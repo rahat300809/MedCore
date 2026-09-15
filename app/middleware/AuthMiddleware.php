@@ -140,6 +140,13 @@ function generateCsrfToken(): string {
 }
 
 /**
+ * Output CSRF hidden input HTML
+ */
+function csrfField(): string {
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(generateCsrfToken()) . '">';
+}
+
+/**
  * Validate CSRF token
  */
 function validateCsrf(): void {

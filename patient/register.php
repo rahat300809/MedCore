@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/../../app/config/app.php';
-require_once __DIR__ . '/../../app/config/database.php';
-require_once __DIR__ . '/../../app/middleware/AuthMiddleware.php';
-require_once __DIR__ . '/../../app/services/OTPService.php';
-require_once __DIR__ . '/../../app/services/AuditService.php';
+require_once __DIR__ . '/../app/config/app.php';
+require_once __DIR__ . '/../app/config/database.php';
+require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
+require_once __DIR__ . '/../app/services/OTPService.php';
+require_once __DIR__ . '/../app/services/AuditService.php';
 
 initSession();
 

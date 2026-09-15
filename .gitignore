@@ -38,6 +38,12 @@ npm-debug.log
 .env
 .env.local
 
+# Scratch & test scripts
+scratch/
+
+# Root assets junction (mirrored from public/assets)
+assets/
+
 # Keep storage directories structure
 !storage/uploads/.gitkeep
 !storage/logs/.gitkeep

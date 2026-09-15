@@ -11,19 +11,19 @@ USE `medcore`;
 -- ============================================================
 INSERT INTO `users` (`role`, `email`, `phone`, `password_hash`, `status`, `email_verified`, `phone_verified`) VALUES
 -- System Admin
-('SYSTEM_ADMIN', 'admin@medcore.local', '01700000000', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1),
+('SYSTEM_ADMIN', 'admin@medcore.local', '01700000000', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
 -- Hospital Admins
-('HOSPITAL_ADMIN', 'admin@abc-hospital.com', '01711111111', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1),
-('HOSPITAL_ADMIN', 'admin@xyz-medical.com', '01722222222', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1),
-('HOSPITAL_ADMIN', 'admin@dhaka-care.com', '01733333333', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1),
+('HOSPITAL_ADMIN', 'admin@abc-hospital.com', '01711111111', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
+('HOSPITAL_ADMIN', 'admin@xyz-medical.com', '01722222222', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
+('HOSPITAL_ADMIN', 'admin@dhaka-care.com', '01733333333', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
 -- Doctors
-('DOCTOR', 'dr.rahman@medcore.local', '01755555555', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1),
-('DOCTOR', 'dr.karim@medcore.local', '01766666666', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1),
-('DOCTOR', 'dr.hasan@medcore.local', '01777777777', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1),
+('DOCTOR', 'dr.rahman@medcore.local', '01755555555', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
+('DOCTOR', 'dr.karim@medcore.local', '01766666666', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
+('DOCTOR', 'dr.hasan@medcore.local', '01777777777', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
 -- Patients
-('PATIENT', 'rahat@example.com', '01788888888', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1),
-('PATIENT', 'nasrin@example.com', '01799999999', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1),
-('PATIENT', 'kamal@example.com', '01800000001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ACTIVE', 1, 1);
+('PATIENT', 'rahat@example.com', '01788888888', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
+('PATIENT', 'nasrin@example.com', '01799999999', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
+('PATIENT', 'kamal@example.com', '01800000001', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1);
 
 -- NOTE: password_hash above is bcrypt of 'password' (Laravel default dummy)
 -- REAL password for demo: 'Demo123!' - update with actual hash after running:
