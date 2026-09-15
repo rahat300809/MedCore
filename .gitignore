@@ -1,0 +1,43 @@
+# MedCore .gitignore
+
+# Sensitive configuration (copy database.example.php and configure locally)
+app/config/database.php
+
+# Uploaded files (not tracked in git)
+storage/uploads/
+storage/logs/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PHP temp
+*.php~
+*.bak
+
+# Composer (if used later)
+vendor/
+composer.lock
+
+# Node (if used)
+node_modules/
+npm-debug.log
+
+# PHPUnit
+.phpunit.result.cache
+
+# Environment
+.env
+.env.local
+
+# Keep storage directories structure
+!storage/uploads/.gitkeep
+!storage/logs/.gitkeep

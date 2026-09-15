@@ -1,0 +1,263 @@
+/* ============================================================
+   MEDCORE PORTAL CSS (Dashboard pages)
+   ============================================================ */
+
+/* Sidebar scroll on small heights */
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--mc-border-dark); border-radius: 2px; }
+
+/* Portal content animations */
+.stat-card {
+  animation: fade-up 0.3s ease both;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.10s; }
+.stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stat-card:nth-child(4) { animation-delay: 0.20s; }
+
+/* Page title row */
+.page-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.page-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--mc-text-muted);
+  margin-top: 2px;
+}
+
+/* Spinner */
+.spinner-sm {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Search bar */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--mc-white);
+  border: 1.5px solid var(--mc-border);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-4);
+  transition: var(--transition);
+}
+
+.search-bar:focus-within {
+  border-color: var(--mc-blue);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-main);
+  font-size: 14px;
+  width: 100%;
+  padding: 10px 0;
+  color: var(--mc-text);
+}
+
+.search-bar i { color: var(--mc-text-muted); }
+
+/* Patient result card (doctor portal) */
+.patient-result-card {
+  background: var(--mc-white);
+  border: 1px solid var(--mc-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.patient-result-header {
+  background: var(--mc-bg);
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--mc-border);
+}
+
+.patient-result-body { padding: var(--space-6); }
+
+/* Medical record locked state */
+.record-locked {
+  background: var(--mc-bg);
+  border: 2px dashed var(--mc-border-dark);
+  border-radius: var(--radius-lg);
+  padding: var(--space-12);
+  text-align: center;
+}
+
+.record-locked-icon {
+  font-size: 3rem;
+  color: var(--mc-text-muted);
+  opacity: 0.4;
+  margin-bottom: var(--space-4);
+}
+
+/* Prescription document styles */
+.rx-header-band {
+  background: linear-gradient(135deg, var(--mc-blue-dark), var(--mc-blue));
+  color: white;
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.rx-header-band .rx-uid {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.rx-body {
+  padding: var(--space-6) var(--space-8);
+}
+
+.medicine-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--mc-border);
+  align-items: start;
+  font-size: 14px;
+}
+
+.medicine-row:last-child { border-bottom: none; }
+
+/* Hospital card list */
+.hospitals-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Doctor verified card */
+.doctor-verify-card {
+  background: var(--mc-white);
+  border: 1px solid var(--mc-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  max-width: 520px;
+  margin: 0 auto;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Waiting consent animation */
+.waiting-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Hospital dashboard stats */
+.hospital-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Admin table actions */
+.action-group {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Affiliation status badges */
+.aff-status-approved { color: var(--mc-green); font-weight: 600; }
+.aff-status-pending   { color: var(--mc-amber); font-weight: 600; }
+.aff-status-rejected  { color: var(--mc-red); font-weight: 600; }
+.aff-status-removed   { color: var(--mc-text-muted); font-weight: 600; }
+
+/* Audit log severity */
+.severity-info     { color: var(--mc-blue); }
+.severity-warning  { color: var(--mc-amber); }
+.severity-critical { color: var(--mc-red); font-weight: 700; }
+
+/* Access history table */
+.access-source {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Verification document viewer */
+.doc-preview {
+  background: var(--mc-bg);
+  border: 1px solid var(--mc-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Global page transition */
+.portal-content > * {
+  animation: fade-up 0.25s ease both;
+}
+
+/* Responsive portal */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .portal-main  { margin-left: 0; }
+
+  /* Overlay when sidebar open */
+  .sidebar.open::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .portal-content { padding: var(--space-5) var(--space-4); }
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .medicine-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .grid-4 { grid-template-columns: 1fr; }
+}
