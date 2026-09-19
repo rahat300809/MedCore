@@ -31,7 +31,7 @@ if (isset($_SESSION['role'])) {
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/landing.css">
@@ -112,7 +112,7 @@ if (isset($_SESSION['role'])) {
   <div class="container">
     <div class="hero-grid-layout">
       <div class="hero-content">
-        <!-- Trust bar -->
+    <!-- Trust bar -->
         <div class="hero-trust-bar">
           <span class="security-badge"><i class="bi bi-shield-fill-check"></i> HL7 FHIR R4 Compliant</span>
           <span class="security-badge"><i class="bi bi-lock-fill"></i> AES-256 Encrypted</span>
@@ -184,17 +184,16 @@ if (isset($_SESSION['role'])) {
           <div class="dashboard-preview">
             <div class="preview-topbar">
               <div class="preview-logo">
-                <div class="logo-icon" style="width:20px;height:20px;font-size:9px;background:linear-gradient(135deg,#38BDF8,#2DD4BF);">
+                <div class="logo-icon" style="width:20px;height:20px;font-size:9px;background:linear-gradient(135deg,#2563EB,#06B6D4);">
                   <i class="bi bi-heart-pulse-fill" style="font-size:9px;"></i>
                 </div>
-                <span style="font-size:12px;font-weight:700;color:#E2E8F0;">MedCore</span>
+                <span style="font-size:12px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">MedCore</span>
               </div>
               <span class="badge badge-success" style="font-size:10px;">
                 <span class="pulse-dot"></span>Live
               </span>
             </div>
 
-            <!-- Live ECG mini-readout -->
             <div class="preview-ecg">
               <svg class="preview-ecg-svg" viewBox="0 0 300 36" preserveAspectRatio="none">
                 <path class="preview-ecg-path preview-ecg-animate"
@@ -202,16 +201,16 @@ if (isset($_SESSION['role'])) {
                      L120,18 L130,18 L135,4 L140,32 L144,2 L150,34 L156,18 L180,18
                      L210,18 L220,18 L225,4 L230,32 L234,2 L240,34 L246,18 L270,18 L300,18"/>
               </svg>
-              <div style="position:absolute;top:4px;right:8px;font-size:9px;color:rgba(52,211,153,0.7);font-weight:600;font-family:monospace;">ECG ♥ 72bpm</div>
+              <div style="position:absolute;top:4px;right:8px;font-size:9px;color:#2563EB;font-weight:700;font-family:'JetBrains Mono','Roboto Mono',monospace;">ECG ♥ 72bpm</div>
             </div>
 
             <!-- Patient card -->
             <div class="preview-portal-card">
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-                <div class="sidebar-avatar" style="width:40px;height:40px;font-size:15px;background:linear-gradient(135deg,#38BDF8,#2DD4BF);">R</div>
+                <div class="sidebar-avatar" style="width:40px;height:40px;font-size:15px;background:linear-gradient(135deg,#2563EB,#06B6D4);">R</div>
                 <div>
-                  <div style="font-size:13px;font-weight:700;color:#E2E8F0;">Rahat Mahamud</div>
-                  <div style="font-size:10px;color:rgba(226,232,240,0.45);">Patient Portal · PT-000001</div>
+                  <div style="font-size:13px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">Rahat Mahamud</div>
+                  <div style="font-size:10px;color:#94A3B8;">Patient Portal · PT-000001</div>
                 </div>
                 <span class="badge badge-success" style="margin-left:auto;font-size:9px;">Active</span>
               </div>
@@ -234,39 +233,39 @@ if (isset($_SESSION['role'])) {
 
             <!-- Access request -->
             <div class="preview-event preview-event-blue">
-              <i class="bi bi-shield-lock-fill" style="color:#38BDF8;"></i>
+              <i class="bi bi-shield-lock-fill" style="color:#2563EB;"></i>
               <div>
-                <div style="font-size:10.5px;font-weight:700;color:#E2E8F0;">Consent Request</div>
-                <div style="font-size:9.5px;color:rgba(226,232,240,0.45);">Dr. Rahman · ABC Hospital · 26:11 left</div>
+                <div style="font-size:10.5px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">Consent Request</div>
+                <div style="font-size:9.5px;color:#94A3B8;">Dr. Rahman · ABC Hospital · 26:11 left</div>
               </div>
               <div style="margin-left:auto;display:flex;gap:5px;">
                 <span class="badge badge-success" style="font-size:9px;padding:3px 8px;">Approve</span>
-                <span style="background:rgba(255,255,255,0.06);color:rgba(226,232,240,0.5);font-size:9px;padding:3px 8px;border-radius:999px;cursor:pointer;">Deny</span>
+                <span style="background:#F1F5F9;color:#64748B;font-size:9px;padding:3px 8px;border-radius:999px;cursor:pointer;">Deny</span>
               </div>
             </div>
 
             <!-- MRI report -->
             <div class="preview-event">
-              <i class="bi bi-clipboard2-pulse" style="color:#38BDF8;"></i>
+              <i class="bi bi-clipboard2-pulse" style="color:#2563EB;"></i>
               <div>
-                <div style="font-size:10.5px;font-weight:700;color:#E2E8F0;">MRI Brain — Report Ready</div>
-                <div style="font-size:9.5px;color:rgba(226,232,240,0.45);">Dhaka Medical Imaging · Today</div>
+                <div style="font-size:10.5px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">MRI Brain — Report Ready</div>
+                <div style="font-size:9.5px;color:#94A3B8;">Dhaka Medical Imaging · Today</div>
               </div>
               <span class="badge badge-info" style="font-size:9px;margin-left:auto;">New</span>
             </div>
 
             <!-- Allergy alert -->
             <div class="preview-event preview-event-red">
-              <i class="bi bi-exclamation-triangle-fill" style="color:#F87171;"></i>
+              <i class="bi bi-exclamation-triangle-fill" style="color:#F43F5E;"></i>
               <div>
-                <div style="font-size:10.5px;font-weight:700;color:#E2E8F0;">Alert: Penicillin Allergy</div>
-                <div style="font-size:9.5px;color:rgba(226,232,240,0.45);">All clinician views flagged</div>
+                <div style="font-size:10.5px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">Alert: Penicillin Allergy</div>
+                <div style="font-size:9.5px;color:#94A3B8;">All clinician views flagged</div>
               </div>
               <span class="badge badge-error" style="font-size:9px;margin-left:auto;">Critical</span>
             </div>
 
             <div class="preview-footer">
-              <i class="bi bi-lock-fill" style="color:#38BDF8;"></i>
+              <i class="bi bi-lock-fill" style="color:#2563EB;"></i>
               <span>180ms sync · AES-256 · 0 unauthorized accesses</span>
             </div>
           </div>
@@ -274,28 +273,28 @@ if (isset($_SESSION['role'])) {
 
         <!-- Floating badge: Hospital verified -->
         <div class="hero-floating-card hero-float-1">
-          <i class="bi bi-building-fill-check" style="color:#38BDF8;"></i>
+          <i class="bi bi-building-fill-check" style="color:#2563EB;"></i>
           <div>
-            <div style="font-size:11px;font-weight:700;color:#E2E8F0;">ABC General Hospital</div>
-            <div style="font-size:9.5px;color:rgba(226,232,240,0.45);">Verified · 12 affiliated doctors</div>
+            <div style="font-size:11px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">ABC General Hospital</div>
+            <div style="font-size:9.5px;color:#64748B;">Verified · 12 affiliated doctors</div>
           </div>
         </div>
 
         <!-- Floating badge: Doctor BMDC -->
         <div class="hero-floating-card hero-float-2">
-          <i class="bi bi-patch-check-fill" style="color:#2DD4BF;"></i>
+          <i class="bi bi-patch-check-fill" style="color:#0891B2;"></i>
           <div>
-            <div style="font-size:11px;font-weight:700;color:#E2E8F0;">Dr. Farhana Rahman</div>
-            <div style="font-size:9.5px;color:rgba(226,232,240,0.45);">BMDC Verified · Cardiology</div>
+            <div style="font-size:11px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">Dr. Farhana Rahman</div>
+            <div style="font-size:9.5px;color:#64748B;">BMDC Verified · Cardiology</div>
           </div>
         </div>
 
         <!-- Floating badge: MRI Scan -->
         <div class="hero-floating-card hero-float-3">
-          <i class="bi bi-activity" style="color:#A78BFA;font-size:20px;"></i>
+          <i class="bi bi-activity" style="color:#7C3AED;font-size:20px;"></i>
           <div>
-            <div style="font-size:11px;font-weight:700;color:#E2E8F0;">MRI Scan Uploaded</div>
-            <div style="font-size:9.5px;color:rgba(226,232,240,0.45);">Brain · T2 Weighted</div>
+            <div style="font-size:11px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">MRI Scan Uploaded</div>
+            <div style="font-size:9.5px;color:#64748B;">Brain · T2 Weighted</div>
           </div>
         </div>
       </div>

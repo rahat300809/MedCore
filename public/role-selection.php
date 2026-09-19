@@ -22,28 +22,33 @@ if (isset($_SESSION['role'])) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Access MedCore — Choose Your Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
   <style>
     :root {
-      --land-bg: #050D1A;
-      --land-neon-blue: #38BDF8;
-      --land-neon-teal: #2DD4BF;
-      --land-neon-green: #34D399;
-      --land-neon-purple: #A78BFA;
-      --land-neon-amber: #FBBF24;
-      --land-text: #E2E8F0;
-      --glass-bg: rgba(255,255,255,0.05);
-      --glass-border: rgba(255,255,255,0.09);
+      --l-blue:        #2563EB;
+      --l-teal:        #0891B2;
+      --l-violet:      #7C3AED;
+      --l-emerald:     #10B981;
+      --l-text:        #0F172A;
+      --l-text-sub:    #334155;
+      --l-text-muted:  #64748B;
+      --l-text-dim:    #94A3B8;
+      --l-bg:          #F8FAFE;
+      --l-blue-soft:   #EFF6FF;
+      --l-teal-soft:   #ECFEFF;
+      --l-violet-soft: #F5F3FF;
+      --glass-bg:      rgba(255,255,255,0.78);
+      --glass-border:  rgba(255,255,255,0.92);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: #050D1A;
-      color: #E2E8F0;
+      background: linear-gradient(150deg, #F0F6FF 0%, #FAFCFF 50%, #F5FFFC 100%);
+      color: #0F172A;
       min-height: 100vh;
       overflow-x: hidden;
     }
@@ -60,25 +65,25 @@ if (isset($_SESSION['role'])) {
     .bg-blob {
       position: absolute;
       border-radius: 50%;
-      filter: blur(130px);
-      opacity: 0.18;
+      filter: blur(120px);
+      opacity: 0.5;
     }
 
     .bg-blob-1 {
       width: 800px; height: 800px;
-      background: radial-gradient(circle, rgba(56,189,248,0.6) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(37,99,235,0.2) 0%, rgba(96,165,250,0.08) 50%, transparent 70%);
       top: -300px; left: -200px;
       animation: bgdrift 18s ease-in-out infinite;
     }
     .bg-blob-2 {
       width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(45,212,191,0.5) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(8,145,178,0.15) 0%, transparent 70%);
       bottom: -200px; right: -150px;
       animation: bgdrift 22s ease-in-out infinite reverse;
     }
     .bg-blob-3 {
       width: 400px; height: 400px;
-      background: radial-gradient(circle, rgba(167,139,250,0.4) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%);
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       animation: bgdrift 26s ease-in-out infinite 4s;
@@ -93,7 +98,7 @@ if (isset($_SESSION['role'])) {
     .bg-dots {
       position: absolute;
       inset: 0;
-      background-image: radial-gradient(rgba(56,189,248,0.1) 1px, transparent 1px);
+      background-image: radial-gradient(rgba(37,99,235,0.1) 1.2px, transparent 1.2px);
       background-size: 36px 36px;
     }
 
@@ -108,11 +113,12 @@ if (isset($_SESSION['role'])) {
 
     .bg-ecg-path {
       fill: none;
-      stroke: #34D399;
+      stroke: #2563EB;
       stroke-width: 1.5;
       stroke-dasharray: 2000;
       stroke-dashoffset: 2000;
       animation: ecg-run 4s linear infinite;
+      opacity: 0.2;
     }
 
     @keyframes ecg-run {
@@ -135,8 +141,8 @@ if (isset($_SESSION['role'])) {
       align-items: center;
       justify-content: space-between;
       padding: 20px 32px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      background: rgba(5,13,26,0.7);
+      border-bottom: 1px solid rgba(37,99,235,0.08);
+      background: rgba(248,250,254,0.9);
       backdrop-filter: blur(20px);
     }
 
@@ -145,9 +151,10 @@ if (isset($_SESSION['role'])) {
       align-items: center;
       gap: 10px;
       text-decoration: none;
-      color: #F8FAFC;
+      color: #0F172A;
       font-size: 1.15rem;
       font-weight: 800;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     .role-header-logo .logo-icon {
@@ -164,19 +171,22 @@ if (isset($_SESSION['role'])) {
       align-items: center;
       gap: 8px;
       padding: 8px 18px;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(37,99,235,0.15);
       border-radius: 10px;
-      color: rgba(226,232,240,0.6);
+      color: #64748B;
       text-decoration: none;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       transition: all 0.2s;
-      background: rgba(255,255,255,0.04);
+      background: white;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
     .role-header-back:hover {
-      border-color: rgba(56,189,248,0.35);
-      color: var(--land-neon-blue);
-      background: rgba(56,189,248,0.06);
+      border-color: rgba(37,99,235,0.4);
+      color: #2563EB;
+      background: #EFF6FF;
+      text-decoration: none;
     }
 
     /* Main content */
@@ -194,26 +204,28 @@ if (isset($_SESSION['role'])) {
       font-weight: 700;
       letter-spacing: 2.5px;
       text-transform: uppercase;
-      color: var(--land-neon-teal);
+      color: #0891B2;
       margin-bottom: 16px;
       display: flex;
       align-items: center;
       gap: 8px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     .role-title {
       font-size: clamp(1.8rem, 4vw, 2.8rem);
       font-weight: 900;
       text-align: center;
-      color: #F8FAFC;
+      color: #0F172A;
       margin-bottom: 12px;
-      letter-spacing: -0.02em;
-      line-height: 1.15;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     .role-subtitle {
       font-size: 14px;
-      color: rgba(226,232,240,0.45);
+      color: #64748B;
       text-align: center;
       margin-bottom: 50px;
       max-width: 460px;
@@ -231,108 +243,85 @@ if (isset($_SESSION['role'])) {
 
     /* Role card */
     .role-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: white;
+      border: 1.5px solid rgba(37,99,235,0.1);
       border-radius: 22px;
       padding: 32px 26px 26px;
       cursor: pointer;
       transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       text-decoration: none;
-      color: var(--land-text);
+      color: #0F172A;
       display: flex;
       flex-direction: column;
       gap: 0;
       position: relative;
       overflow: hidden;
-      backdrop-filter: blur(20px);
+      box-shadow: 0 2px 12px rgba(37,99,235,0.06);
     }
 
     .role-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(56,189,248,0.5), transparent);
+      height: 3px;
+      border-radius: 22px 22px 0 0;
       opacity: 0;
-      transition: opacity 0.35s;
+      transition: opacity 0.3s;
     }
-
-    .role-card::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, rgba(56,189,248,0.04) 0%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.35s;
-    }
+    .role-card.patient::before  { background: linear-gradient(90deg, #2563EB, #06B6D4); }
+    .role-card.doctor::before   { background: linear-gradient(90deg, #0891B2, #10B981); }
+    .role-card.hospital::before { background: linear-gradient(90deg, #7C3AED, #0891B2); }
 
     .role-card:hover {
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(56,189,248,0.3);
+      background: white;
+      border-color: rgba(37,99,235,0.2);
       transform: translateY(-8px) scale(1.01);
-      box-shadow: 0 25px 70px rgba(0,0,0,0.5), 0 0 40px rgba(56,189,248,0.08);
-      color: var(--land-text);
+      box-shadow: 0 24px 60px rgba(37,99,235,0.12), 0 8px 24px rgba(0,0,0,0.06);
+      color: #0F172A;
       text-decoration: none;
     }
-
     .role-card:hover::before { opacity: 1; }
-    .role-card:hover::after  { opacity: 1; }
-
-    /* Patient card hover tint */
-    .role-card.patient:hover { border-color: rgba(56,189,248,0.35); }
-    .role-card.doctor:hover  { border-color: rgba(45,212,191,0.35); }
-    .role-card.hospital:hover { border-color: rgba(167,139,250,0.35); }
 
     /* Card icon */
     .role-card-icon {
-      width: 72px; height: 72px;
-      border-radius: 18px;
+      width: 68px; height: 68px;
+      border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
       font-size: 2rem;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
       position: relative;
       z-index: 1;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
     }
 
     .role-card:hover .role-card-icon { transform: scale(1.1) rotate(-3deg); }
 
-    .icon-patient  {
-      background: rgba(56,189,248,0.12);
-      color: var(--land-neon-blue);
-      box-shadow: 0 0 30px rgba(56,189,248,0.2);
-    }
-    .icon-doctor   {
-      background: linear-gradient(135deg, rgba(56,189,248,0.15), rgba(45,212,191,0.15));
-      color: var(--land-neon-teal);
-      box-shadow: 0 0 30px rgba(45,212,191,0.2);
-    }
-    .icon-hospital {
-      background: rgba(167,139,250,0.12);
-      color: var(--land-neon-purple);
-      box-shadow: 0 0 30px rgba(167,139,250,0.2);
-    }
+    .icon-patient  { background: #EFF6FF; color: #2563EB; }
+    .icon-doctor   { background: linear-gradient(135deg, #EFF6FF, #ECFEFF); color: #0891B2; }
+    .icon-hospital { background: #F5F3FF; color: #7C3AED; }
 
     .role-card h3 {
       font-size: 1.25rem;
       font-weight: 800;
-      color: #F8FAFC;
+      color: #0F172A;
       margin-bottom: 8px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: -0.02em;
       position: relative; z-index: 1;
     }
 
     .role-card p {
       font-size: 13px;
-      color: rgba(226,232,240,0.5);
-      line-height: 1.6;
-      margin-bottom: 24px;
+      color: #64748B;
+      line-height: 1.65;
+      margin-bottom: 22px;
       position: relative; z-index: 1;
     }
 
     /* Feature list */
     .role-features {
       list-style: none;
-      margin-bottom: 26px;
+      margin-bottom: 24px;
       position: relative; z-index: 1;
     }
 
@@ -341,8 +330,9 @@ if (isset($_SESSION['role'])) {
       align-items: center;
       gap: 9px;
       font-size: 12.5px;
-      color: rgba(226,232,240,0.6);
+      color: #475569;
       padding: 4px 0;
+      font-weight: 500;
     }
 
     .role-features li i { font-size: 13px; flex-shrink: 0; }
@@ -351,50 +341,51 @@ if (isset($_SESSION['role'])) {
     .role-cta {
       display: block;
       text-align: center;
-      padding: 13px 20px;
+      padding: 14px 20px;
       border-radius: 13px;
       font-size: 14px;
       font-weight: 700;
-      transition: all 0.25s ease;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
       text-decoration: none;
       position: relative; z-index: 1;
-      letter-spacing: 0.2px;
+      letter-spacing: 0.1px;
     }
 
     .cta-patient {
-      background: rgba(56,189,248,0.12);
-      border: 1px solid rgba(56,189,248,0.3);
-      color: var(--land-neon-blue);
+      background: linear-gradient(135deg, #2563EB, #06B6D4);
+      color: white;
+      box-shadow: 0 6px 24px rgba(37,99,235,0.3);
+      border: none;
     }
     .cta-patient:hover {
-      background: rgba(56,189,248,0.2);
-      box-shadow: 0 0 25px rgba(56,189,248,0.25);
-      color: var(--land-neon-blue);
-      text-decoration: none;
+      box-shadow: 0 10px 36px rgba(37,99,235,0.4);
+      transform: translateY(-2px);
+      color: white; text-decoration: none;
     }
 
     .cta-doctor {
-      background: linear-gradient(135deg, rgba(56,189,248,0.15), rgba(45,212,191,0.15));
-      border: 1px solid rgba(45,212,191,0.35);
-      color: var(--land-neon-teal);
+      background: linear-gradient(135deg, #0891B2, #10B981);
+      color: white;
+      box-shadow: 0 6px 24px rgba(8,145,178,0.3);
+      border: none;
     }
     .cta-doctor:hover {
-      background: linear-gradient(135deg, rgba(56,189,248,0.25), rgba(45,212,191,0.25));
-      box-shadow: 0 0 25px rgba(45,212,191,0.25);
-      color: var(--land-neon-teal);
-      text-decoration: none;
+      box-shadow: 0 10px 36px rgba(8,145,178,0.4);
+      transform: translateY(-2px);
+      color: white; text-decoration: none;
     }
 
     .cta-hospital {
-      background: rgba(167,139,250,0.1);
-      border: 1px solid rgba(167,139,250,0.3);
-      color: var(--land-neon-purple);
+      background: linear-gradient(135deg, #7C3AED, #0891B2);
+      color: white;
+      box-shadow: 0 6px 24px rgba(124,58,237,0.3);
+      border: none;
     }
     .cta-hospital:hover {
-      background: rgba(167,139,250,0.2);
-      box-shadow: 0 0 25px rgba(167,139,250,0.2);
-      color: var(--land-neon-purple);
-      text-decoration: none;
+      box-shadow: 0 10px 36px rgba(124,58,237,0.35);
+      transform: translateY(-2px);
+      color: white; text-decoration: none;
     }
 
     /* Sub actions */
@@ -402,18 +393,13 @@ if (isset($_SESSION['role'])) {
       margin-top: 10px;
       text-align: center;
       font-size: 12px;
-      color: rgba(226,232,240,0.3);
+      color: #94A3B8;
       position: relative; z-index: 1;
     }
 
-    .role-sub a {
-      font-weight: 600;
-      text-decoration: underline;
-    }
-
-    .patient .role-sub a { color: rgba(56,189,248,0.6); }
-    .doctor  .role-sub a { color: rgba(45,212,191,0.6); }
-    .hospital .role-sub a { color: rgba(167,139,250,0.6); }
+    .patient  .role-sub a { color: #2563EB; font-weight: 600; }
+    .doctor   .role-sub a { color: #0891B2; font-weight: 600; }
+    .hospital .role-sub a { color: #7C3AED; font-weight: 600; }
 
     /* Admin link */
     .admin-access {
@@ -422,42 +408,44 @@ if (isset($_SESSION['role'])) {
       align-items: center;
       gap: 12px;
       font-size: 13px;
-      color: rgba(226,232,240,0.25);
+      color: #94A3B8;
     }
 
     .admin-access-btn {
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 7px 18px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
+      padding: 8px 20px;
+      background: white;
+      border: 1.5px solid rgba(37,99,235,0.12);
       border-radius: 999px;
-      color: rgba(226,232,240,0.4);
+      color: #475569;
       font-size: 12.5px;
-      font-weight: 600;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       text-decoration: none;
       transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     .admin-access-btn:hover {
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,255,255,0.15);
-      color: rgba(226,232,240,0.7);
+      background: #EFF6FF;
+      border-color: rgba(37,99,235,0.3);
+      color: #2563EB;
       text-decoration: none;
     }
 
     /* Security note */
     .security-note {
-      margin-top: 30px;
+      margin-top: 24px;
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 12px;
-      color: rgba(226,232,240,0.25);
+      color: #94A3B8;
     }
 
-    .security-note i { color: #34D399; font-size: 13px; }
+    .security-note i { color: #10B981; font-size: 13px; }
 
     /* Responsive */
     @media (max-width: 900px) {
