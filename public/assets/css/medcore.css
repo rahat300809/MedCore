@@ -82,6 +82,17 @@
   --max-width: 1280px;
   --sidebar-width: 260px;
   --topbar-height: 64px;
+
+  /* === DARK MEDICAL LANDING TOKENS === */
+  --land-bg:          #050D1A;
+  --land-neon-blue:   #38BDF8;
+  --land-neon-teal:   #2DD4BF;
+  --land-neon-green:  #34D399;
+  --land-neon-red:    #F87171;
+  --land-neon-amber:  #FBBF24;
+  --land-neon-purple: #A78BFA;
+  --glass-bg:         rgba(255,255,255,0.05);
+  --glass-border:     rgba(255,255,255,0.09);
 }
 
 /* ============================================================
@@ -851,18 +862,75 @@ tr:hover td { background: var(--mc-bg); }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--mc-bg);
+  background: var(--land-bg, var(--mc-bg));
   padding: var(--space-6);
+  position: relative;
+  overflow: hidden;
 }
 
+/* Dark medical background for auth pages */
+.auth-flow-container::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(56,189,248,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(45,212,191,0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.auth-flow-container > * { position: relative; z-index: 1; }
+
 .auth-card {
-  background: var(--mc-white);
-  border: 1px solid var(--mc-border);
+  background: rgba(8,20,36,0.8);
+  border: 1px solid rgba(56,189,248,0.15);
   border-radius: var(--radius-xl);
   padding: var(--space-10);
   width: 100%;
   max-width: 480px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  color: #E2E8F0;
+}
+
+/* Auth card input overrides for dark theme */
+.auth-card .form-control {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+  color: #E2E8F0;
+}
+
+.auth-card .form-control:focus {
+  border-color: rgba(56,189,248,0.5);
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.1);
+  background: rgba(255,255,255,0.07);
+}
+
+.auth-card .form-control::placeholder { color: rgba(226,232,240,0.3); }
+
+.auth-card .form-label {
+  color: rgba(226,232,240,0.55);
+}
+
+.auth-card h1, .auth-card h2, .auth-card h3 {
+  color: #F8FAFC;
+}
+
+.auth-card p {
+  color: rgba(226,232,240,0.55);
+}
+
+.auth-card .otp-input {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.12);
+  color: #F8FAFC;
+}
+
+.auth-card .otp-input:focus {
+  border-color: rgba(56,189,248,0.5);
+  background: rgba(56,189,248,0.06);
 }
 
 .auth-logo {
