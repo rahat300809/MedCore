@@ -92,8 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
                 // Get their approved hospitals for the "access denied" page
-                $_SESSION['denied_doctor_id']   = $doctor['id'];
-                $_SESSION['denied_doctor_name'] = $doctor['full_name'];
+                $_SESSION['denied_doctor_id']      = $doctor['id'];
+                $_SESSION['denied_doctor_name']    = $doctor['full_name'];
+                $_SESSION['denied_doctor_user_id'] = $doctor['user_id'];
+                $_SESSION['denied_hospital_id']    = $hospitalId;
+                $_SESSION['denied_hospital_name']  = $hospital['name'];
                 header('Location: ' . APP_URL . '/doctor/access-denied.php?reason=no_affiliation');
                 exit;
             }

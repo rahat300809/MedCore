@@ -43,6 +43,9 @@ if ($query) {
             'metadata'   => ['query' => $query],
         ]);
 
+        // Auto-expire stale pending access requests
+        $db->prepare("UPDATE access_requests SET status = 'EXPIRED' WHERE status = 'PENDING' AND expires_at IS NOT NULL AND expires_at < NOW()")->execute();
+
         // Check for active access session
         $stmt = $db->prepare("
             SELECT * FROM access_sessions
@@ -52,18 +55,19 @@ if ($query) {
             LIMIT 1
         ");
         $stmt->execute([$doctorId, $found['id'], $hospitalId]);
-        $accessSession = $stmt->fetch();
+        $accessSession = $stmt->fetch() ?: null;
 
         // Also check pending access request
         $stmt = $db->prepare("
             SELECT * FROM access_requests
             WHERE doctor_id = ? AND patient_id = ? AND hospital_id = ?
               AND status = 'PENDING'
+              AND (expires_at IS NULL OR expires_at > NOW())
             ORDER BY requested_at DESC
             LIMIT 1
         ");
         $stmt->execute([$doctorId, $found['id'], $hospitalId]);
-        $pendingRequest = $stmt->fetch();
+        $pendingRequest = $stmt->fetch() ?: null;
     }
 }
 
@@ -73,11 +77,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_request'])) {
     $patientId = (int)$_POST['patient_id'];
     $reason    = trim($_POST['access_reason'] ?? '');
 
+    // Auto-expire stale requests first
+    $db->prepare("UPDATE access_requests SET status = 'EXPIRED' WHERE status = 'PENDING' AND expires_at IS NOT NULL AND expires_at < NOW()")->execute();
+
     // Check no existing pending or active
     $stmt = $db->prepare("
         SELECT id FROM access_requests
         WHERE doctor_id = ? AND patient_id = ? AND hospital_id = ?
           AND status = 'PENDING'
+          AND (expires_at IS NULL OR expires_at > NOW())
         LIMIT 1
     ");
     $stmt->execute([$doctorId, $patientId, $hospitalId]);
@@ -86,20 +94,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_request'])) {
     } else {
         $stmt = $db->prepare("
             INSERT INTO access_requests
-                (doctor_id, patient_id, hospital_id, access_reason, status, expires_at)
+                (doctor_id, patient_id, hospital_id, doctor_notes, status, expires_at)
             VALUES (?, ?, ?, ?, 'PENDING', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
         ");
         $stmt->execute([$doctorId, $patientId, $hospitalId, $reason]);
+        $newReqId = (int)$db->lastInsertId();
 
         // Create notification for patient
         $doctorName = $_SESSION['name'] ?? 'Doctor';
         $hospitalName = $_SESSION['hospital_name'] ?? 'Hospital';
         $notifStmt = $db->prepare("
-            INSERT INTO notifications (user_id, type, title, message, reference_type, action_url)
+            INSERT INTO notifications (user_id, type, title, message, reference_type, reference_id, action_url)
             SELECT u.id, 'ACCESS_REQUEST',
                    CONCAT('Access Request from Dr. ', :dname),
                    CONCAT('Dr. ', :dname2, ' from ', :hname, ' requests access to your medical record.'),
                    'access_request',
+                   :ref_id,
                    :action_url
             FROM patients p JOIN users u ON u.id = p.user_id
             WHERE p.id = :pid
@@ -108,7 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_request'])) {
             ':dname'      => $doctorName,
             ':dname2'     => $doctorName,
             ':hname'      => $hospitalName,
-            ':action_url' => APP_URL . '/patient/consent-requests.php',
+            ':ref_id'     => $newReqId,
+            ':action_url' => APP_URL . '/patient/dashboard.php#doctor-requests',
             ':pid'        => $patientId,
         ]);
 
@@ -120,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_request'])) {
             'metadata'   => ['reason' => $reason],
         ]);
 
-        $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Access request sent. Waiting for patient approval.'];
+        $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Access request sent successfully! Waiting for patient approval.'];
     }
     header('Location: ' . APP_URL . '/doctor/patient-search.php?q=' . urlencode($query));
     exit;
@@ -265,7 +276,7 @@ $csrf = generateCsrfToken();
                   remaining
                 </div>
               </div>
-              <?php elseif (isset($pendingRequest)): ?>
+              <?php elseif ($pendingRequest): ?>
               <div class="access-timer" style="background:var(--mc-amber-light);border-color:var(--mc-amber);">
                 <i class="bi bi-clock-fill" style="color:var(--mc-amber);"></i>
                 <div style="font-size:12px;color:#92400E;">
@@ -299,7 +310,7 @@ $csrf = generateCsrfToken();
             <a href="<?= APP_URL ?>/doctor/medical-record.php?patient=<?= $found['id'] ?>" class="btn btn-primary btn-lg" style="flex:1;">
               <i class="bi bi-folder2-open"></i> View Full Medical Record
             </a>
-            <a href="<?= APP_URL ?>/doctor/new-prescription.php?patient=<?= $found['id'] ?>&session=<?= $accessSession['id'] ?>"
+            <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $found['id'] ?>&session=<?= $accessSession['id'] ?>"
                class="btn btn-success btn-lg">
               <i class="bi bi-file-earmark-medical-fill"></i> New Prescription
             </a>
@@ -309,7 +320,7 @@ $csrf = generateCsrfToken();
             </a>
           </div>
 
-          <?php elseif (isset($pendingRequest)): ?>
+          <?php elseif ($pendingRequest): ?>
           <!-- WAITING -->
           <div class="record-locked" style="border-color:var(--mc-amber);">
             <div style="font-size:2rem;color:var(--mc-amber);margin-bottom:var(--space-4);" class="waiting-pulse">

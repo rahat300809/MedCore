@@ -132,6 +132,15 @@ if ($targetRx) {
         <i class="bi bi-prescription2"></i>
         <span>Prescriptions</span>
       </a>
+      <a href="<?= APP_URL ?>/doctor/reports.php" class="nav-item">
+        <i class="bi bi-graph-up-arrow"></i>
+        <span>Practice Analytics &amp; Reports</span>
+      </a>
+      <div class="nav-section-title">Multi-Hospital Ecosystem</div>
+      <a href="<?= APP_URL ?>/doctor/request-affiliation.php" class="nav-item">
+        <i class="bi bi-building-add"></i>
+        <span>Affiliation Requests</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">

@@ -1,8 +1,190 @@
 /* ============================================================
-   MEDCORE PORTAL CSS (Dashboard pages)
+   ADMIN PORTAL LAYOUT FIX
+   Admin pages use <main class="portal-content"> directly inside
+   .portal-layout (no .portal-main wrapper), so we must offset
+   the content by the sidebar width to prevent overlap.
    ============================================================ */
 
-/* Sidebar scroll on small heights */
+.portal-layout > .portal-content,
+.portal-layout > main.portal-content {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--mc-bg);
+  min-width: 0; /* prevent flex overflow */
+}
+
+/* Top navigation bar inside portal pages */
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--mc-white);
+  border-bottom: 1px solid var(--mc-border);
+  padding: 0 var(--space-6);
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+
+.top-nav-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.top-nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* Scrollable body area within portal content */
+.portal-body {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--mc-bg);
+}
+
+/* Sidebar nav items used in admin pages (class="nav-item") */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px var(--space-5);
+  color: rgba(255,255,255,0.65);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--transition);
+  position: relative;
+  border-radius: 0;
+}
+
+.nav-item:hover {
+  color: white;
+  background: rgba(255,255,255,0.08);
+}
+
+.nav-item.active {
+  color: white;
+  background: rgba(255,255,255,0.12);
+  font-weight: 600;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #3B82F6;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Section title inside sidebar nav */
+.nav-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #64748B;
+  padding: var(--space-3) var(--space-5) var(--space-1);
+  margin-top: var(--space-4);
+}
+
+/* Brand icon (square letter avatar) */
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 16px;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* User avatar circle */
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* Eyebrow label above page title */
+.eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 2px;
+}
+
+/* Data table (admin tables) */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--mc-text-muted);
+  padding: 10px 16px;
+  text-align: left;
+  background: var(--mc-bg);
+  border-bottom: 1px solid var(--mc-border);
+}
+
+.data-table tbody td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--mc-border);
+  color: var(--mc-text);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td { background: var(--mc-bg); }
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================
+   RESPONSIVE: collapse sidebar on mobile
+   ============================================================ */
+@media (max-width: 1024px) {
+  .portal-layout > .portal-content,
+  .portal-layout > main.portal-content {
+    margin-left: 0;
+  }
+}
+
+/* ============================================================
+   Sidebar scrollbar
+   ============================================================ */
 .sidebar::-webkit-scrollbar { width: 4px; }
 .sidebar::-webkit-scrollbar-track { background: transparent; }
 .sidebar::-webkit-scrollbar-thumb { background: var(--mc-border-dark); border-radius: 2px; }
@@ -240,6 +422,8 @@
   }
   .sidebar.open { transform: translateX(0); }
   .portal-main  { margin-left: 0; }
+  .portal-layout > .portal-content,
+  .portal-layout > main.portal-content { margin-left: 0; }
 
   /* Overlay when sidebar open */
   .sidebar.open::after {

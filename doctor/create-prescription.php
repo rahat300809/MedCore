@@ -9,7 +9,7 @@ requireDoctorHospitalContext();
 $db         = getDB();
 $doctorId   = (int)$_SESSION['doctor_id'];
 $hospitalId = (int)$_SESSION['hospital_id'];
-$patientId  = (int)($_GET['patient_id'] ?? 0);
+$patientId  = (int)($_GET['patient_id'] ?? $_GET['patient'] ?? 0);
 
 if (!$patientId) {
     header('Location: ' . APP_URL . '/doctor/patient-search.php');

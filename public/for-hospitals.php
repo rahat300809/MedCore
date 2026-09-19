@@ -83,9 +83,13 @@ initSession();
     <p style="max-width: 680px; margin: 0 auto 32px; font-size: 1.1rem; color: var(--mc-text-secondary);">
       Manage affiliated physicians, departments, consultations, and accreditation records effortlessly. Eliminate interoperability silos and join Bangladesh's premier medical data network.
     </p>
-    <div class="d-flex justify-content-center gap-3">
-      <a href="<?= APP_URL ?>/hospital/login.php" class="btn btn-primary btn-lg">Hospital Admin Access</a>
-      <a href="<?= APP_URL ?>/#how-it-works" class="btn btn-secondary btn-lg">How It Works</a>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+      <a href="<?= APP_URL ?>/hospital/register.php" class="btn btn-primary btn-lg">
+        <i class="bi bi-building-add"></i> Register Your Hospital
+      </a>
+      <a href="<?= APP_URL ?>/hospital/login.php" class="btn btn-secondary btn-lg">
+        <i class="bi bi-box-arrow-in-right"></i> Hospital Admin Login
+      </a>
     </div>
   </div>
 </section>

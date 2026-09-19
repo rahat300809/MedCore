@@ -125,8 +125,15 @@ $csrf = generateCsrfToken();
       </button>
     </form>
 
-    <div style="text-align:center;margin-top:var(--space-6);font-size:13px;color:var(--mc-text-muted);">
+    <div style="text-align:center;margin-top:var(--space-5);font-size:13px;color:var(--mc-text-muted);">
       <a href="<?= APP_URL ?>/role-selection.php">← Back to Portal Selection</a>
+    </div>
+
+    <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--mc-border); text-align:center; font-size:13px;">
+      <span style="color:var(--mc-text-muted);">New hospital?</span>
+      <a href="<?= APP_URL ?>/hospital/register.php" style="color: #0D9488; font-weight: 700; text-decoration: none; margin-left: 5px;">
+        <i class="bi bi-building-add"></i> Apply to Join MedCore Network
+      </a>
     </div>
 
     <?php if (APP_ENV === 'development'): ?>

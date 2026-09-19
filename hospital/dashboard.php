@@ -141,8 +141,11 @@ $csrf = generateCsrfToken();
       <a href="<?= APP_URL ?>/hospital/consultations.php">
         <i class="bi bi-stethoscope"></i> Consultations
       </a>
-      <a href="<?= APP_URL ?>/hospital/audit-log.php">
-        <i class="bi bi-clock-history"></i> Audit Log
+      <a href="<?= APP_URL ?>/hospital/diagnostics.php">
+        <i class="bi bi-file-earmark-medical-fill"></i> Diagnostics & Imaging
+      </a>
+      <a href="<?= APP_URL ?>/hospital/affiliations.php">
+        <i class="bi bi-clock-history"></i> Affiliation History
       </a>
 
       <div class="sidebar-section-title">Account</div>

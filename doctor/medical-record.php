@@ -9,7 +9,7 @@ requireDoctorHospitalContext();
 $db         = getDB();
 $doctorId   = (int)$_SESSION['doctor_id'];
 $hospitalId = (int)$_SESSION['hospital_id'];
-$patientId  = (int)($_GET['patient_id'] ?? 0);
+$patientId  = (int)($_GET['patient_id'] ?? $_GET['patient'] ?? 0);
 
 if (!$patientId) {
     header('Location: ' . APP_URL . '/doctor/patient-search.php');
@@ -584,7 +584,13 @@ foreach ($allergies as $alg) {
                           <?php endif; ?>
                         </td>
                         <td><?= $med['started_at'] ? date('d M Y', strtotime($med['started_at'])) : '—' ?></td>
-                        <td><?= htmlspecialchars($med['doctor_name'] ? 'Dr. ' . $med['doctor_name'] : '—') ?></td>
+                        <td>
+                          <?php if ($med['prescribed_by'] == $doctorId): ?>
+                            <strong>Dr. <?= htmlspecialchars($med['doctor_name']) ?></strong> <span class="badge badge-success" style="font-size: 9px;">You</span>
+                          <?php else: ?>
+                            <span class="text-muted" style="font-size: 11px;"><i class="bi bi-shield-lock"></i> Attending Physician</span>
+                          <?php endif; ?>
+                        </td>
                       </tr>
                     <?php endforeach; ?>
                   </tbody>
@@ -629,7 +635,15 @@ foreach ($allergies as $alg) {
                       <tr>
                         <td><strong><?= htmlspecialchars($rx['prescription_uid']) ?></strong></td>
                         <td><?= date('d M Y, h:i A', strtotime($rx['created_at'])) ?></td>
-                        <td>Dr. <?= htmlspecialchars($rx['doctor_name']) ?> <small class="text-muted">(<?= htmlspecialchars($rx['specialization'] ?? '') ?>)</small></td>
+                        <td>
+                          <?php if ($rx['doctor_id'] == $doctorId): ?>
+                            <strong>Dr. <?= htmlspecialchars($rx['doctor_name']) ?></strong> <span class="badge badge-success" style="font-size: 10px;">You</span>
+                          <?php else: ?>
+                            <span class="badge" style="background: #F1F5F9; color: #475569; font-size: 11px;">
+                              <i class="bi bi-shield-lock"></i> Licensed Physician (Confidential)
+                            </span>
+                          <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($rx['hospital_name']) ?></td>
                         <td><?= htmlspecialchars($rx['diagnosis'] ?? 'Clinical Evaluation') ?></td>
                         <td><span class="badge badge-info"><?= $rx['medicine_count'] ?> items</span></td>

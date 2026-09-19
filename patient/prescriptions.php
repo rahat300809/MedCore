@@ -325,9 +325,14 @@ if ($targetRx) {
                       <td><span class="badge badge-info"><?= $rx['medicine_count'] ?> items</span></td>
                       <td><span class="badge badge-success"><?= htmlspecialchars($rx['status']) ?></span></td>
                       <td>
-                        <a href="<?= APP_URL ?>/patient/prescriptions.php?rx=<?= urlencode($rx['prescription_uid']) ?>" class="btn btn-primary btn-sm">
-                          <i class="bi bi-eye"></i> View &amp; Print
-                        </a>
+                        <div style="display: flex; gap: 6px;">
+                          <a href="<?= APP_URL ?>/patient/prescription-report.php?id=<?= $rx['id'] ?>" target="_blank" class="btn btn-primary btn-sm" style="background: #0F766E; border-color: #0F766E; font-weight: 700; white-space: nowrap;">
+                            <i class="bi bi-file-earmark-medical-fill"></i> Full Report
+                          </a>
+                          <a href="<?= APP_URL ?>/patient/prescriptions.php?rx=<?= urlencode($rx['prescription_uid']) ?>" class="btn btn-outline btn-sm" style="white-space: nowrap;">
+                            <i class="bi bi-eye"></i> Quick View
+                          </a>
+                        </div>
                       </td>
                     </tr>
                   <?php endforeach; ?>

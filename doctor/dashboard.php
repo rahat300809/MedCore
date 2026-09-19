@@ -10,11 +10,43 @@ $db = getDB();
 $doctorId   = (int)$_SESSION['doctor_id'];
 $hospitalId = (int)$_SESSION['hospital_id'];
 
+// Handle quick hospital switch
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['switch_hospital_id'])) {
+    validateCsrf();
+    $targetHospId = (int)$_POST['switch_hospital_id'];
+
+    $stmtSwitch = $db->prepare("
+        SELECT dh.*, h.name AS hospital_name
+        FROM doctor_hospitals dh
+        JOIN hospitals h ON dh.hospital_id = h.id
+        WHERE dh.doctor_id = ? AND dh.hospital_id = ? AND dh.status = 'APPROVED'
+    ");
+    $stmtSwitch->execute([$doctorId, $targetHospId]);
+    $switched = $stmtSwitch->fetch();
+
+    if ($switched) {
+        $_SESSION['hospital_id']   = $switched['hospital_id'];
+        $_SESSION['hospital_name'] = $switched['hospital_name'];
+        $_SESSION['selected_hospital_id']   = $switched['hospital_id'];
+        $_SESSION['selected_hospital_name'] = $switched['hospital_name'];
+
+        AuditService::log('DOCTOR_SWITCH_HOSPITAL', [
+            'user_id'    => $_SESSION['user_id'],
+            'doctor_id'  => $doctorId,
+            'hospital_id'=> $targetHospId,
+            'metadata'   => ['switched_to' => $switched['hospital_name']]
+        ]);
+
+        header('Location: ' . APP_URL . '/doctor/dashboard.php?switched=1');
+        exit;
+    }
+}
+
 // Doctor profile
 $stmt = $db->prepare("
     SELECT d.*, u.email, u.phone, u.last_login_at,
            h.name AS hospital_name, h.type AS hospital_type, h.city AS hospital_city,
-           dh.designation AS affiliation_designation, dh.department_id,
+           dh.designation AS affiliation_designation, dh.department_id, dh.employment_type,
            dept.name AS department_name
     FROM doctors d
     JOIN users u ON u.id = d.user_id
@@ -25,6 +57,19 @@ $stmt = $db->prepare("
 ");
 $stmt->execute([$hospitalId, $hospitalId, $doctorId]);
 $doctor = $stmt->fetch();
+
+// Fetch all active hospital affiliations for this doctor
+$stmtAllAffils = $db->prepare("
+    SELECT dh.*, h.name AS hospital_name, h.hospital_uid, h.type AS hospital_type, h.city AS hospital_city,
+           dept.name AS department_name
+    FROM doctor_hospitals dh
+    JOIN hospitals h ON dh.hospital_id = h.id
+    LEFT JOIN departments dept ON dh.department_id = dept.id
+    WHERE dh.doctor_id = ? AND dh.status = 'APPROVED'
+    ORDER BY h.name ASC
+");
+$stmtAllAffils->execute([$doctorId]);
+$affiliatedHospitals = $stmtAllAffils->fetchAll();
 
 // Stats
 $stmt = $db->prepare("
@@ -91,6 +136,8 @@ AuditService::log('DASHBOARD_VIEW', [
     'doctor_id'  => $doctorId,
     'hospital_id'=> $hospitalId,
 ]);
+
+$csrf = generateCsrfToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,6 +149,40 @@ AuditService::log('DASHBOARD_VIEW', [
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
+  <style>
+    .hospital-switch-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--mc-blue-light);
+      color: var(--mc-blue);
+      border: 1px solid rgba(37,99,235,0.2);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .hospital-switch-btn:hover {
+      background: var(--mc-blue);
+      color: white;
+    }
+    .affil-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--mc-border);
+      background: var(--mc-white);
+      transition: var(--transition);
+    }
+    .affil-card.active {
+      border-color: var(--mc-blue);
+      background: var(--mc-blue-light);
+    }
+  </style>
 </head>
 <body>
 <div class="portal-layout">
@@ -118,10 +199,20 @@ AuditService::log('DASHBOARD_VIEW', [
 
     <!-- Hospital context badge -->
     <div style="padding:var(--space-3) var(--space-5);background:var(--mc-blue-50);border-bottom:1px solid var(--mc-border);">
-      <div style="font-size:10px;color:var(--mc-text-muted);text-transform:uppercase;letter-spacing:1px;">Active Hospital</div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:10px;color:var(--mc-text-muted);text-transform:uppercase;letter-spacing:1px;">Active Hospital</span>
+        <?php if (count($affiliatedHospitals) > 1): ?>
+          <a href="javascript:void(0)" onclick="openHospitalModal()" style="font-size:11px; font-weight:700; color:var(--mc-blue); text-decoration:none;">
+            Switch (<?= count($affiliatedHospitals) ?>)
+          </a>
+        <?php endif; ?>
+      </div>
       <div style="font-size:13px;font-weight:700;color:var(--mc-blue);margin-top:2px;">
         <i class="bi bi-building-fill-check"></i>
         <?= htmlspecialchars($doctor['hospital_name']) ?>
+      </div>
+      <div style="font-size:11px; color:var(--mc-text-muted); margin-top:1px;">
+        <?= htmlspecialchars($doctor['affiliation_designation'] ?? 'Consultant') ?> · <?= htmlspecialchars($doctor['employment_type'] ?? 'FULL_TIME') ?>
       </div>
     </div>
 
@@ -140,19 +231,19 @@ AuditService::log('DASHBOARD_VIEW', [
       <a href="<?= APP_URL ?>/doctor/prescriptions.php">
         <i class="bi bi-file-earmark-medical-fill"></i> My Prescriptions
       </a>
+      <a href="<?= APP_URL ?>/doctor/reports.php">
+        <i class="bi bi-graph-up-arrow"></i> Practice Analytics &amp; Reports
+      </a>
 
-      <div class="sidebar-section-title">Access</div>
-      <a href="<?= APP_URL ?>/doctor/patient-search.php">
-        <i class="bi bi-person-check-fill"></i> Access Requests
-        <?php if ($stats['pending_requests'] > 0): ?>
-          <span class="nav-badge"><?= $stats['pending_requests'] ?></span>
-        <?php endif; ?>
+      <div class="sidebar-section-title">Access & Multi-Hospital</div>
+      <a href="<?= APP_URL ?>/doctor/request-affiliation.php">
+        <i class="bi bi-building-add"></i> Request Hospital Affiliation
+      </a>
+      <a href="javascript:void(0)" onclick="openHospitalModal()">
+        <i class="bi bi-hospital"></i> Switch Hospital (<?= count($affiliatedHospitals) ?>)
       </a>
 
       <div class="sidebar-section-title">Account</div>
-      <a href="<?= APP_URL ?>/doctor/settings.php">
-        <i class="bi bi-gear-fill"></i> Settings
-      </a>
       <a href="<?= APP_URL ?>/app/helpers/logout.php" data-confirm="End your clinical session?">
         <i class="bi bi-box-arrow-right"></i> End Session
       </a>
@@ -161,7 +252,7 @@ AuditService::log('DASHBOARD_VIEW', [
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="sidebar-avatar" style="background:var(--mc-teal);">
-          <?= strtoupper(substr($doctor['full_name'], 3, 1)) ?>
+          <?= strtoupper(substr($doctor['full_name'], 4, 1) ?: substr($doctor['full_name'], 0, 1)) ?>
         </div>
         <div class="sidebar-user-info">
           <div class="name"><?= htmlspecialchars($doctor['full_name']) ?></div>
@@ -187,10 +278,18 @@ AuditService::log('DASHBOARD_VIEW', [
         </h2>
         <div style="font-size:12px;color:var(--mc-text-muted);">
           <?= htmlspecialchars($doctor['department_name'] ?? $doctor['specialization'] ?? '') ?>
-          · <?= htmlspecialchars($doctor['hospital_name']) ?>
+          · <strong style="color:var(--mc-blue);"><?= htmlspecialchars($doctor['hospital_name']) ?></strong>
           · <?= date('D, d M Y') ?>
         </div>
       </div>
+
+      <!-- Multi-hospital switcher button in topbar -->
+      <?php if (count($affiliatedHospitals) > 1): ?>
+        <button type="button" class="hospital-switch-btn" onclick="openHospitalModal()">
+          <i class="bi bi-arrow-left-right"></i>
+          <span>Switch Hospital (<?= count($affiliatedHospitals) ?>)</span>
+        </button>
+      <?php endif; ?>
 
       <!-- Active session indicator -->
       <?php if (!empty($activeSessions)): ?>
@@ -206,6 +305,12 @@ AuditService::log('DASHBOARD_VIEW', [
     </header>
 
     <div class="portal-content">
+
+      <?php if (isset($_GET['switched'])): ?>
+      <div class="alert alert-success mb-4" data-auto-dismiss="5000">
+        <i class="bi bi-check-circle-fill"></i> Switched practice location to <strong><?= htmlspecialchars($doctor['hospital_name']) ?></strong>.
+      </div>
+      <?php endif; ?>
 
       <!-- ACTIVE ACCESS SESSIONS BANNER -->
       <?php if (!empty($activeSessions)): ?>
@@ -240,7 +345,7 @@ AuditService::log('DASHBOARD_VIEW', [
         <div class="stat-card">
           <div class="stat-icon stat-icon-teal"><i class="bi bi-stethoscope"></i></div>
           <div class="stat-value"><?= $stats['total_consultations'] ?></div>
-          <div class="stat-label">Total Consultations</div>
+          <div class="stat-label">Total at This Hospital</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon stat-icon-green"><i class="bi bi-file-earmark-medical-fill"></i></div>
@@ -248,9 +353,58 @@ AuditService::log('DASHBOARD_VIEW', [
           <div class="stat-label">Active Prescriptions</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon stat-icon-amber"><i class="bi bi-clock-history"></i></div>
-          <div class="stat-value"><?= $stats['active_sessions'] ?></div>
-          <div class="stat-label">Active Access Sessions</div>
+          <div class="stat-icon stat-icon-amber"><i class="bi bi-building-fill-check"></i></div>
+          <div class="stat-value"><?= count($affiliatedHospitals) ?></div>
+          <div class="stat-label">Affiliated Hospitals</div>
+        </div>
+      </div>
+
+      <!-- MULTI-HOSPITAL AFFILIATIONS SUMMARY BAR -->
+      <div class="card mb-6" style="padding: 16px 20px; border: 1px solid var(--mc-border); background: linear-gradient(to right, #F8FAFC, #FFFFFF);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">
+              <i class="bi bi-diagram-3-fill text-blue"></i> My Hospital Practice Network
+            </h3>
+            <div style="font-size: 12px; color: var(--mc-text-muted);">
+              You are authorized to practice across these verified medical centers
+            </div>
+          </div>
+          <span class="badge" style="background: #EFF6FF; color: #1E40AF; font-weight: 700;">
+            <?= count($affiliatedHospitals) ?> Active Hospital<?= count($affiliatedHospitals) > 1 ? 's' : '' ?>
+          </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+          <?php foreach ($affiliatedHospitals as $aff): ?>
+          <?php $isCurrent = ($aff['hospital_id'] == $hospitalId); ?>
+          <div class="affil-card <?= $isCurrent ? 'active' : '' ?>">
+            <div>
+              <div style="font-weight: 700; font-size: 13px; color: var(--mc-text);">
+                <?= htmlspecialchars($aff['hospital_name']) ?>
+                <?php if ($isCurrent): ?>
+                  <span class="badge badge-verified" style="font-size: 10px; margin-left: 4px;">CURRENT</span>
+                <?php endif; ?>
+              </div>
+              <div style="font-size: 11px; color: var(--mc-text-muted);">
+                <?= htmlspecialchars($aff['department_name'] ?? 'General') ?>
+                · <?= htmlspecialchars($aff['employment_type']) ?>
+              </div>
+            </div>
+
+            <?php if (!$isCurrent): ?>
+              <form method="POST" style="margin: 0;">
+                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                <input type="hidden" name="switch_hospital_id" value="<?= $aff['hospital_id'] ?>">
+                <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 4px 10px;">
+                  Switch Here
+                </button>
+              </form>
+            <?php else: ?>
+              <span style="font-size: 12px; color: var(--mc-blue); font-weight: 700;"><i class="bi bi-check2-circle"></i> In Session</span>
+            <?php endif; ?>
+          </div>
+          <?php endforeach; ?>
         </div>
       </div>
 
@@ -357,6 +511,51 @@ AuditService::log('DASHBOARD_VIEW', [
   </main>
 </div>
 
+<!-- HOSPITAL SWITCH MODAL -->
+<div id="hospital-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:white; border-radius:var(--radius-xl); max-width:480px; width:100%; padding:24px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 style="font-size:1.2rem; font-weight:800; color:#0F172A; margin:0;">
+        <i class="bi bi-hospital text-blue"></i> Switch Clinical Hospital
+      </h3>
+      <button type="button" onclick="closeHospitalModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--mc-text-muted);">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <p style="font-size:13px; color:var(--mc-text-secondary); margin:0 0 16px 0;">
+      Select the hospital location where you are conducting patient consultations right now:
+    </p>
+
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <?php foreach ($affiliatedHospitals as $aff): ?>
+      <?php $isCurrent = ($aff['hospital_id'] == $hospitalId); ?>
+      <form method="POST" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+        <input type="hidden" name="switch_hospital_id" value="<?= $aff['hospital_id'] ?>">
+        <button type="submit" class="affil-card w-100 <?= $isCurrent ? 'active' : '' ?>" style="text-align:left; cursor:pointer; width:100%; border:1.5px solid <?= $isCurrent ? 'var(--mc-blue)' : 'var(--mc-border)' ?>;">
+          <div>
+            <div style="font-weight:700; font-size:14px; color:var(--mc-text);">
+              <?= htmlspecialchars($aff['hospital_name']) ?>
+            </div>
+            <div style="font-size:12px; color:var(--mc-text-muted);">
+              <?= htmlspecialchars($aff['department_name'] ?? 'General') ?>
+              · <?= htmlspecialchars($aff['employment_type']) ?>
+              · <?= htmlspecialchars($aff['hospital_city'] ?? '') ?>
+            </div>
+          </div>
+          <?php if ($isCurrent): ?>
+            <span class="badge badge-verified" style="font-size:11px;"><i class="bi bi-check-lg"></i> Active</span>
+          <?php else: ?>
+            <span class="btn btn-secondary btn-sm" style="font-size:11px;">Switch →</span>
+          <?php endif; ?>
+        </button>
+      </form>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</div>
+
 <script src="<?= APP_URL ?>/assets/js/medcore.js"></script>
 <script>
 // Sidebar toggle
@@ -366,6 +565,14 @@ document.getElementById('hamburger-btn')?.addEventListener('click', function() {
   this.setAttribute('aria-expanded', !expanded);
   sidebar.classList.toggle('open');
 });
+
+function openHospitalModal() {
+  document.getElementById('hospital-modal').style.display = 'flex';
+}
+
+function closeHospitalModal() {
+  document.getElementById('hospital-modal').style.display = 'none';
+}
 
 // Access session countdown timers
 <?php foreach ($activeSessions as $s): ?>

@@ -8,7 +8,7 @@ initSession();
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>For Doctors — MedCore</title>
+  <title>For Doctors — MedCore Multi-Hospital Network</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
@@ -65,7 +65,7 @@ initSession();
     </ul>
     <div class="navbar-actions">
       <a href="<?= APP_URL ?>/role-selection.php" class="btn btn-secondary btn-sm">Log In</a>
-      <a href="<?= APP_URL ?>/doctor/verify.php" class="btn btn-primary btn-sm">Doctor Sign Up</a>
+      <a href="<?= APP_URL ?>/doctor/register.php" class="btn btn-primary btn-sm">Doctor Sign Up</a>
     </div>
   </div>
 </nav>
@@ -74,18 +74,62 @@ initSession();
 <section class="page-hero">
   <div class="container">
     <span class="security-badge" style="background: #DBEAFE; color: #1E40AF; border-color: #BFDBFE;">
-      <i class="bi bi-patch-check-fill"></i> BMDC-Verified Clinical Network
+      <i class="bi bi-patch-check-fill"></i> Central BMDC Verification & Multi-Hospital Ecosystem
     </span>
     <h1 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin: 16px 0 12px; color: var(--mc-text);">
-      Instant Patient History.<br>
-      <span style="color: var(--mc-blue);">Streamlined Clinical Prescriptions.</span>
+      One Doctor Verification.<br>
+      <span style="color: var(--mc-blue);">Practice Across Multiple Hospitals.</span>
     </h1>
     <p style="max-width: 680px; margin: 0 auto 32px; font-size: 1.1rem; color: var(--mc-text-secondary);">
-      Practice across multiple affiliated hospitals with a single login. Access complete patient timelines with consent, review past medications, and generate digital tamper-proof prescriptions in seconds.
+      Register once and get verified by the MedCore Central Admin board. Once approved, practice seamlessly across multiple hospitals with unified patient health histories, adverse interaction alerts, and instant digital prescriptions.
     </p>
     <div class="d-flex justify-content-center gap-3">
-      <a href="<?= APP_URL ?>/doctor/verify.php" class="btn btn-primary btn-lg">Doctor Verification Flow</a>
-      <a href="<?= APP_URL ?>/role-selection.php" class="btn btn-secondary btn-lg">Doctor Portal Login</a>
+      <a href="<?= APP_URL ?>/doctor/register.php" class="btn btn-primary btn-lg">Apply for Doctor Verification</a>
+      <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="btn btn-secondary btn-lg">Doctor Portal Login</a>
+    </div>
+  </div>
+</section>
+
+<!-- HOW THE ECOSYSTEM WORKS -->
+<section style="padding: 40px 0; background: var(--mc-white); border-bottom: 1px solid var(--mc-border);">
+  <div class="container">
+    <div style="text-align: center; max-width: 640px; margin: 0 auto 32px;">
+      <p class="eyebrow" style="color: var(--mc-blue);">HOSPITALIZATION WORKFLOW</p>
+      <h2 style="font-size: 1.8rem; font-weight: 800;">How Multi-Hospital Practice Works</h2>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+      <div style="background: var(--mc-bg); border-radius: var(--radius-lg); padding: 24px; border: 1px solid var(--mc-border);">
+        <div style="font-size: 1.6rem; font-weight: 800; color: var(--mc-blue); margin-bottom: 8px;">01</div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">Doctor Self-Registration</h3>
+        <p style="font-size: 13px; color: var(--mc-text-secondary); margin: 0;">
+          Submit your BMDC registration ID, qualifications, and experience through our verified registration portal.
+        </p>
+      </div>
+
+      <div style="background: var(--mc-bg); border-radius: var(--radius-lg); padding: 24px; border: 1px solid var(--mc-border);">
+        <div style="font-size: 1.6rem; font-weight: 800; color: #166534; margin-bottom: 8px;">02</div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">Main Admin Approval</h3>
+        <p style="font-size: 13px; color: var(--mc-text-secondary); margin: 0;">
+          The Central System Admin reviews and verifies your medical credentials, granting you full clinical authorization.
+        </p>
+      </div>
+
+      <div style="background: var(--mc-bg); border-radius: var(--radius-lg); padding: 24px; border: 1px solid var(--mc-border);">
+        <div style="font-size: 1.6rem; font-weight: 800; color: #7C3AED; margin-bottom: 8px;">03</div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">Hospitals Affiliate You</h3>
+        <p style="font-size: 13px; color: var(--mc-text-secondary); margin: 0;">
+          Multiple hospitals (ABC Hospital, XYZ Medical, etc.) add you to their department rosters (Full-time, Visiting, etc.).
+        </p>
+      </div>
+
+      <div style="background: var(--mc-bg); border-radius: var(--radius-lg); padding: 24px; border: 1px solid var(--mc-border);">
+        <div style="font-size: 1.6rem; font-weight: 800; color: #0D9488; margin-bottom: 8px;">04</div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">Seamless Practice</h3>
+        <p style="font-size: 13px; color: var(--mc-text-secondary); margin: 0;">
+          Log in, switch practice locations with 1 click, consult patients with consent, and issue branded prescriptions.
+        </p>
+      </div>
     </div>
   </div>
 </section>
@@ -98,14 +142,14 @@ initSession();
         <div class="feature-card">
           <div class="feature-icon"><i class="bi bi-search"></i></div>
           <h3 style="font-size: 1.25rem; font-weight: 700;">Instant Patient Lookup</h3>
-          <p class="text-muted">Search by MedCore Patient UID (PT-000001) or last 4 digits of National ID. Send a 1-click access request directly to patient's mobile device.</p>
+          <p class="text-muted">Search by MedCore Patient UID (PT-000001) or National ID. Send a 1-click access request directly to patient's mobile device.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="feature-card">
           <div class="feature-icon"><i class="bi bi-hospital"></i></div>
           <h3 style="font-size: 1.25rem; font-weight: 700;">Multi-Hospital Context</h3>
-          <p class="text-muted">Consult at Square Hospital in the morning and Evercare Hospital in the evening. MedCore automatically applies institutional letterheads and verification rules.</p>
+          <p class="text-muted">Consult at ABC Hospital in the morning and XYZ Medical in the evening. MedCore automatically applies institutional letterheads and verification rules.</p>
         </div>
       </div>
       <div class="col-md-4">

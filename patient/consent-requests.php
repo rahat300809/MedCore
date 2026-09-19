@@ -9,92 +9,125 @@ requireAuth('PATIENT');
 $db        = getDB();
 $patientId = (int)$_SESSION['patient_id'];
 
-// Handle approve / deny
+// Handle approve / deny / revoke
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validateCsrf();
 
     $requestId = (int)($_POST['request_id'] ?? 0);
+    $sessionId = (int)($_POST['session_id'] ?? 0);
     $action    = $_POST['action'] ?? '';
 
-    // Verify the request belongs to this patient
-    $stmt = $db->prepare("
-        SELECT ar.*, d.full_name AS doctor_name, h.name AS hospital_name
-        FROM access_requests ar
-        JOIN doctors d ON ar.doctor_id = d.id
-        JOIN hospitals h ON ar.hospital_id = h.id
-        WHERE ar.id = ? AND ar.patient_id = ? AND ar.status = 'PENDING'
-        LIMIT 1
-    ");
-    $stmt->execute([$requestId, $patientId]);
-    $request = $stmt->fetch();
+    // 1. If revoking an active session
+    if ($action === 'revoke' || ($sessionId > 0 && $action === 'deny')) {
+        $stmt = $db->prepare("
+            SELECT s.*, d.full_name AS doctor_name, h.name AS hospital_name
+            FROM access_sessions s
+            JOIN doctors d ON s.doctor_id = d.id
+            JOIN hospitals h ON s.hospital_id = h.id
+            WHERE s.id = ? AND s.patient_id = ? AND s.status = 'ACTIVE'
+            LIMIT 1
+        ");
+        $stmt->execute([$sessionId, $patientId]);
+        $session = $stmt->fetch();
 
-    if ($request) {
-        if ($action === 'approve') {
-            $db->beginTransaction();
-            try {
-                // Update access request status
-                $db->prepare("UPDATE access_requests SET status = 'APPROVED', approved_at = NOW() WHERE id = ?")
+        if ($session) {
+            $db->prepare("UPDATE access_sessions SET status = 'REVOKED', revoked_at = NOW() WHERE id = ?")
+               ->execute([$sessionId]);
+
+            AuditService::log('ACCESS_REVOKED_BY_PATIENT', [
+                'user_id'    => $_SESSION['user_id'],
+                'patient_id' => $patientId,
+                'doctor_id'  => $session['doctor_id'],
+                'hospital_id'=> $session['hospital_id'],
+                'metadata'   => ['session_id' => $sessionId, 'doctor_name' => $session['doctor_name']],
+            ]);
+
+            $_SESSION['flash'] = ['type' => 'info', 'msg' => 'Clinical access for Dr. ' . $session['doctor_name'] . ' has been immediately revoked.'];
+        }
+    } else {
+        // 2. Handling pending request approval or denial
+        $stmt = $db->prepare("
+            SELECT ar.*, d.full_name AS doctor_name, h.name AS hospital_name
+            FROM access_requests ar
+            JOIN doctors d ON ar.doctor_id = d.id
+            JOIN hospitals h ON ar.hospital_id = h.id
+            WHERE ar.id = ? AND ar.patient_id = ? AND ar.status = 'PENDING'
+            LIMIT 1
+        ");
+        $stmt->execute([$requestId, $patientId]);
+        $request = $stmt->fetch();
+
+        if ($request) {
+            if ($action === 'approve') {
+                $db->beginTransaction();
+                try {
+                    // Update access request status
+                    $db->prepare("UPDATE access_requests SET status = 'APPROVED', approved_at = NOW() WHERE id = ?")
+                       ->execute([$requestId]);
+
+                    // Create access session (30 minutes)
+                    $sessionToken = bin2hex(random_bytes(32));
+                    $tokenHash = hash('sha256', $sessionToken);
+                    $db->prepare("
+                        INSERT INTO access_sessions
+                            (access_request_id, doctor_id, patient_id, hospital_id, token_hash, status, expires_at)
+                        VALUES (?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+                    ")->execute([$requestId, $request['doctor_id'], $patientId, $request['hospital_id'], $tokenHash]);
+
+                    // Notify doctor
+                    $db->prepare("
+                        INSERT INTO notifications (user_id, type, title, message, reference_type, reference_id, action_url)
+                        SELECT u.id, 'ACCESS_GRANTED',
+                               'Access Granted by Patient',
+                               'Your request to access a patient record has been approved. 30-minute session started.',
+                               'access_session', :req_id, :action_url
+                        FROM doctors d JOIN users u ON u.id = d.user_id
+                        WHERE d.id = :did
+                    ")->execute([
+                        ':req_id'     => $requestId,
+                        ':action_url' => APP_URL . '/doctor/medical-record.php?patient_id=' . $patientId,
+                        ':did'        => $request['doctor_id'],
+                    ]);
+
+                    $db->commit();
+
+                    AuditService::log(AuditService::ACCESS_GRANTED, [
+                        'user_id'    => $_SESSION['user_id'],
+                        'patient_id' => $patientId,
+                        'doctor_id'  => $request['doctor_id'],
+                        'hospital_id'=> $request['hospital_id'],
+                        'metadata'   => ['request_id' => $requestId, 'doctor_name' => $request['doctor_name']],
+                    ]);
+
+                    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Access granted to Dr. ' . $request['doctor_name'] . ' for 30 minutes. The doctor can now view your record.'];
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Failed to grant access: ' . $e->getMessage()];
+                }
+
+            } elseif ($action === 'deny') {
+                $db->prepare("UPDATE access_requests SET status = 'DENIED' WHERE id = ?")
                    ->execute([$requestId]);
 
-                // Create access session (30 minutes)
-                $sessionToken = bin2hex(random_bytes(32));
-                $tokenHash = hash('sha256', $sessionToken);
-                $db->prepare("
-                    INSERT INTO access_sessions
-                        (access_request_id, doctor_id, patient_id, hospital_id, token_hash, status, expires_at)
-                    VALUES (?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
-                ")->execute([$requestId, $request['doctor_id'], $patientId, $request['hospital_id'], $tokenHash]);
-
-                // Notify doctor
-                $db->prepare("
-                    INSERT INTO notifications (user_id, type, title, message, reference_type, reference_id, action_url)
-                    SELECT u.id, 'ACCESS_GRANTED',
-                           'Access Granted by Patient',
-                           'Your request to access a patient record has been approved. 30-minute session started.',
-                           'access_session', :req_id, :action_url
-                    FROM doctors d JOIN users u ON u.id = d.user_id
-                    WHERE d.id = :did
-                ")->execute([
-                    ':req_id'     => $requestId,
-                    ':action_url' => APP_URL . '/doctor/medical-record.php?patient_id=' . $patientId,
-                    ':did'        => $request['doctor_id'],
-                ]);
-
-                $db->commit();
-
-                AuditService::log(AuditService::ACCESS_GRANTED, [
+                AuditService::log(AuditService::ACCESS_DENIED, [
                     'user_id'    => $_SESSION['user_id'],
                     'patient_id' => $patientId,
                     'doctor_id'  => $request['doctor_id'],
                     'hospital_id'=> $request['hospital_id'],
-                    'metadata'   => ['request_id' => $requestId, 'doctor_name' => $request['doctor_name']],
+                    'metadata'   => ['request_id' => $requestId],
                 ]);
 
-                $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Access granted to Dr. ' . $request['doctor_name'] . ' for 30 minutes.'];
-            } catch (Exception $e) {
-                $db->rollBack();
-                $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Failed to grant access: ' . $e->getMessage()];
+                $_SESSION['flash'] = ['type' => 'info', 'msg' => 'Access request from Dr. ' . $request['doctor_name'] . ' has been declined.'];
             }
-
-        } elseif ($action === 'deny') {
-            $db->prepare("UPDATE access_requests SET status = 'DENIED' WHERE id = ?")
-               ->execute([$requestId]);
-
-            AuditService::log(AuditService::ACCESS_DENIED, [
-                'user_id'    => $_SESSION['user_id'],
-                'patient_id' => $patientId,
-                'doctor_id'  => $request['doctor_id'],
-                'hospital_id'=> $request['hospital_id'],
-                'metadata'   => ['request_id' => $requestId],
-            ]);
-
-            $_SESSION['flash'] = ['type' => 'info', 'msg' => 'Access request from Dr. ' . $request['doctor_name'] . ' has been denied.'];
         }
     }
 
     header('Location: ' . APP_URL . '/patient/consent-requests.php');
     exit;
 }
+
+// Auto-expire stale requests
+$db->prepare("UPDATE access_requests SET status = 'EXPIRED' WHERE status = 'PENDING' AND expires_at IS NOT NULL AND expires_at < NOW()")->execute();
 
 // Fetch pending requests
 $stmt = $db->prepare("
@@ -103,7 +136,7 @@ $stmt = $db->prepare("
     FROM access_requests ar
     JOIN doctors d ON ar.doctor_id = d.id
     JOIN hospitals h ON ar.hospital_id = h.id
-    WHERE ar.patient_id = ? AND ar.status = 'PENDING'
+    WHERE ar.patient_id = ? AND ar.status = 'PENDING' AND (ar.expires_at IS NULL OR ar.expires_at > NOW())
     ORDER BY ar.requested_at DESC
 ");
 $stmt->execute([$patientId]);
@@ -225,10 +258,10 @@ $csrf = generateCsrfToken();
           </div>
           <form method="POST" style="display:inline;">
             <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-            <input type="hidden" name="action" value="deny">
+            <input type="hidden" name="action" value="revoke">
             <input type="hidden" name="session_id" value="<?= $s['id'] ?>">
-            <button type="submit" class="btn btn-secondary btn-sm" data-confirm="Revoke access for Dr. <?= htmlspecialchars($s['doctor_name']) ?>?">
-              <i class="bi bi-x-circle-fill"></i> Revoke
+            <button type="submit" class="btn btn-secondary btn-sm" style="color:var(--mc-red);border-color:#FCA5A5;background:#FEF2F2;" data-confirm="Revoke access for Dr. <?= htmlspecialchars($s['doctor_name']) ?>?">
+              <i class="bi bi-x-circle-fill"></i> Revoke Access
             </button>
           </form>
         </div>
@@ -257,24 +290,26 @@ $csrf = generateCsrfToken();
                 <i class="bi bi-stethoscope"></i>
               </div>
               <div>
-                <div style="font-weight:700;font-size:14px;">Dr. <?= htmlspecialchars($req['doctor_name']) ?></div>
+                <div style="font-weight:700;font-size:15px;color:var(--mc-navy);">Dr. <?= htmlspecialchars($req['doctor_name']) ?></div>
                 <div style="font-size:12px;color:var(--mc-text-muted);">
                   <?= htmlspecialchars($req['specialization'] ?? 'Physician') ?>
-                  · Reg: <code><?= htmlspecialchars($req['medical_registration_id']) ?></code>
+                  · BMDC Reg: <code><?= htmlspecialchars($req['medical_registration_id']) ?></code>
                 </div>
-                <div style="font-size:12px;color:var(--mc-text-muted);">
+                <div style="font-size:12px;color:var(--mc-text-muted);margin-top:2px;">
                   <i class="bi bi-building-fill-check"></i>
-                  <?= htmlspecialchars($req['hospital_name']) ?> (<?= ucfirst(strtolower($req['hospital_type'])) ?>)
+                  <?= htmlspecialchars($req['hospital_name']) ?> (<?= ucfirst(strtolower($req['hospital_type'])) ?><?= $req['hospital_city'] ? ', ' . htmlspecialchars($req['hospital_city']) : '' ?>)
                 </div>
-                <?php if ($req['access_reason']): ?>
-                <div style="font-size:12px;background:var(--mc-bg);padding:4px 10px;border-radius:var(--radius-sm);margin-top:6px;">
+                <?php if (!empty($req['doctor_notes'])): ?>
+                <div style="font-size:12px;background:var(--mc-bg);padding:6px 12px;border-radius:var(--radius-sm);margin-top:6px;border-left:3px solid var(--mc-blue);">
                   <i class="bi bi-chat-quote-fill" style="color:var(--mc-blue);"></i>
-                  <em><?= htmlspecialchars($req['access_reason']) ?></em>
+                  <strong>Clinical Reason:</strong> <em><?= htmlspecialchars($req['doctor_notes']) ?></em>
                 </div>
                 <?php endif; ?>
                 <div style="font-size:11px;color:var(--mc-text-muted);margin-top:4px;">
                   Requested: <?= date('d M Y, h:i A', strtotime($req['requested_at'])) ?>
+                  <?php if ($req['expires_at']): ?>
                   · Expires: <?= date('h:i A', strtotime($req['expires_at'])) ?>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>
@@ -284,16 +319,16 @@ $csrf = generateCsrfToken();
                 <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
                 <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
                 <input type="hidden" name="action" value="approve">
-                <button type="submit" class="btn btn-success">
-                  <i class="bi bi-check-circle-fill"></i> Approve (30 min)
+                <button type="submit" class="btn btn-success" style="font-weight:700;padding:10px 18px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(16,185,129,0.3);">
+                  <i class="bi bi-check-circle-fill"></i> Accept (30 min)
                 </button>
               </form>
-              <form method="POST" style="display:inline;">
+              <form method="POST" style="display:inline;" onsubmit="return confirm('Decline access request from Dr. <?= htmlspecialchars(addslashes($req['doctor_name'])) ?>?');">
                 <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
                 <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
                 <input type="hidden" name="action" value="deny">
-                <button type="submit" class="btn btn-secondary">
-                  <i class="bi bi-x-circle-fill"></i> Deny
+                <button type="submit" class="btn btn-secondary" style="color:var(--mc-red);border-color:#FCA5A5;background:#FEF2F2;">
+                  <i class="bi bi-x-circle-fill"></i> Decline
                 </button>
               </form>
             </div>
