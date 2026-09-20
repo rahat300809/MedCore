@@ -86,6 +86,40 @@ function requireDoctorHospitalContext(): void {
 }
 
 /**
+ * Require laboratory to have active hospital affiliation context
+ * Called on every lab portal page
+ */
+function requireLabContext(): void {
+    requireAuth('LABORATORY');
+
+    if (!isset($_SESSION['lab_id']) || !isset($_SESSION['hospital_id'])) {
+        session_destroy();
+        header('Location: ' . APP_URL . '/lab/login.php');
+        exit;
+    }
+
+    $db = getDB();
+    $stmt = $db->prepare("
+        SELECT hl.id FROM hospital_laboratories hl
+        JOIN laboratories l ON hl.laboratory_id = l.id
+        JOIN hospitals h ON hl.hospital_id = h.id
+        WHERE hl.laboratory_id = ?
+          AND hl.hospital_id = ?
+          AND hl.status = 'APPROVED'
+          AND l.verification_status = 'VERIFIED'
+          AND h.verification_status = 'VERIFIED'
+        LIMIT 1
+    ");
+    $stmt->execute([$_SESSION['lab_id'], $_SESSION['hospital_id']]);
+
+    if (!$stmt->fetch()) {
+        session_destroy();
+        header('Location: ' . APP_URL . '/lab/login.php?error=affiliation_revoked');
+        exit;
+    }
+}
+
+/**
  * Require valid patient ownership
  * Patient can only access their own records
  */
@@ -168,6 +202,7 @@ function redirectToLogin(string $role): void {
         'DOCTOR'        => APP_URL . '/doctor/select-hospital.php',
         'HOSPITAL_ADMIN'=> APP_URL . '/hospital/login.php',
         'SYSTEM_ADMIN'  => APP_URL . '/admin/login.php',
+        'LABORATORY'    => APP_URL . '/lab/login.php',
     ];
     header('Location: ' . ($routes[$role] ?? APP_URL . '/role-selection.php'));
     exit;

@@ -13,6 +13,8 @@ if (isset($_SESSION['role'])) {
         header('Location: ' . APP_URL . '/doctor/dashboard.php'); exit;
     } elseif ($_SESSION['role'] === 'PATIENT') {
         header('Location: ' . APP_URL . '/patient/dashboard.php'); exit;
+    } elseif ($_SESSION['role'] === 'LABORATORY') {
+        header('Location: ' . APP_URL . '/lab/dashboard.php'); exit;
     }
 }
 ?>
@@ -551,11 +553,19 @@ if (isset($_SESSION['role'])) {
       </div>
     </div>
 
-    <div class="admin-access">
-      <span>System Administrator?</span>
-      <a href="<?= APP_URL ?>/admin/login.php" class="admin-access-btn" id="admin-console-link">
-        <i class="bi bi-shield-lock-fill"></i> Central Admin Console
-      </a>
+    <div class="admin-access" style="flex-wrap: wrap; justify-content: center; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>Diagnostic Laboratory?</span>
+        <a href="<?= APP_URL ?>/lab/login.php" class="admin-access-btn" id="lab-portal-link" style="border-color: rgba(99,102,241,0.25); color: #4F46E5;">
+          <i class="bi bi-flask-fill"></i> Laboratory Portal
+        </a>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>System Administrator?</span>
+        <a href="<?= APP_URL ?>/admin/login.php" class="admin-access-btn" id="admin-console-link">
+          <i class="bi bi-shield-lock-fill"></i> Central Admin Console
+        </a>
+      </div>
     </div>
 
     <div class="security-note">

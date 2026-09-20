@@ -10,6 +10,7 @@ if (isset($_SESSION['role'])) {
         'DOCTOR'         => APP_URL . '/doctor/dashboard.php',
         'HOSPITAL_ADMIN' => APP_URL . '/hospital/dashboard.php',
         'SYSTEM_ADMIN'   => APP_URL . '/admin/dashboard.php',
+        'LABORATORY'     => APP_URL . '/lab/dashboard.php',
     ];
     if (isset($portals[$_SESSION['role']])) {
         header('Location: ' . $portals[$_SESSION['role']]);

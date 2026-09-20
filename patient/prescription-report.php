@@ -101,6 +101,32 @@ $stmtPrev = $db->prepare("
 $stmtPrev->execute([$patientId, $rxId]);
 $prevPrescriptions = $stmtPrev->fetchAll();
 
+// Fetch Lab Order and Token if any
+$stmtLabOrder = $db->prepare("
+    SELECT plo.*, l.name AS lab_name, l.lab_uid
+    FROM prescription_lab_orders plo
+    LEFT JOIN laboratories l ON plo.laboratory_id = l.id
+    WHERE plo.prescription_id = ?
+    LIMIT 1
+");
+$stmtLabOrder->execute([$rxId]);
+$prescriptionLabOrder = $stmtLabOrder->fetch();
+
+$labTestsOrdered = [];
+if ($prescriptionLabOrder) {
+    $stmtLT = $db->prepare("
+        SELECT lot.*, ltr.result_status, ltr.result_summary, ltr.result_value, ltr.reference_range,
+               l2.name AS result_lab_name, l2.lab_uid AS result_lab_uid
+        FROM lab_order_tests lot
+        LEFT JOIN lab_test_results ltr ON ltr.lab_order_test_id = lot.id
+        LEFT JOIN laboratories l2 ON ltr.laboratory_id = l2.id
+        WHERE lot.lab_order_id = ?
+        ORDER BY lot.id ASC
+    ");
+    $stmtLT->execute([$prescriptionLabOrder['id']]);
+    $labTestsOrdered = $stmtLT->fetchAll();
+}
+
 $age = date_diff(new DateTime($rx['date_of_birth']), new DateTime())->y;
 
 AuditService::log('VIEW_PRESCRIPTION_REPORT', [
@@ -388,6 +414,85 @@ AuditService::log('VIEW_PRESCRIPTION_REPORT', [
         </tbody>
       </table>
     </div>
+
+    <!-- OFFICIAL LABORATORY ORDER & TOKEN (IF ORDERED) -->
+    <?php if ($prescriptionLabOrder && !empty($labTestsOrdered)): ?>
+    <div style="margin-bottom: 28px; border: 2px solid #6366F1; border-radius: 12px; overflow: hidden; background: #FAF5FF;">
+      <div style="background: linear-gradient(135deg, #4F46E5, #6366F1); color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px;">🔬</span>
+          <div>
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.9; font-weight: 700;">Official Lab Order Token</div>
+            <div style="font-size: 14px; font-weight: 800;">Diagnostic &amp; Pathology Tests Prescribed</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 10px; opacity: 0.85; text-transform: uppercase;">Present Token at Laboratory</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 900; background: rgba(255,255,255,0.22); padding: 4px 12px; border-radius: 6px; letter-spacing: 1.5px; display: inline-block;">
+            <?= htmlspecialchars($prescriptionLabOrder['lab_token']) ?>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; font-size: 12px; color: #4B5563;">
+          <div>
+            Order Status:
+            <span class="badge" style="background: <?= $prescriptionLabOrder['status'] === 'COMPLETED' ? '#DCFCE7; color: #166534;' : ($prescriptionLabOrder['status'] === 'PARTIAL' ? '#FEF3C7; color: #92400E;' : '#EEF2FF; color: #4338CA;') ?> font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+              <?= htmlspecialchars($prescriptionLabOrder['status']) ?>
+            </span>
+            &nbsp;·&nbsp; Valid 30 days (Expires <?= date('d M Y', strtotime($prescriptionLabOrder['expires_at'])) ?>)
+          </div>
+          <div style="font-size: 11px; color: #4338CA;">
+            <i class="bi bi-info-circle-fill"></i> Results automatically link to your Patient Portal when uploaded by the lab.
+          </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB;">
+          <thead>
+            <tr style="background: #F3F4F6; text-align: left; color: #374151;">
+              <th style="padding: 8px 12px; width: 35px;">#</th>
+              <th style="padding: 8px 12px;">Test Name</th>
+              <th style="padding: 8px 12px;">Category</th>
+              <th style="padding: 8px 12px;">Urgency</th>
+              <th style="padding: 8px 12px;">Status</th>
+              <th style="padding: 8px 12px;">Issuing Lab</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($labTestsOrdered as $tidx => $lt): ?>
+            <tr style="border-top: 1px solid #E5E7EB;">
+              <td style="padding: 8px 12px; color: #9CA3AF;"><?= $tidx + 1 ?></td>
+              <td style="padding: 8px 12px; font-weight: 700; color: #1F2937;"><?= htmlspecialchars($lt['test_name']) ?></td>
+              <td style="padding: 8px 12px; color: #6B7280;"><?= htmlspecialchars($lt['test_category'] ?: 'General') ?></td>
+              <td style="padding: 8px 12px;">
+                <span style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; <?= $lt['urgency'] === 'STAT' ? 'background: #FEE2E2; color: #991B1B;' : ($lt['urgency'] === 'URGENT' ? 'background: #FEF3C7; color: #92400E;' : 'background: #F3F4F6; color: #374151;') ?>">
+                  <?= htmlspecialchars($lt['urgency']) ?>
+                </span>
+              </td>
+              <td style="padding: 8px 12px;">
+                <?php if ($lt['status'] === 'COMPLETED'): ?>
+                  <span style="color: #16A34A; font-weight: 700;"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                <?php else: ?>
+                  <span style="color: #6366F1; font-weight: 600;"><i class="bi bi-hourglass-split"></i> Awaiting Lab</span>
+                <?php endif; ?>
+              </td>
+              <td style="padding: 8px 12px; font-size: 11px; color: #4B5563;">
+                <?= htmlspecialchars($lt['result_lab_name'] ?? ($prescriptionLabOrder['lab_name'] ?? 'Affiliated Lab')) ?>
+              </td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+
+        <?php if (!empty($prescriptionLabOrder['test_notes'])): ?>
+        <div style="margin-top: 10px; font-size: 11px; color: #4B5563; background: #fff; border: 1px dashed #D1D5DB; border-radius: 6px; padding: 8px 12px;">
+          <strong>Doctor Instructions for Lab:</strong> <?= htmlspecialchars($prescriptionLabOrder['test_notes']) ?>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div>
+    <?php endif; ?>
 
     <!-- ADVICE & LAB INVESTIGATIONS -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 28px;">

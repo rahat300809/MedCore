@@ -27,6 +27,15 @@ class AuditService {
     const UNAUTHORIZED_ACCESS        = 'UNAUTHORIZED_ACCESS';
     const FAILED_LOGIN               = 'FAILED_LOGIN';
     const FAILED_OTP                 = 'FAILED_OTP';
+    // Laboratory audit events
+    const LAB_REGISTERED             = 'LAB_REGISTERED';
+    const LAB_VERIFIED               = 'LAB_VERIFIED';
+    const LAB_AFFILIATED             = 'LAB_AFFILIATED';
+    const LAB_TOKEN_SEARCHED         = 'LAB_TOKEN_SEARCHED';
+    const LAB_RESULT_UPLOADED        = 'LAB_RESULT_UPLOADED';
+    const LAB_ORDER_CREATED          = 'LAB_ORDER_CREATED';
+    const LAB_ORDER_COMPLETED        = 'LAB_ORDER_COMPLETED';
+    const VIEW_LAB_RESULT            = 'VIEW_LAB_RESULT';
 
     public static function log(
         string $action,

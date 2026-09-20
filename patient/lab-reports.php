@@ -81,7 +81,60 @@ $stmtLab = $db->prepare("
 $stmtLab->execute([$patientId]);
 $legacyReports = $stmtLab->fetchAll();
 
-$totalCount   = count($diagnostics) + count($legacyReports);
+// Fetch token-tracked prescription lab orders and their lab test results
+$stmtLabOrders = $db->prepare("
+    SELECT plo.*,
+           h.name AS hospital_name, h.city AS hospital_city,
+           d.full_name AS doctor_name, d.specialization AS doctor_spec,
+           l.name AS assigned_lab_name, l.lab_uid AS assigned_lab_uid,
+           rx.prescription_uid
+    FROM prescription_lab_orders plo
+    JOIN hospitals h ON plo.hospital_id = h.id
+    JOIN doctors d ON plo.doctor_id = d.id
+    LEFT JOIN laboratories l ON plo.laboratory_id = l.id
+    LEFT JOIN prescriptions rx ON plo.prescription_id = rx.id
+    WHERE plo.patient_id = ?
+    ORDER BY plo.created_at DESC
+");
+$stmtLabOrders->execute([$patientId]);
+$prescriptionLabOrders = $stmtLabOrders->fetchAll();
+
+$labOrdersWithDetails = [];
+$completedOrdersCount = 0;
+foreach ($prescriptionLabOrders as $ord) {
+    $stmtTests = $db->prepare("
+        SELECT lot.*,
+               ltr.id AS result_id, ltr.result_summary, ltr.result_value, ltr.reference_range,
+               ltr.result_status, ltr.technician_name, ltr.uploaded_at AS result_uploaded_at,
+               res_lab.name AS result_lab_name, res_lab.lab_uid AS result_lab_uid,
+               res_hosp.name AS result_hospital_name
+        FROM lab_order_tests lot
+        LEFT JOIN lab_test_results ltr ON ltr.lab_order_test_id = lot.id
+        LEFT JOIN laboratories res_lab ON ltr.laboratory_id = res_lab.id
+        LEFT JOIN hospitals res_hosp ON ltr.hospital_id = res_hosp.id
+        WHERE lot.lab_order_id = ?
+        ORDER BY lot.id ASC
+    ");
+    $stmtTests->execute([$ord['id']]);
+    $tests = $stmtTests->fetchAll();
+
+    foreach ($tests as &$t) {
+        $t['files'] = [];
+        if (!empty($t['result_id'])) {
+            $stmtFiles = $db->prepare("SELECT * FROM lab_result_files WHERE lab_test_result_id = ? ORDER BY id ASC");
+            $stmtFiles->execute([$t['result_id']]);
+            $t['files'] = $stmtFiles->fetchAll();
+        }
+    }
+    unset($t);
+
+    $ord['tests'] = $tests;
+    if ($ord['status'] === 'COMPLETED') $completedOrdersCount++;
+    $labOrdersWithDetails[] = $ord;
+}
+
+$ordersCount  = count($labOrdersWithDetails);
+$totalCount   = count($diagnostics) + count($legacyReports) + $ordersCount;
 $imagingCount = 0;
 $pathCount    = count($legacyReports);
 
@@ -153,6 +206,36 @@ $activeTab = $_GET['tab'] ?? 'all';
     .modality-BLOOD_TEST { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
     .modality-ECG { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
     .modality-OTHER { background: #F3F4F6; color: #374151; border: 1px solid #E5E7EB; }
+    .token-order-card {
+      border: 1.5px solid #818CF8;
+      border-radius: 14px;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(99,102,241,0.06);
+      transition: box-shadow 0.2s;
+    }
+    .token-order-card:hover {
+      box-shadow: 0 8px 25px rgba(99,102,241,0.12);
+    }
+    .token-header {
+      background: linear-gradient(135deg, #4338CA, #6366F1);
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .token-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 800;
+      background: rgba(255,255,255,0.22);
+      padding: 3px 10px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
   </style>
 </head>
 <body>
@@ -256,6 +339,9 @@ $activeTab = $_GET['tab'] ?? 'all';
         <a href="?tab=all" class="tab-btn <?= $activeTab === 'all' ? 'active' : '' ?>">
           <i class="bi bi-collection-fill"></i> All Records (<?= $totalCount ?>)
         </a>
+        <a href="?tab=orders" class="tab-btn <?= $activeTab === 'orders' ? 'active' : '' ?>" style="<?= $ordersCount > 0 ? 'color: #4338CA;' : '' ?>">
+          <i class="bi bi-flask-fill"></i> Prescription Lab Orders &amp; Results (<?= $ordersCount ?>)
+        </a>
         <a href="?tab=imaging" class="tab-btn <?= $activeTab === 'imaging' ? 'active' : '' ?>">
           <i class="bi bi-disc-fill"></i> Radiology &amp; Imaging (<?= $imagingCount ?>)
         </a>
@@ -307,11 +393,168 @@ $activeTab = $_GET['tab'] ?? 'all';
       </div>
 
       <!-- HOSPITAL DIAGNOSTICS & IMAGING LIST -->
-      <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px;">
+      <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 30px;">
+
+        <!-- TOKEN-TRACKED PRESCRIPTION LAB ORDERS -->
+        <?php if ($activeTab === 'all' || $activeTab === 'orders'): ?>
+          <?php foreach ($labOrdersWithDetails as $lorder): $shownCount = ($shownCount ?? 0) + 1; ?>
+          <div class="token-order-card">
+            <div class="token-header">
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <span style="font-size: 22px;">🔬</span>
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; font-weight: 700;">Lab Order Token</div>
+                  <span class="token-pill"><?= htmlspecialchars($lorder['lab_token']) ?></span>
+                </div>
+                <div style="font-size: 12px; opacity: 0.95;">
+                  Ordered on <?= date('d M Y, h:i A', strtotime($lorder['created_at'])) ?>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; <?= $lorder['status'] === 'COMPLETED' ? 'background:#DCFCE7; color:#166534;' : ($lorder['status'] === 'PARTIAL' ? 'background:#FEF3C7; color:#92400E;' : 'background:rgba(255,255,255,0.25); color:#fff;') ?>">
+                  <i class="bi <?= $lorder['status'] === 'COMPLETED' ? 'bi-check-circle-fill' : 'bi-clock-fill' ?>"></i> <?= htmlspecialchars($lorder['status']) ?>
+                </span>
+                <?php if ($lorder['prescription_uid']): ?>
+                <a href="<?= APP_URL ?>/patient/prescription-report.php?id=<?= $lorder['prescription_id'] ?>" target="_blank" style="color: #fff; font-size: 11px; text-decoration: underline; opacity: 0.9;">
+                  Rx #<?= htmlspecialchars($lorder['prescription_uid']) ?>
+                </a>
+                <?php endif; ?>
+              </div>
+            </div>
+
+            <div style="padding: 18px 20px;">
+              <!-- HOSPITAL & DOCTOR ORIGIN STRIP -->
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #EEF2F6; margin-bottom: 14px; font-size: 12px; color: #475569;">
+                <div>
+                  <i class="bi bi-building text-primary"></i> Hospital: <strong style="color:#0F172A;"><?= htmlspecialchars($lorder['hospital_name']) ?></strong>
+                  &nbsp;·&nbsp; Prescribed by: <strong style="color:#0F172A;">Dr. <?= htmlspecialchars($lorder['doctor_name']) ?></strong> (<?= htmlspecialchars($lorder['doctor_spec'] ?? 'Specialist') ?>)
+                </div>
+                <div style="font-size: 11px; color: #64748B;">
+                  Token expires: <?= date('d M Y', strtotime($lorder['expires_at'])) ?>
+                </div>
+              </div>
+
+              <?php if (!empty($lorder['test_notes'])): ?>
+              <div style="font-size: 12px; background: #F8FAFC; border-left: 3px solid #6366F1; padding: 8px 12px; border-radius: 0 6px 6px 0; margin-bottom: 14px; color: #334155;">
+                <strong>Doctor's Instructions for Lab:</strong> <?= htmlspecialchars($lorder['test_notes']) ?>
+              </div>
+              <?php endif; ?>
+
+              <!-- TESTS & RESULTS LIST -->
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <?php foreach ($lorder['tests'] as $test): ?>
+                <div style="border: 1px solid <?= $test['status'] === 'COMPLETED' ? '#BBF7D0' : '#E2E8F0' ?>; background: <?= $test['status'] === 'COMPLETED' ? '#F0FDF4' : '#F8FAFC' ?>; border-radius: 10px; padding: 14px 16px;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+                    <div>
+                      <div style="font-weight: 800; font-size: 14px; color: #0F172A;">
+                        <?= htmlspecialchars($test['test_name']) ?>
+                        <?php if ($test['test_category']): ?>
+                          <span style="font-size: 11px; font-weight: 600; color: #64748B; margin-left: 6px;">(<?= htmlspecialchars($test['test_category']) ?>)</span>
+                        <?php endif; ?>
+                        <span style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; <?= $test['urgency'] === 'STAT' ? 'background:#FEE2E2;color:#991B1B;' : ($test['urgency'] === 'URGENT' ? 'background:#FEF3C7;color:#92400E;' : 'background:#E0E7FF;color:#3730A3;') ?>">
+                          <?= htmlspecialchars($test['urgency']) ?>
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <?php if ($test['status'] === 'COMPLETED'): ?>
+                        <span class="badge badge-success" style="font-size: 11px;"><i class="bi bi-check-circle-fill"></i> Test Completed</span>
+                      <?php else: ?>
+                        <span class="badge" style="background:#EEF2FF; color:#4338CA; font-size: 11px;"><i class="bi bi-hourglass-split"></i> Awaiting Sample / Testing</span>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+
+                  <?php if ($test['status'] === 'COMPLETED'): ?>
+                    <!-- LABORATORY & HOSPITAL ISSUANCE TRACKING -->
+                    <div style="background: #fff; border: 1px solid #D1FAE5; border-radius: 8px; padding: 12px; margin-top: 8px;">
+                      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #065F46; margin-bottom: 8px;">
+                        <div>
+                          <i class="bi bi-patch-check-fill" style="color: #10B981; font-size: 14px;"></i>
+                          Issued by Laboratory: <strong><?= htmlspecialchars($test['result_lab_name'] ?: 'Affiliated Laboratory') ?></strong>
+                          <?php if ($test['result_lab_uid']): ?>
+                            (<code><?= htmlspecialchars($test['result_lab_uid']) ?></code>)
+                          <?php endif; ?>
+                          &nbsp;·&nbsp; Under Hospital: <strong><?= htmlspecialchars($test['result_hospital_name'] ?: $lorder['hospital_name']) ?></strong>
+                        </div>
+                        <?php if ($test['result_uploaded_at']): ?>
+                        <div style="font-size: 11px; color: #64748B;">
+                          <i class="bi bi-clock"></i> <?= date('d M Y, h:i A', strtotime($test['result_uploaded_at'])) ?>
+                        </div>
+                        <?php endif; ?>
+                      </div>
+
+                      <?php if ($test['result_value'] || $test['reference_range']): ?>
+                      <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; font-size: 12px;">
+                        <?php if ($test['result_value']): ?>
+                        <div>
+                          <span style="color:#64748B;">Result Value:</span>
+                          <strong style="color:#0F172A; font-size: 13px;"><?= htmlspecialchars($test['result_value']) ?></strong>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($test['reference_range']): ?>
+                        <div>
+                          <span style="color:#64748B;">Reference Range:</span>
+                          <span style="color:#334155; font-family: monospace;"><?= htmlspecialchars($test['reference_range']) ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($test['result_status']): ?>
+                        <div>
+                          <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; <?= $test['result_status'] === 'NORMAL' ? 'background:#DCFCE7;color:#166534;' : ($test['result_status'] === 'CRITICAL' ? 'background:#FEE2E2;color:#991B1B;' : 'background:#FEF3C7;color:#92400E;') ?>">
+                            <?= htmlspecialchars($test['result_status']) ?>
+                          </span>
+                        </div>
+                        <?php endif; ?>
+                      </div>
+                      <?php endif; ?>
+
+                      <?php if ($test['result_summary']): ?>
+                      <div style="font-size: 12px; color: #334155; margin-bottom: 8px; line-height: 1.5;">
+                        <strong>Findings / Summary:</strong> <?= nl2br(htmlspecialchars($test['result_summary'])) ?>
+                      </div>
+                      <?php endif; ?>
+
+                      <?php if ($test['technician_name']): ?>
+                      <div style="font-size: 11px; color: #64748B; margin-bottom: 8px;">
+                        <i class="bi bi-person-badge"></i> Certified Lab Technician: <?= htmlspecialchars($test['technician_name']) ?>
+                      </div>
+                      <?php endif; ?>
+
+                      <!-- ATTACHED RESULT FILES -->
+                      <?php if (!empty($test['files'])): ?>
+                      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #D1D5DB;">
+                        <?php foreach ($test['files'] as $rf): ?>
+                        <a href="<?= APP_URL ?>/uploads/<?= htmlspecialchars($rf['file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-primary" style="font-size: 11px; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;">
+                          <i class="bi <?= $rf['file_type'] === 'PDF' ? 'bi-file-pdf-fill text-danger' : 'bi-file-image-fill text-primary' ?>"></i>
+                          <span><?= htmlspecialchars($rf['original_name'] ?: 'Lab Result File') ?></span>
+                          <?php if ($rf['file_size']): ?>
+                            <span style="opacity: 0.7; font-size: 10px;">(<?= round($rf['file_size'] / 1024, 1) ?> KB)</span>
+                          <?php endif; ?>
+                        </a>
+                        <?php endforeach; ?>
+                      </div>
+                      <?php endif; ?>
+                    </div>
+                  <?php else: ?>
+                    <!-- PENDING TEST CALLOUT -->
+                    <div style="font-size: 12px; color: #6366F1; display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                      <i class="bi bi-info-circle"></i>
+                      <span>Present Token <strong><?= htmlspecialchars($lorder['lab_token']) ?></strong> at any affiliated lab of <?= htmlspecialchars($lorder['hospital_name']) ?> to complete this test.</span>
+                    </div>
+                  <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
+
         <?php
-        $shownCount = 0;
+        $shownCount = $shownCount ?? 0;
         foreach ($diagnostics as $diag):
           $isImaging = in_array($diag['modality'], ['XRAY','MRI','CT_SCAN','ULTRASOUND','ECG','ECHOCARDIOGRAM','ENDOSCOPY']);
+          if ($activeTab === 'orders') continue;
           if ($activeTab === 'imaging' && !$isImaging) continue;
           if ($activeTab === 'pathology' && $isImaging) continue;
           $shownCount++;

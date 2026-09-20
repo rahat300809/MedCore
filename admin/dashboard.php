@@ -75,6 +75,11 @@ $stats['total_patients']     = (int)$db->query("SELECT COUNT(*) FROM patients")-
 $stats['total_consultations']= (int)$db->query("SELECT COUNT(*) FROM consultations")->fetchColumn();
 $stats['total_prescriptions']= (int)$db->query("SELECT COUNT(*) FROM prescriptions")->fetchColumn();
 
+$stats['total_labs']         = (int)$db->query("SELECT COUNT(*) FROM laboratories")->fetchColumn();
+$stats['pending_labs']       = (int)$db->query("SELECT COUNT(*) FROM laboratories WHERE verification_status = 'PENDING'")->fetchColumn();
+$stats['verified_labs']      = (int)$db->query("SELECT COUNT(*) FROM laboratories WHERE verification_status = 'VERIFIED'")->fetchColumn();
+$stats['total_lab_orders']   = (int)$db->query("SELECT COUNT(*) FROM prescription_lab_orders")->fetchColumn();
+
 // Fetch Pending Doctors Queue (Top priority for Admin)
 $stmt = $db->prepare("
     SELECT d.*, u.email, u.phone, u.created_at AS registered_at
@@ -244,6 +249,14 @@ $csrf = generateCsrfToken();
       <a href="<?= APP_URL ?>/admin/hospitals.php" class="nav-item">
         <i class="bi bi-building-fill-check"></i> Hospital Network
       </a>
+      <a href="<?= APP_URL ?>/admin/laboratories.php" class="nav-item">
+        <i class="bi bi-flask-fill"></i> Diagnostic Labs
+        <?php if (($stats['pending_labs'] ?? 0) > 0): ?>
+          <span class="badge badge-pending" style="margin-left:auto; font-size:11px; padding:2px 6px;">
+            <?= $stats['pending_labs'] ?>
+          </span>
+        <?php endif; ?>
+      </a>
       <a href="<?= APP_URL ?>/admin/affiliations.php" class="nav-item">
         <i class="bi bi-diagram-3-fill"></i> Hospital Affiliations
       </a>
@@ -385,6 +398,24 @@ $csrf = generateCsrfToken();
             Across all network hospitals
           </div>
         </div>
+
+        <!-- Stat 5: Diagnostic Labs -->
+        <a href="<?= APP_URL ?>/admin/laboratories.php" style="text-decoration:none; color:inherit;">
+          <div class="stat-card-admin" style="cursor:pointer; transition:transform .15s;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <span class="stat-label">Diagnostic Labs</span>
+              <div class="stat-icon" style="background: #EEF2FF; color: #4F46E5;">
+                <i class="bi bi-flask-fill"></i>
+              </div>
+            </div>
+            <div class="stat-num"><?= $stats['total_labs'] ?></div>
+            <div style="font-size: 12px; color: var(--mc-text-muted); display: flex; gap: 8px;">
+              <span style="color: #166534; font-weight: 600;">✓ <?= $stats['verified_labs'] ?> Verified</span>
+              <span>·</span>
+              <span style="color: #92400E; font-weight: 600;">⏳ <?= $stats['pending_labs'] ?> Pending</span>
+            </div>
+          </div>
+        </a>
       </div>
 
       <!-- TWO COLUMN LAYOUT: PENDING QUEUE + HOSPITAL ECOSYSTEM -->

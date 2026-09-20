@@ -77,6 +77,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
     $medDurations   = $_POST['med_duration'] ?? [];
     $medInsts       = $_POST['med_instructions'] ?? [];
 
+    // Lab tests
+    $labTestNames   = array_filter(array_map('trim', $_POST['lab_test_name'] ?? []));
+    $labTestCats    = $_POST['lab_test_category'] ?? [];
+    $labTestUrgency = $_POST['lab_test_urgency'] ?? [];
+    $labTestInst    = $_POST['lab_test_instructions'] ?? [];
+    $labTestNotes   = trim($_POST['lab_test_notes'] ?? '');
+    $hasLabTests    = !empty($labTestNames);
+
     if (empty($diagnosis)) {
         $error = 'Please provide a clinical diagnosis or observation.';
     } elseif (empty($medNames) || empty(trim($medNames[0] ?? ''))) {
@@ -148,15 +156,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
                 ]);
             }
 
-            // E. Notify Patient
+            // E. Generate Lab Token & Create Lab Order (if lab tests prescribed)
+            $labToken = null;
+            if ($hasLabTests) {
+                // Generate short unique token: LT- + 5 uppercase alphanumeric chars
+                do {
+                    $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                    $rand  = '';
+                    for ($k = 0; $k < 5; $k++) $rand .= $chars[random_int(0, strlen($chars)-1)];
+                    $labToken = 'LT-' . $rand;
+                    $stmtTok = $db->prepare("SELECT id FROM prescription_lab_orders WHERE lab_token = ?");
+                    $stmtTok->execute([$labToken]);
+                } while ($stmtTok->fetch()); // retry if collision
+
+                $db->prepare("
+                    INSERT INTO prescription_lab_orders
+                        (lab_token, prescription_id, patient_id, doctor_id, hospital_id,
+                         test_notes, status, expires_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 'PENDING', DATE_ADD(NOW(), INTERVAL 30 DAY))
+                ")->execute([
+                    $labToken, $prescriptionId, $patientId, $doctorId, $hospitalId, $labTestNotes
+                ]);
+                $labOrderId = $db->lastInsertId();
+
+                $stmtLabTest = $db->prepare("
+                    INSERT INTO lab_order_tests
+                        (lab_order_id, test_name, test_category, urgency, instructions)
+                    VALUES (?, ?, ?, ?, ?)
+                ");
+                foreach ($labTestNames as $ti => $tname) {
+                    $stmtLabTest->execute([
+                        $labOrderId,
+                        $tname,
+                        trim($labTestCats[$ti] ?? ''),
+                        in_array($labTestUrgency[$ti] ?? '', ['ROUTINE','URGENT','STAT']) ? $labTestUrgency[$ti] : 'ROUTINE',
+                        trim($labTestInst[$ti] ?? '')
+                    ]);
+                }
+
+                AuditService::log(AuditService::LAB_ORDER_CREATED, [
+                    'user_id'    => $_SESSION['user_id'],
+                    'doctor_id'  => $doctorId,
+                    'patient_id' => $patientId,
+                    'hospital_id'=> $hospitalId,
+                    'metadata'   => ['lab_token' => $labToken, 'prescription_uid' => $rxUid, 'test_count' => count($labTestNames)],
+                ]);
+            }
+
+            // F. Notify Patient
             $doctorName = $_SESSION['name'] ?? 'Doctor';
             $hospitalName = $_SESSION['hospital_name'] ?? 'Hospital';
+            $labTokenMsg = $labToken ? " Lab Token: {$labToken}" : '';
             $db->prepare("
                 INSERT INTO notifications
                     (user_id, type, title, message, reference_type, reference_id, action_url)
                 SELECT u.id, 'NEW_PRESCRIPTION',
                        CONCAT('New Prescription from Dr. ', :dname),
-                       CONCAT('Dr. ', :dname2, ' at ', :hname, ' has issued prescription #', :rx_uid),
+                       CONCAT('Dr. ', :dname2, ' at ', :hname, ' has issued prescription #', :rx_uid, :lab_msg),
                        'prescription', :rx_id, :action_url
                 FROM patients p JOIN users u ON u.id = p.user_id
                 WHERE p.id = :pid
@@ -165,12 +221,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
                 ':dname2'     => $doctorName,
                 ':hname'      => $hospitalName,
                 ':rx_uid'     => $rxUid,
+                ':lab_msg'    => $labTokenMsg,
                 ':rx_id'      => $prescriptionId,
                 ':action_url' => APP_URL . '/patient/prescriptions.php',
                 ':pid'        => $patientId,
             ]);
 
-            // F. Log Audit
+            // G. Log Audit
             AuditService::log(AuditService::CREATE_PRESCRIPTION, [
                 'user_id'    => $_SESSION['user_id'],
                 'doctor_id'  => $doctorId,
@@ -178,15 +235,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
                 'hospital_id'=> $hospitalId,
                 'target_type'=> 'prescription',
                 'target_id'  => $prescriptionId,
-                'metadata'   => ['prescription_uid' => $rxUid, 'consultation_uid' => $consUid],
+                'metadata'   => ['prescription_uid' => $rxUid, 'consultation_uid' => $consUid, 'lab_token' => $labToken],
             ]);
 
             $db->commit();
 
-            $_SESSION['flash'] = [
-                'type' => 'success',
-                'msg'  => "Prescription #{$rxUid} created and securely synced to patient record."
-            ];
+            $flashMsg = "Prescription #{$rxUid} created and securely synced to patient record.";
+            if ($labToken) {
+                $flashMsg .= " Lab Token: <strong>{$labToken}</strong> — patient can show this at any affiliated lab.";
+            }
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => $flashMsg];
             header('Location: ' . APP_URL . '/doctor/prescriptions.php?rx=' . $rxUid);
             exit;
 
@@ -467,7 +525,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
           </div>
         </div>
 
-        <!-- Submit Bar -->
+        <!-- 4. Lab Tests (New) -->
+        <div class="card mb-4" style="border:1px solid rgba(14,165,233,0.3);">
+          <div class="card-header d-flex justify-content-between align-items-center" style="background:rgba(14,165,233,0.08);">
+            <h4 class="card-title" style="font-size:1rem;color:#38bdf8;margin:0;"><i class="bi bi-eyedropper"></i> 🔬 Lab Tests &amp; Investigations <span style="font-size:.75rem;color:#64748b;font-weight:400">(optional — generates a Lab Token)</span></h4>
+            <button type="button" class="btn btn-sm" onclick="addLabTestRow()" style="background:rgba(14,165,233,0.15);border:1px solid rgba(14,165,233,0.3);color:#38bdf8;">
+              <i class="bi bi-plus-lg"></i> Add Test
+            </button>
+          </div>
+          <div class="card-body">
+            <div id="lab-tests-container">
+              <!-- empty by default; doctor adds rows -->
+            </div>
+            <div id="lab-tests-placeholder" style="text-align:center;padding:1.5rem;color:#475569;font-size:.875rem;">
+              Click <strong>Add Test</strong> to prescribe lab investigations. A short Lab Token will be generated automatically on the prescription.
+            </div>
+            <div class="mt-3" id="lab-notes-wrap" style="display:none;">
+              <label class="form-label">Special Notes for the Lab</label>
+              <textarea name="lab_test_notes" rows="2" class="form-control" placeholder="e.g. Patient is fasting. Please collect early morning sample."></textarea>
+            </div>
+          </div>
+        </div>
+
         <div class="d-flex justify-content-between align-items-center mb-5">
           <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $patientId ?>" class="btn btn-secondary">
             Cancel
@@ -486,6 +565,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
 
 <script>
 let medCount = 1;
+let labTestCount = 0;
 
 function addMedicineRow() {
   const id = medCount++;
@@ -552,6 +632,67 @@ function removeMedicineRow(id) {
       return;
     }
     row.remove();
+  }
+}
+
+function addLabTestRow() {
+  const id = labTestCount++;
+  document.getElementById('lab-tests-placeholder').style.display = 'none';
+  document.getElementById('lab-notes-wrap').style.display = 'block';
+  const div = document.createElement('div');
+  div.className = 'lab-test-row';
+  div.id = 'lab-test-row-' + id;
+  div.style.cssText = 'background:rgba(14,165,233,0.04);border:1px solid rgba(14,165,233,0.15);border-radius:10px;padding:12px;margin-bottom:10px;';
+  div.innerHTML = `
+    <div class="row g-2 align-items-center">
+      <div class="col-md-4">
+        <label class="form-label" style="font-size:.8rem;">Test Name <span class="text-danger">*</span></label>
+        <input type="text" name="lab_test_name[]" class="form-control form-control-sm" placeholder="e.g. CBC, HbA1c, Chest X-Ray" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:.8rem;">Category</label>
+        <select name="lab_test_category[]" class="form-control form-control-sm">
+          <option value="">— Select —</option>
+          <option value="Haematology">Haematology</option>
+          <option value="Biochemistry">Biochemistry</option>
+          <option value="Microbiology">Microbiology</option>
+          <option value="Radiology">Radiology</option>
+          <option value="Urine Analysis">Urine Analysis</option>
+          <option value="Histopathology">Histopathology</option>
+          <option value="Serology">Serology</option>
+          <option value="Cardiac">Cardiac</option>
+          <option value="Endocrinology">Endocrinology</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" style="font-size:.8rem;">Urgency</label>
+        <select name="lab_test_urgency[]" class="form-control form-control-sm">
+          <option value="ROUTINE">Routine</option>
+          <option value="URGENT">Urgent</option>
+          <option value="STAT">STAT</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" style="font-size:.8rem;">Instructions</label>
+        <input type="text" name="lab_test_instructions[]" class="form-control form-control-sm" placeholder="e.g. Fasting">
+      </div>
+      <div class="col-md-1 text-end" style="padding-top:18px;">
+        <button type="button" class="btn btn-outline text-danger btn-sm" onclick="removeLabTestRow(${id})" title="Remove">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+  `;
+  document.getElementById('lab-tests-container').appendChild(div);
+}
+
+function removeLabTestRow(id) {
+  const row = document.getElementById('lab-test-row-' + id);
+  if (row) row.remove();
+  if (document.querySelectorAll('.lab-test-row').length === 0) {
+    document.getElementById('lab-tests-placeholder').style.display = 'block';
+    document.getElementById('lab-notes-wrap').style.display = 'none';
   }
 }
 </script>

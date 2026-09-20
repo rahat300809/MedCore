@@ -21,9 +21,10 @@ $stmt = $db->prepare("
         (SELECT COUNT(*) FROM departments WHERE hospital_id = :h3 AND status = 'ACTIVE') AS active_departments,
         (SELECT COUNT(*) FROM consultations WHERE hospital_id = :h4 AND DATE(consultation_date) = CURDATE()) AS today_consultations,
         (SELECT COUNT(*) FROM consultations WHERE hospital_id = :h5) AS total_consultations,
-        (SELECT COUNT(*) FROM access_sessions WHERE hospital_id = :h6 AND status = 'ACTIVE' AND expires_at > NOW()) AS active_sessions
+        (SELECT COUNT(*) FROM access_sessions WHERE hospital_id = :h6 AND status = 'ACTIVE' AND expires_at > NOW()) AS active_sessions,
+        (SELECT COUNT(*) FROM hospital_laboratories WHERE hospital_id = :h7 AND status = 'APPROVED') AS affiliated_labs
 ");
-$stmt->execute([':h1'=>$hospitalId,':h2'=>$hospitalId,':h3'=>$hospitalId,':h4'=>$hospitalId,':h5'=>$hospitalId,':h6'=>$hospitalId]);
+$stmt->execute([':h1'=>$hospitalId,':h2'=>$hospitalId,':h3'=>$hospitalId,':h4'=>$hospitalId,':h5'=>$hospitalId,':h6'=>$hospitalId,':h7'=>$hospitalId]);
 $stats = $stmt->fetch();
 
 // Affiliated doctors
@@ -133,6 +134,12 @@ $csrf = generateCsrfToken();
         <span class="nav-badge"><?= $stats['pending_affiliations'] ?></span>
         <?php endif; ?>
       </a>
+      <a href="<?= APP_URL ?>/hospital/laboratories.php">
+        <i class="bi bi-flask-fill"></i> Laboratories
+        <?php if (($stats['affiliated_labs'] ?? 0) > 0): ?>
+        <span class="nav-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;"><?= $stats['affiliated_labs'] ?></span>
+        <?php endif; ?>
+      </a>
       <a href="<?= APP_URL ?>/hospital/departments.php">
         <i class="bi bi-diagram-3-fill"></i> Departments
       </a>
@@ -213,11 +220,13 @@ $csrf = generateCsrfToken();
           <div class="stat-value"><?= $stats['today_consultations'] ?></div>
           <div class="stat-label">Today's Consultations</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon stat-icon-green"><i class="bi bi-stethoscope"></i></div>
-          <div class="stat-value"><?= $stats['total_consultations'] ?></div>
-          <div class="stat-label">Total Consultations</div>
-        </div>
+        <a href="<?= APP_URL ?>/hospital/laboratories.php" style="text-decoration:none;color:inherit;">
+          <div class="stat-card" style="cursor:pointer;border-color:rgba(99,102,241,0.3);background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(99,102,241,0.06));">
+            <div class="stat-icon" style="background:rgba(99,102,241,0.15);color:#818cf8;"><i class="bi bi-flask-fill"></i></div>
+            <div class="stat-value" style="color:#818cf8;"><?= $stats['affiliated_labs'] ?? 0 ?></div>
+            <div class="stat-label">Affiliated Labs →</div>
+          </div>
+        </a>
       </div>
 
       <!-- Pending Affiliations -->
