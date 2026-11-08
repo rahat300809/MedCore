@@ -100,12 +100,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_request'])) {
     if ($stmt->fetch()) {
         $_SESSION['flash'] = ['type' => 'warning', 'msg' => 'An access request is already pending for this patient.'];
     } else {
+        $reqExpiresAt = date('Y-m-d H:i:s', strtotime('+30 minutes'));
         $stmt = $db->prepare("
             INSERT INTO access_requests
                 (doctor_id, patient_id, hospital_id, doctor_notes, status, expires_at)
-            VALUES (?, ?, ?, ?, 'PENDING', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+            VALUES (?, ?, ?, ?, 'PENDING', ?)
         ");
-        $stmt->execute([$doctorId, $patientId, $hospitalId, $reason]);
+        $stmt->execute([$doctorId, $patientId, $hospitalId, $reason, $reqExpiresAt]);
         $newReqId = (int)$db->lastInsertId();
 
         // Create notification for patient
@@ -173,12 +174,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_verbal_otp']))
     if ($isValid) {
         $db->beginTransaction();
         try {
+            $sessExpiresAt = date('Y-m-d H:i:s', strtotime('+30 minutes'));
             $stmt = $db->prepare("
                 INSERT INTO access_requests
                     (doctor_id, patient_id, hospital_id, doctor_notes, status, approved_at, expires_at)
-                VALUES (?, ?, ?, ?, 'APPROVED', NOW(), DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+                VALUES (?, ?, ?, ?, 'APPROVED', NOW(), ?)
             ");
-            $stmt->execute([$doctorId, $patientId, $hospitalId, $reason . ' (Verified via Verbal OTP)']);
+            $stmt->execute([$doctorId, $patientId, $hospitalId, $reason . ' (Verified via Verbal OTP)', $sessExpiresAt]);
             $newReqId = (int)$db->lastInsertId();
 
             $sessionToken = bin2hex(random_bytes(32));
@@ -186,9 +188,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_verbal_otp']))
             $stmtSess = $db->prepare("
                 INSERT INTO access_sessions
                     (access_request_id, doctor_id, patient_id, hospital_id, token_hash, status, expires_at)
-                VALUES (?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+                VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?)
             ");
-            $stmtSess->execute([$newReqId, $doctorId, $patientId, $hospitalId, $tokenHash]);
+            $stmtSess->execute([$newReqId, $doctorId, $patientId, $hospitalId, $tokenHash, $sessExpiresAt]);
 
             $db->commit();
 
@@ -225,12 +227,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['emergency_break_glass
     } else {
         $db->beginTransaction();
         try {
+            $emgExpiresAt = date('Y-m-d H:i:s', strtotime('+30 minutes'));
             $stmt = $db->prepare("
                 INSERT INTO access_requests
                     (doctor_id, patient_id, hospital_id, doctor_notes, status, approved_at, expires_at)
-                VALUES (?, ?, ?, ?, 'APPROVED', NOW(), DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+                VALUES (?, ?, ?, ?, 'APPROVED', NOW(), ?)
             ");
-            $stmt->execute([$doctorId, $patientId, $hospitalId, '[EMERGENCY_OVERRIDE]: ' . $emgReason]);
+            $stmt->execute([$doctorId, $patientId, $hospitalId, '[EMERGENCY_OVERRIDE]: ' . $emgReason, $emgExpiresAt]);
             $newReqId = (int)$db->lastInsertId();
 
             $sessionToken = bin2hex(random_bytes(32));
@@ -238,9 +241,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['emergency_break_glass
             $stmtSess = $db->prepare("
                 INSERT INTO access_sessions
                     (access_request_id, doctor_id, patient_id, hospital_id, token_hash, status, expires_at)
-                VALUES (?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+                VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?)
             ");
-            $stmtSess->execute([$newReqId, $doctorId, $patientId, $hospitalId, $tokenHash]);
+            $stmtSess->execute([$newReqId, $doctorId, $patientId, $hospitalId, $tokenHash, $emgExpiresAt]);
 
             $db->prepare("
                 INSERT INTO notifications (user_id, type, title, message, reference_type, reference_id, action_url)

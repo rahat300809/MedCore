@@ -54,11 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $sessionToken = bin2hex(random_bytes(32));
                     $tokenHash = hash('sha256', $sessionToken);
+                    $sessExpiresAt = date('Y-m-d H:i:s', strtotime('+30 minutes'));
                     $db->prepare("
                         INSERT INTO access_sessions
                             (access_request_id, doctor_id, patient_id, hospital_id, token_hash, status, expires_at)
-                        VALUES (?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
-                    ")->execute([$requestId, $request['doctor_id'], $patientId, $request['hospital_id'], $tokenHash]);
+                        VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?)
+                    ")->execute([$requestId, $request['doctor_id'], $patientId, $request['hospital_id'], $tokenHash, $sessExpiresAt]);
 
                     $db->prepare("
                         INSERT INTO notifications (user_id, type, title, message, reference_type, reference_id, action_url)

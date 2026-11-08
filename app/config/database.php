@@ -84,8 +84,36 @@ function getDB(): PDO {
         }
         $sqliteFile = file_exists($tmpDb) ? $tmpDb : $bundleDb;
 
+        if (!class_exists('MedCoreSQLitePDO', false)) {
+            class MedCoreSQLitePDO extends PDO {
+                #[\ReturnTypeWillChange]
+                public function prepare($statement, $options = []) {
+                    return parent::prepare(self::translateQuery($statement), $options);
+                }
+                #[\ReturnTypeWillChange]
+                public function query(string $statement, ?int $fetchMode = null, ...$fetch_mode_args) {
+                    $rewritten = self::translateQuery($statement);
+                    return $fetchMode !== null ? parent::query($rewritten, $fetchMode, ...$fetch_mode_args) : parent::query($rewritten);
+                }
+                #[\ReturnTypeWillChange]
+                public function exec(string $statement): int|false {
+                    return parent::exec(self::translateQuery($statement));
+                }
+                public static function translateQuery(string $sql): string {
+                    // In SQLite, DISTINCT aggregates cannot have a second separator argument
+                    $sql = preg_replace('/GROUP_CONCAT\(\s*DISTINCT\s+(.*?)\s+SEPARATOR\s+([\'"].*?[\'"])\s*\)/is', 'GROUP_CONCAT(DISTINCT $1)', $sql);
+                    $sql = preg_replace('/GROUP_CONCAT\(\s*(.*?)\s+SEPARATOR\s+([\'"].*?[\'"])\s*\)/is', 'GROUP_CONCAT($1, $2)', $sql);
+                    $sql = preg_replace('/DATE_ADD\(\s*NOW\(\)\s*,\s*INTERVAL\s+(\d+)\s+MINUTE\s*\)/i', "datetime('now', '+$1 minutes')", $sql);
+                    $sql = preg_replace('/DATE_ADD\(\s*NOW\(\)\s*,\s*INTERVAL\s+(\d+)\s+DAY\s*\)/i', "datetime('now', '+$1 days')", $sql);
+                    $sql = preg_replace('/DATE_ADD\(\s*NOW\(\)\s*,\s*INTERVAL\s+(\d+)\s+HOUR\s*\)/i', "datetime('now', '+$1 hours')", $sql);
+                    $sql = preg_replace('/TIMESTAMPDIFF\(\s*SECOND\s*,\s*NOW\(\)\s*,\s*([a-zA-Z0-9_\.]+)\s*\)/i', "(strftime('%s', $1) - strftime('%s', 'now'))", $sql);
+                    return $sql;
+                }
+            }
+        }
+
         try {
-            $pdo = new PDO('sqlite:' . $sqliteFile, null, null, [
+            $pdo = new MedCoreSQLitePDO('sqlite:' . $sqliteFile, null, null, [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES   => false,
@@ -94,7 +122,7 @@ function getDB(): PDO {
             // Register MySQL-compatible SQL functions in SQLite safely without PHP 8.5 deprecation warnings
             $reg = function($name, $fn) use ($pdo) {
                 if (method_exists($pdo, 'createFunction')) {
-                    @$pdo->createFunction($name, $fn);
+                    $pdo->createFunction($name, $fn);
                 } elseif (method_exists($pdo, 'sqliteCreateFunction')) {
                     @$pdo->sqliteCreateFunction($name, $fn);
                 }
@@ -103,6 +131,7 @@ function getDB(): PDO {
             $reg('CURDATE', fn() => date('Y-m-d'));
             $reg('NOW', fn() => date('Y-m-d H:i:s'));
             $reg('DATE', fn($d) => substr((string)$d, 0, 10));
+            $reg('CONCAT', fn(...$args) => implode('', $args));
             $reg('SHA2', fn($val, $bits = 256) => hash('sha256', (string)$val));
             $reg('TIMESTAMPDIFF', function($unit, $t1, $t2) {
                 $sec = strtotime((string)$t2) - strtotime((string)$t1);

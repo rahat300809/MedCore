@@ -114,7 +114,21 @@ if (!$targetScript) {
 // Execute script if found
 if ($targetScript && is_file($targetScript)) {
     chdir(dirname($targetScript));
-    require $targetScript;
+    try {
+        require $targetScript;
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        error_log("MedCore Exception: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+        echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>MedCore Error</title>';
+        echo '<style>body{font-family:system-ui,-apple-system,sans-serif;padding:30px;background:#f8fafc;color:#1e293b}.card{background:#fff;padding:24px 30px;border-radius:12px;border:1px solid #e2e8f0;max-width:760px;margin:40px auto;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)}h1{color:#ef4444;font-size:20px;margin-top:0}pre{background:#f1f5f9;padding:12px;border-radius:8px;overflow:auto;font-size:13px;line-height:1.5}</style></head><body>';
+        echo '<div class="card">';
+        echo '<h1>MedCore Application Error</h1>';
+        echo '<p style="font-weight:600;color:#0f172a;">' . htmlspecialchars($e->getMessage()) . '</p>';
+        echo '<p style="color:#64748b;font-size:13px;">In <code>' . htmlspecialchars($e->getFile()) . '</code> on line <strong>' . $e->getLine() . '</strong></p>';
+        echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+        echo '<p style="margin-top:20px;"><a href="/" style="display:inline-block;padding:8px 16px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">&larr; Return to MedCore Home</a></p>';
+        echo '</div></body></html>';
+    }
     exit;
 }
 

@@ -18,7 +18,7 @@ if (!$patientId) {
 
 // 1. Verify Active Access Session (CRITICAL SECURITY CHECK)
 $stmtSession = $db->prepare("
-    SELECT s.*, TIMESTAMPDIFF(SECOND, NOW(), s.expires_at) AS seconds_remaining
+    SELECT s.*
     FROM access_sessions s
     WHERE s.doctor_id = ? AND s.patient_id = ? AND s.hospital_id = ?
       AND s.status = 'ACTIVE' AND s.expires_at > NOW()
@@ -27,6 +27,9 @@ $stmtSession = $db->prepare("
 ");
 $stmtSession->execute([$doctorId, $patientId, $hospitalId]);
 $accessSession = $stmtSession->fetch();
+if ($accessSession) {
+    $accessSession['seconds_remaining'] = max(0, strtotime($accessSession['expires_at']) - time());
+}
 
 if (!$accessSession) {
     AuditService::log(AuditService::UNAUTHORIZED_ACCESS, [

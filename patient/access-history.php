@@ -34,8 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['revoke_session'])) {
 
 // 1. Active sessions
 $stmtActive = $db->prepare("
-    SELECT s.*, d.full_name AS doctor_name, d.specialization, h.name AS hospital_name,
-           TIMESTAMPDIFF(SECOND, NOW(), s.expires_at) AS seconds_left
+    SELECT s.*, d.full_name AS doctor_name, d.specialization, h.name AS hospital_name
     FROM access_sessions s
     JOIN doctors d ON s.doctor_id = d.id
     JOIN hospitals h ON s.hospital_id = h.id
@@ -44,6 +43,10 @@ $stmtActive = $db->prepare("
 ");
 $stmtActive->execute([$patientId]);
 $activeSessions = $stmtActive->fetchAll();
+foreach ($activeSessions as &$s) {
+    $s['seconds_left'] = max(0, strtotime($s['expires_at']) - time());
+}
+unset($s);
 
 // 2. Past Access Sessions
 $stmtPast = $db->prepare("

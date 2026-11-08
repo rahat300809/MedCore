@@ -68,11 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Create access session (30 minutes)
                     $sessionToken = bin2hex(random_bytes(32));
                     $tokenHash = hash('sha256', $sessionToken);
+                    $sessExpiresAt = date('Y-m-d H:i:s', strtotime('+30 minutes'));
                     $db->prepare("
                         INSERT INTO access_sessions
                             (access_request_id, doctor_id, patient_id, hospital_id, token_hash, status, expires_at)
-                        VALUES (?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
-                    ")->execute([$requestId, $request['doctor_id'], $patientId, $request['hospital_id'], $tokenHash]);
+                        VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?)
+                    ")->execute([$requestId, $request['doctor_id'], $patientId, $request['hospital_id'], $tokenHash, $sessExpiresAt]);
 
                     // Notify doctor
                     $db->prepare("
@@ -145,8 +146,7 @@ $pending = $stmt->fetchAll();
 // Active sessions
 $stmt = $db->prepare("
     SELECT acs.*, d.full_name AS doctor_name, d.specialization,
-           h.name AS hospital_name,
-           TIMESTAMPDIFF(SECOND, NOW(), acs.expires_at) AS secs_remaining
+           h.name AS hospital_name
     FROM access_sessions acs
     JOIN doctors d ON acs.doctor_id = d.id
     JOIN hospitals h ON acs.hospital_id = h.id
@@ -155,6 +155,10 @@ $stmt = $db->prepare("
 ");
 $stmt->execute([$patientId]);
 $activeSessions = $stmt->fetchAll();
+foreach ($activeSessions as &$acs) {
+    $acs['secs_remaining'] = max(0, strtotime($acs['expires_at']) - time());
+}
+unset($acs);
 
 // Historical requests
 $stmt = $db->prepare("

@@ -49,3 +49,20 @@ define('UPLOAD_PATH', STORAGE_PATH . '/uploads');
 
 // Timezone
 date_default_timezone_set('Asia/Dhaka');
+
+// Polyfills for environments without mbstring
+if (!function_exists('mb_strimwidth')) {
+    function mb_strimwidth($str, $start, $width, $trimmarker = '', $encoding = null) {
+        $str = (string)$str;
+        $sub = substr($str, (int)$start);
+        if (strlen($sub) <= (int)$width) {
+            return $sub;
+        }
+        $markerLen = strlen((string)$trimmarker);
+        if ((int)$width <= $markerLen) {
+            return substr((string)$trimmarker, 0, (int)$width);
+        }
+        return substr($sub, 0, (int)$width - $markerLen) . $trimmarker;
+    }
+}
+

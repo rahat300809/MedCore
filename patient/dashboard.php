@@ -41,11 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // 2. Create 30-minute access session
                     $sessionToken = bin2hex(random_bytes(32));
                     $tokenHash = hash('sha256', $sessionToken);
+                    $sessExpiresAt = date('Y-m-d H:i:s', strtotime('+30 minutes'));
                     $db->prepare("
                         INSERT INTO access_sessions
                             (access_request_id, doctor_id, patient_id, hospital_id, token_hash, status, expires_at)
-                        VALUES (?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
-                    ")->execute([$requestId, $request['doctor_id'], $patientId, $request['hospital_id'], $tokenHash]);
+                        VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?)
+                    ")->execute([$requestId, $request['doctor_id'], $patientId, $request['hospital_id'], $tokenHash, $sessExpiresAt]);
 
                     // 3. Send notification to doctor with instant link to patient record
                     $db->prepare("
@@ -177,8 +178,7 @@ $pendingRequests = $stmtPending->fetchAll();
 // Active access sessions (currently granted)
 $stmtActive = $db->prepare("
     SELECT s.*, d.full_name AS doctor_name, d.specialization, d.medical_registration_id,
-           h.name AS hospital_name,
-           TIMESTAMPDIFF(SECOND, NOW(), s.expires_at) AS seconds_remaining
+           h.name AS hospital_name
     FROM access_sessions s
     JOIN doctors d ON s.doctor_id = d.id
     JOIN hospitals h ON s.hospital_id = h.id
@@ -187,6 +187,10 @@ $stmtActive = $db->prepare("
 ");
 $stmtActive->execute([$patientId]);
 $activeSessions = $stmtActive->fetchAll();
+foreach ($activeSessions as &$s) {
+    $s['seconds_remaining'] = max(0, strtotime($s['expires_at']) - time());
+}
+unset($s);
 
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);

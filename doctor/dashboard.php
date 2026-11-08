@@ -105,8 +105,7 @@ $recentConsultations = $stmt->fetchAll();
 
 // Active access sessions
 $stmt = $db->prepare("
-    SELECT acs.*, p.full_name AS patient_name, p.patient_uid,
-           TIMESTAMPDIFF(SECOND, NOW(), acs.expires_at) AS seconds_remaining
+    SELECT acs.*, p.full_name AS patient_name, p.patient_uid
     FROM access_sessions acs
     JOIN patients p ON acs.patient_id = p.id
     WHERE acs.doctor_id = ? AND acs.status = 'ACTIVE' AND acs.expires_at > NOW()
@@ -115,6 +114,10 @@ $stmt = $db->prepare("
 ");
 $stmt->execute([$doctorId]);
 $activeSessions = $stmt->fetchAll();
+foreach ($activeSessions as &$acs) {
+    $acs['seconds_remaining'] = max(0, strtotime($acs['expires_at']) - time());
+}
+unset($acs);
 
 // Recent prescriptions issued
 $stmt = $db->prepare("

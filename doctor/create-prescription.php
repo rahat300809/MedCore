@@ -18,7 +18,7 @@ if (!$patientId) {
 
 // 1. Verify Active Session
 $stmtSession = $db->prepare("
-    SELECT s.*, TIMESTAMPDIFF(SECOND, NOW(), s.expires_at) AS seconds_remaining
+    SELECT s.*
     FROM access_sessions s
     WHERE s.doctor_id = ? AND s.patient_id = ? AND s.hospital_id = ?
       AND s.status = 'ACTIVE' AND s.expires_at > NOW()
@@ -27,6 +27,9 @@ $stmtSession = $db->prepare("
 ");
 $stmtSession->execute([$doctorId, $patientId, $hospitalId]);
 $accessSession = $stmtSession->fetch();
+if ($accessSession) {
+    $accessSession['seconds_remaining'] = max(0, strtotime($accessSession['expires_at']) - time());
+}
 
 if (!$accessSession) {
     $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Active consent required before prescribing medications.'];
@@ -171,13 +174,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
                     $stmtTok->execute([$labToken]);
                 } while ($stmtTok->fetch()); // retry if collision
 
+                $labExpiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
                 $db->prepare("
                     INSERT INTO prescription_lab_orders
                         (lab_token, prescription_id, patient_id, doctor_id, hospital_id,
                          test_notes, status, expires_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 'PENDING', DATE_ADD(NOW(), INTERVAL 30 DAY))
+                    VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?)
                 ")->execute([
-                    $labToken, $prescriptionId, $patientId, $doctorId, $hospitalId, $labTestNotes
+                    $labToken, $prescriptionId, $patientId, $doctorId, $hospitalId, $labTestNotes, $labExpiresAt
                 ]);
                 $labOrderId = $db->lastInsertId();
 
