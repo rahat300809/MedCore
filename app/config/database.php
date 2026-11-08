@@ -54,8 +54,28 @@ function getDB(): PDO {
     }
 
     // 2. Embedded SQLite Fallback (Bundled DB for 1-click Vercel / demo deployments)
-    $bundleDb = dirname(__DIR__, 2) . '/database/medcore.sqlite';
-    if (file_exists($bundleDb)) {
+    $candidatePaths = [
+        dirname(__DIR__, 2) . '/api/medcore.sqlite',
+        dirname(__DIR__, 2) . '/database/medcore.sqlite',
+        dirname(__DIR__) . '/api/medcore.sqlite',
+        dirname(__DIR__) . '/database/medcore.sqlite',
+        '/var/task/api/medcore.sqlite',
+        '/var/task/user/api/medcore.sqlite',
+        '/var/task/database/medcore.sqlite',
+        '/var/task/user/database/medcore.sqlite',
+        __DIR__ . '/../../api/medcore.sqlite',
+        __DIR__ . '/../../database/medcore.sqlite',
+    ];
+
+    $bundleDb = null;
+    foreach ($candidatePaths as $p) {
+        if ($p && file_exists($p)) {
+            $bundleDb = $p;
+            break;
+        }
+    }
+
+    if ($bundleDb) {
         // In serverless environments like Vercel Lambda, the deployment directory is read-only.
         // We copy the database file to /tmp/medcore.sqlite so write operations work.
         $tmpDb = sys_get_temp_dir() . '/medcore.sqlite';
