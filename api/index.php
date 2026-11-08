@@ -37,7 +37,7 @@ if (isset($_SERVER['HTTP_X_DEBUG_MEDCORE']) || isset($_GET['diag']) || strpos($r
 }
 
 // Quick Diagnostics & Health Check
-if (isset($_GET['health']) || $uri === '/health') {
+if (isset($_GET['health']) || $uri === '/health' || $uri === '/api/health' || $uri === '/api/health.php') {
     header('Content-Type: application/json');
     $dbStatus = 'UNKNOWN';
     $dbError = null;
