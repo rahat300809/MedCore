@@ -143,19 +143,33 @@ function getDB(): PDO {
             ]);
 
             // Register MySQL-compatible SQL functions in SQLite safely without PHP 8.5 deprecation warnings
-            $reg = function($name, $fn) use ($pdo) {
+            $reg = function($name, $fn, $numArgs = -1) use ($pdo) {
                 if (method_exists($pdo, 'createFunction')) {
-                    $pdo->createFunction($name, $fn);
+                    $pdo->createFunction($name, $fn, $numArgs);
                 } elseif (method_exists($pdo, 'sqliteCreateFunction')) {
-                    @$pdo->sqliteCreateFunction($name, $fn);
+                    @$pdo->sqliteCreateFunction($name, $fn, $numArgs);
                 }
             };
 
-            $reg('CURDATE', fn() => date('Y-m-d'));
-            $reg('NOW', fn() => date('Y-m-d H:i:s'));
-            $reg('DATE', fn($d) => substr((string)$d, 0, 10));
-            $reg('CONCAT', fn(...$args) => implode('', $args));
-            $reg('SHA2', fn($val, $bits = 256) => hash('sha256', (string)$val));
+            $reg('CURDATE', fn() => date('Y-m-d'), 0);
+            $reg('NOW', fn() => date('Y-m-d H:i:s'), 0);
+            $reg('DATE', fn($d) => substr((string)$d, 0, 10), 1);
+            $reg('CONCAT', fn(...$args) => implode('', $args), -1);
+            $reg('SHA2', fn($val, $bits = 256) => hash('sha256', (string)$val), -1);
+            $reg('IF', fn($cond, $t, $f) => $cond ? $t : $f, 3);
+            $reg('DATEDIFF', function($d1, $d2) {
+                $t1 = strtotime((string)$d1);
+                $t2 = strtotime((string)$d2);
+                return (int)round(($t1 - $t2) / 86400);
+            }, 2);
+            $reg('YEAR', fn($d) => (int)date('Y', strtotime((string)$d)), 1);
+            $reg('MONTH', fn($d) => (int)date('m', strtotime((string)$d)), 1);
+            $reg('DAY', fn($d) => (int)date('d', strtotime((string)$d)), 1);
+            $reg('FIELD', function($val, ...$list) {
+                if ($val === null) return 0;
+                $idx = array_search((string)$val, array_map('strval', $list), true);
+                return ($idx !== false) ? ($idx + 1) : 0;
+            }, -1);
             $reg('TIMESTAMPDIFF', function($unit, $t1, $t2) {
                 $sec = strtotime((string)$t2) - strtotime((string)$t1);
                 $u = strtoupper((string)$unit);
@@ -164,7 +178,7 @@ function getDB(): PDO {
                 if ($u === 'HOUR')   return (int)floor($sec / 3600);
                 if ($u === 'DAY')    return (int)floor($sec / 86400);
                 return $sec;
-            });
+            }, 3);
 
             return $pdo;
         } catch (\Throwable $sqle) {
