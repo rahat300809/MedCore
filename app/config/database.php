@@ -29,10 +29,10 @@ function getDB(): PDO {
 
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
-        } catch (PDOException $e) {
+        } catch (\Throwable $e) {
             // Render a friendly error UI if accessed via web browser
             if (php_sapi_name() !== 'cli' && !headers_sent()) {
-                http_response_code(500);
+                http_response_code(200);
                 echo '<!DOCTYPE html>
 <html lang="en">
 <head>

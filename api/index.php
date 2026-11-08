@@ -3,6 +3,10 @@
  * MedCore — Vercel Serverless Master Router & Entry Point
  */
 
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
 $rootDir = dirname(__DIR__);
 $rawUri = $_SERVER['REQUEST_URI'] ?? '/';
 $uri = parse_url($rawUri, PHP_URL_PATH) ?: '/';
