@@ -19,16 +19,19 @@ function getDB(): PDO {
         return $pdo;
     }
 
-    // 1. Try MySQL first if DB_HOST is explicitly configured (or local XAMPP)
-    $hasCustomDbHost = getenv('DB_HOST') && getenv('DB_HOST') !== 'localhost';
-    $isVercel = getenv('VERCEL') == '1' 
-        || isset($_SERVER['VERCEL']) 
-        || getenv('VERCEL_REGION') 
-        || getenv('LAMBDA_TASK_ROOT')
-        || isset($_SERVER['LAMBDA_TASK_ROOT'])
-        || strpos(__DIR__, '/var/task') !== false;
+    $lastError = '';
 
-    if ($hasCustomDbHost || !$isVercel) {
+    // 1. Try MySQL first if DB_HOST is explicitly configured (remote MySQL or local XAMPP)
+    $dbHost = getenv('DB_HOST');
+    $isVercel = strpos(__DIR__, '/var/task') !== false 
+        || getenv('VERCEL') == '1' 
+        || isset($_SERVER['VERCEL']) 
+        || getenv('VERCEL_REGION');
+
+    // On Vercel, only try MySQL if a real remote host (not localhost) is given
+    $shouldTryMySql = (!$isVercel) || ($dbHost && $dbHost !== 'localhost');
+
+    if ($shouldTryMySql) {
         $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -45,10 +48,8 @@ function getDB(): PDO {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
             return $pdo;
         } catch (\Throwable $e) {
-            // If explicit remote MySQL was given and failed, render friendly error
-            if ($hasCustomDbHost) {
-                renderDbError($e->getMessage());
-            }
+            $lastError = 'MySQL (' . DB_HOST . '): ' . $e->getMessage();
+            // Silently fall through to embedded SQLite so the live site never breaks
         }
     }
 
@@ -95,12 +96,12 @@ function getDB(): PDO {
 
             return $pdo;
         } catch (\Throwable $sqle) {
-            // Continue to fallback error UI if SQLite also fails
+            $lastError .= ' | SQLite: ' . $sqle->getMessage();
         }
     }
 
-    // 3. Fallback Setup Guide UI
-    renderDbError('Could not connect to MySQL and embedded database is missing.');
+    // 3. Fallback Setup Guide UI (only if BOTH MySQL and SQLite fail)
+    renderDbError($lastError ?: 'Database connection could not be established.');
     return $pdo;
 }
 
