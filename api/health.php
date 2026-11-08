@@ -9,7 +9,10 @@ $res = [
     'php_version' => PHP_VERSION,
     'env_db_host' => getenv('DB_HOST') ?: null,
     'dir' => __DIR__,
-    'api_files' => scandir(__DIR__),
+    'api_files' => is_dir(__DIR__) ? @scandir(__DIR__) : null,
+    'app_config_files' => is_dir(dirname(__DIR__) . '/app/config') ? @scandir(dirname(__DIR__) . '/app/config') : null,
+    'task_files' => is_dir('/var/task') ? @scandir('/var/task') : null,
+    'task_user_files' => is_dir('/var/task/user') ? @scandir('/var/task/user') : null,
     'db_status' => null,
     'db_error' => null,
 ];
@@ -25,4 +28,5 @@ try {
 }
 
 echo json_encode($res, JSON_PRETTY_PRINT);
+
 
