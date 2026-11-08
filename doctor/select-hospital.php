@@ -5,10 +5,16 @@ require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 
 initSession();
 
-// If already authenticated as doctor, go to dashboard
-if (isLoggedIn('DOCTOR') && isset($_SESSION['hospital_id'])) {
+// If already authenticated as doctor and not switching hospital, go to dashboard
+if (isLoggedIn('DOCTOR') && isset($_SESSION['hospital_id']) && !isset($_GET['switch'])) {
     header('Location: ' . APP_URL . '/doctor/dashboard.php');
     exit;
+}
+
+// If switching hospital, populate pending doctor ID
+if (isLoggedIn('DOCTOR') && isset($_SESSION['doctor_id'])) {
+    $_SESSION['pending_doctor_id'] = $_SESSION['doctor_id'];
+    $_SESSION['pending_doctor_name'] = $_SESSION['name'] ?? '';
 }
 
 $db = getDB();

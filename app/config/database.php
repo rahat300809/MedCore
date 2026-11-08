@@ -83,7 +83,7 @@ function getDB(): PDO {
 
     $bundleDb = null;
     foreach ($candidatePaths as $p) {
-        if ($p && file_exists($p)) {
+        if ($p && file_exists($p) && filesize($p) > 1000) {
             $bundleDb = $p;
             break;
         }
@@ -91,16 +91,21 @@ function getDB(): PDO {
 
     // In serverless environments like Vercel Lambda, the deployment directory is read-only.
     // We ensure /tmp/medcore.sqlite exists and is populated with zero external dependencies.
-    $tmpDb = sys_get_temp_dir() . '/medcore.sqlite';
-    if (!file_exists($tmpDb) || filesize($tmpDb) < 1000) {
-        if ($bundleDb && file_exists($bundleDb)) {
-            @copy($bundleDb, $tmpDb);
-        } elseif (function_exists('getEmbeddedDbBinary')) {
-            @file_put_contents($tmpDb, getEmbeddedDbBinary());
+    if ($isVercel) {
+        $tmpDb = sys_get_temp_dir() . '/medcore.sqlite';
+        if (!file_exists($tmpDb) || filesize($tmpDb) < 1000 || ($bundleDb && filemtime($bundleDb) > @filemtime($tmpDb))) {
+            if ($bundleDb && file_exists($bundleDb)) {
+                @copy($bundleDb, $tmpDb);
+            } elseif (function_exists('getEmbeddedDbBinary')) {
+                @file_put_contents($tmpDb, getEmbeddedDbBinary());
+            }
         }
+        $sqliteFile = file_exists($tmpDb) ? $tmpDb : $bundleDb;
+    } else {
+        $sqliteFile = $bundleDb ?: (sys_get_temp_dir() . '/medcore.sqlite');
     }
-    $sqliteFile = file_exists($tmpDb) ? $tmpDb : $bundleDb;
     if (!$sqliteFile && function_exists('getEmbeddedDbBinary')) {
+        $tmpDb = sys_get_temp_dir() . '/medcore.sqlite';
         @file_put_contents($tmpDb, getEmbeddedDbBinary());
         $sqliteFile = $tmpDb;
     }

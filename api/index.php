@@ -103,6 +103,43 @@ if (preg_match('#^/assets/(.+)$#', $uri, $matches)) {
     }
 }
 
+// 1.1 Uploads & Documents Handler
+if (preg_match('#^/(?:storage/)?uploads/(.+)$#', $uri, $matches)) {
+    $uploadPath = null;
+    $candidates = [
+        $rootDir . '/public/uploads/' . $matches[1],
+        $rootDir . '/storage/uploads/' . $matches[1],
+        $rootDir . '/uploads/' . $matches[1],
+        sys_get_temp_dir() . '/uploads/' . $matches[1],
+    ];
+    foreach ($candidates as $c) {
+        if (is_file($c)) {
+            $uploadPath = $c;
+            break;
+        }
+    }
+    if ($uploadPath) {
+        $ext = strtolower(pathinfo($uploadPath, PATHINFO_EXTENSION));
+        $mimes = [
+            'pdf'   => 'application/pdf',
+            'png'   => 'image/png',
+            'jpg'   => 'image/jpeg',
+            'jpeg'  => 'image/jpeg',
+            'gif'   => 'image/gif',
+            'webp'  => 'image/webp',
+            'svg'   => 'image/svg+xml',
+        ];
+        if (isset($mimes[$ext])) {
+            header('Content-Type: ' . $mimes[$ext]);
+        } else {
+            header('Content-Type: application/octet-stream');
+        }
+        header('Cache-Control: private, max-age=3600');
+        readfile($uploadPath);
+        exit;
+    }
+}
+
 // 2. Direct script execution
 $targetScript = null;
 
