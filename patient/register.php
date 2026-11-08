@@ -218,32 +218,42 @@ $csrf = generateCsrfToken();
       <input type="hidden" name="verify_otp" value="1">
       <input type="hidden" name="otp" id="otp-combined">
 
-      <div class="otp-inputs mb-6" style="margin-bottom:var(--space-6);">
+      <div class="otp-inputs mb-4" style="margin-bottom:var(--space-4);">
         <input type="text" maxlength="1" class="otp-input" name="otp_digits[]" inputmode="numeric" pattern="[0-9]" aria-label="OTP digit 1">
         <input type="text" maxlength="1" class="otp-input" name="otp_digits[]" inputmode="numeric" pattern="[0-9]" aria-label="OTP digit 2">
         <input type="text" maxlength="1" class="otp-input" name="otp_digits[]" inputmode="numeric" pattern="[0-9]" aria-label="OTP digit 3">
         <input type="text" maxlength="1" class="otp-input" name="otp_digits[]" inputmode="numeric" pattern="[0-9]" aria-label="OTP digit 4">
-        <input type="text" maxlength="1" class="otp-input" name="otp_digits[]" inputmode="numeric" pattern="[0-9]" aria-label="OTP digit 5">
-        <input type="text" maxlength="1" class="otp-input" name="otp_digits[]" inputmode="numeric" pattern="[0-9]" aria-label="OTP digit 6">
+      </div>
+
+      <div style="text-align:center; margin-bottom:var(--space-4);">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="autofillPatientOtp('1234')" style="font-size:12px; font-weight:600;">
+          <i class="bi bi-magic"></i> Auto-Fill Demo Code (1234)
+        </button>
       </div>
 
       <button type="submit" class="btn btn-primary w-100 btn-lg" id="verify-btn">
-        <i class="bi bi-check-circle-fill"></i> Verify & Create Account
+        <i class="bi bi-check-circle-fill"></i> Verify &amp; Create Account
       </button>
     </form>
 
+    <script>
+    function autofillPatientOtp(code) {
+      const inputs = document.querySelectorAll('.otp-input');
+      [...code].forEach((char, idx) => {
+        if (inputs[idx]) inputs[idx].value = char;
+      });
+      const hidden = document.getElementById('otp-combined');
+      if (hidden) hidden.value = code;
+    }
+    </script>
+
     <?php
     // DEV MODE: Show OTP
-    if (APP_ENV === 'development' && isset($_SESSION['reg_otp_id'])):
-        $db = getDB();
-        $stmt = $db->prepare("SELECT otp_display, expires_at FROM otp_verifications WHERE id = ?");
-        $stmt->execute([$_SESSION['reg_otp_id']]);
-        $otpRecord = $stmt->fetch();
+    if (APP_ENV === 'development'):
     ?>
     <div class="alert alert-warning" style="margin-top:var(--space-4);font-size:13px;">
-      <i class="bi bi-bug-fill"></i>
-      <strong>Dev Mode OTP:</strong> <code style="font-size:1.1rem;font-weight:800;"><?= $otpRecord['otp_display'] ?? 'N/A' ?></code>
-      &nbsp;| Expires: <?= $otpRecord['expires_at'] ?>
+      <i class="bi bi-info-circle-fill"></i>
+      <strong>Demo Code:</strong> <code style="font-size:1.1rem;font-weight:800;letter-spacing:2px;">1234</code>
     </div>
     <?php endif; ?>
 

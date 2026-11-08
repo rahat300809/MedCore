@@ -155,7 +155,7 @@ function requireDoctorAccessSession(int $patientId): array {
     $session = $stmt->fetch();
 
     if (!$session) {
-        header('Location: ' . APP_URL . '/doctor/patient-result.php?error=no_access&patient=' . $patientId);
+        header('Location: ' . APP_URL . '/doctor/patient-search.php?error=no_access&patient=' . $patientId);
         exit;
     }
 

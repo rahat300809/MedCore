@@ -238,6 +238,21 @@ $stmtNotif = $db->prepare("SELECT COUNT(*) AS cnt FROM notifications WHERE user_
 $stmtNotif->execute([$_SESSION['user_id']]);
 $unreadCount = (int)$stmtNotif->fetch()['cnt'];
 
+// Active Lab Tokens for quick presentation at diagnostic labs
+$stmtActiveTokens = $db->prepare("
+    SELECT plo.*, d.full_name AS doctor_name, h.name AS hospital_name,
+           (SELECT COUNT(*) FROM lab_order_tests lot WHERE lot.lab_order_id = plo.id) AS total_tests,
+           (SELECT COUNT(*) FROM lab_order_tests lot WHERE lot.lab_order_id = plo.id AND lot.status = 'COMPLETED') AS done_tests
+    FROM prescription_lab_orders plo
+    JOIN doctors d ON plo.doctor_id = d.id
+    JOIN hospitals h ON plo.hospital_id = h.id
+    WHERE plo.patient_id = ? AND plo.status IN ('PENDING', 'IN_PROGRESS', 'PARTIAL') AND plo.expires_at > NOW()
+    ORDER BY plo.created_at DESC
+    LIMIT 3
+");
+$stmtActiveTokens->execute([$patientId]);
+$activeLabTokens = $stmtActiveTokens->fetchAll();
+
 // Welcome flag
 $isNewUser = isset($_GET['welcome']);
 ?>
@@ -350,6 +365,11 @@ $isNewUser = isset($_GET['welcome']);
           <?= $patient['patient_uid'] ?> · <?= date('D, d M Y') ?>
         </div>
       </div>
+
+      <!-- Emergency ICE Profile Card Button -->
+      <a href="<?= APP_URL ?>/emergency.php?uid=<?= urlencode($patient['patient_uid']) ?>" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:6px; color:#DC2626; border-color:#FCA5A5; background:#FEF2F2; font-weight:700;" title="Public Emergency In-Case-of-Emergency Profile">
+        <i class="bi bi-heart-pulse-fill"></i> Emergency ICE Card
+      </a>
 
       <!-- Consent badge alert -->
       <?php if (count($pendingRequests) > 0): ?>
@@ -529,6 +549,52 @@ $isNewUser = isset($_GET['welcome']);
             <span><strong>Your Privacy Protected:</strong> Granting access provides time-bounded (30 minutes) clinical permission for this doctor. You can revoke it anytime.</span>
           </div>
 
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <!-- ACTIVE LAB TOKENS QUICK ACCESS -->
+      <?php if (!empty($activeLabTokens)): ?>
+      <div class="card mb-6" style="border-left:4px solid #8B5CF6; background:linear-gradient(135deg, #FAF5FF, #FFFFFF);">
+        <div class="d-flex align-center justify-between gap-3 mb-3 flex-wrap">
+          <div class="d-flex align-center gap-2">
+            <i class="bi bi-qr-code-scan" style="color:#7C3AED; font-size:1.3rem;"></i>
+            <div>
+              <h3 style="font-size:1rem; font-weight:800; color:#5B21B6; margin:0;">Active Laboratory Orders &amp; Tokens</h3>
+              <div style="font-size:12px; color:var(--mc-text-muted);">Present this short token at any affiliated hospital laboratory to undergo prescribed tests</div>
+            </div>
+          </div>
+          <a href="<?= APP_URL ?>/patient/lab-reports.php" class="btn btn-outline-primary btn-sm">
+            View All Reports <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
+          <?php foreach ($activeLabTokens as $tok): ?>
+          <div style="background:white; border:1px solid #DDD6FE; border-radius:var(--radius-md); padding:16px; box-shadow:0 2px 8px rgba(139,92,246,0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="badge" style="background:#EDE9FE; color:#6D28D9; font-weight:700;">
+                <i class="bi bi-tag-fill"></i> SHORT TOKEN
+              </span>
+              <span style="font-size:11px; color:var(--mc-text-muted);">Expires: <?= date('d M', strtotime($tok['expires_at'])) ?></span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; background:#F5F3FF; padding:10px 14px; border-radius:8px; border:1px dashed #A78BFA; margin-bottom:10px;">
+              <span style="font-family:var(--font-mono); font-size:1.35rem; font-weight:800; letter-spacing:1px; color:#5B21B6;">
+                <?= htmlspecialchars($tok['lab_token']) ?>
+              </span>
+              <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:4px 8px;" data-copy="<?= htmlspecialchars($tok['lab_token']) ?>">
+                <i class="bi bi-clipboard"></i> Copy
+              </button>
+            </div>
+            <div style="font-size:12px; color:var(--mc-text-secondary); line-height:1.4;">
+              <div><strong>Prescribed by:</strong> Dr. <?= htmlspecialchars($tok['doctor_name']) ?></div>
+              <div><strong>Facility:</strong> <?= htmlspecialchars($tok['hospital_name']) ?></div>
+              <div style="margin-top:4px; color:var(--mc-text-muted); font-size:11px;">
+                Tests: <?= $tok['done_tests'] ?> / <?= $tok['total_tests'] ?> completed
+              </div>
+            </div>
+          </div>
+          <?php endforeach; ?>
         </div>
       </div>
       <?php endif; ?>

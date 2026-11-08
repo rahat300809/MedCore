@@ -17,6 +17,13 @@ $doctorName  = $_SESSION['pending_doctor_name'] ?? '';
 $doctorEmail = $_SESSION['pending_doctor_email'] ?? '';
 $otpId       = (int)$_SESSION['pending_otp_id'];
 
+$db = getDB();
+$stmt = $db->prepare("SELECT otp_display, expires_at, attempt_count, max_attempts FROM otp_verifications WHERE id = ?");
+$stmt->execute([$otpId]);
+$otpRec = $stmt->fetch();
+$demoCode = $otpRec['otp_display'] ?? '1234';
+$digitCount = max(4, min(6, strlen($demoCode)));
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validateCsrf();
 
@@ -34,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             LIMIT 1
         ");
         $stmt->execute([$_SESSION['pending_doctor_id'], $_SESSION['selected_hospital_id']]);
-        if (!$stmt->fetch()) {
+        $affilRow = $stmt->fetch();
+        if (!$affilRow) {
             session_unset();
             header('Location: ' . APP_URL . '/doctor/access-denied.php?reason=no_affiliation');
             exit;
@@ -44,12 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$_SESSION['pending_doctor_user_id']]);
 
         session_regenerate_id(true);
-        $_SESSION['user_id']     = $_SESSION['pending_doctor_user_id'];
-        $_SESSION['role']        = 'DOCTOR';
-        $_SESSION['doctor_id']   = $_SESSION['pending_doctor_id'];
-        $_SESSION['hospital_id'] = $_SESSION['selected_hospital_id'];
+        $_SESSION['user_id']       = $_SESSION['pending_doctor_user_id'];
+        $_SESSION['role']          = 'DOCTOR';
+        $_SESSION['doctor_id']     = $_SESSION['pending_doctor_id'];
+        $_SESSION['hospital_id']   = $_SESSION['selected_hospital_id'];
         $_SESSION['hospital_name'] = $_SESSION['selected_hospital_name'];
-        $_SESSION['name']        = $doctorName;
+        $_SESSION['department_id'] = $affilRow['department_id'] ?? null;
+        $_SESSION['name']          = $doctorName;
 
         // Clean up
         unset($_SESSION['pending_doctor_id'], $_SESSION['pending_doctor_user_id'],
@@ -129,11 +138,17 @@ $csrf = generateCsrfToken();
       <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
       <input type="hidden" name="otp" id="otp-combined">
 
-      <div class="otp-inputs mb-6" style="margin-bottom:var(--space-6);">
-        <?php for ($i = 1; $i <= 6; $i++): ?>
+      <div class="otp-inputs mb-4" style="margin-bottom:var(--space-4);">
+        <?php for ($i = 1; $i <= $digitCount; $i++): ?>
         <input type="text" maxlength="1" class="otp-input" name="otp_digits[]"
           inputmode="numeric" pattern="[0-9]" aria-label="OTP digit <?= $i ?>">
         <?php endfor; ?>
+      </div>
+
+      <div style="text-align:center; margin-bottom:var(--space-5);">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="autofillDemoOtp('<?= htmlspecialchars($demoCode) ?>')" style="font-size:12px; font-weight:600;">
+          <i class="bi bi-magic"></i> Auto-Fill Demo Code (<?= htmlspecialchars($demoCode) ?>)
+        </button>
       </div>
 
       <button type="submit" class="btn btn-primary w-100 btn-lg" id="otp-submit-btn">
@@ -141,20 +156,12 @@ $csrf = generateCsrfToken();
       </button>
     </form>
 
-    <?php
-    if (APP_ENV === 'development') {
-        $db = getDB();
-        $stmt = $db->prepare("SELECT otp_display, expires_at, attempt_count, max_attempts FROM otp_verifications WHERE id = ?");
-        $stmt->execute([$otpId]);
-        $otpRec = $stmt->fetch();
-    ?>
+    <?php if (APP_ENV === 'development'): ?>
     <div class="alert alert-warning" style="margin-top:var(--space-4);font-size:13px;">
-      <i class="bi bi-bug-fill"></i>
-      <strong>Dev OTP:</strong> <code style="font-size:1.2rem;font-weight:800;letter-spacing:4px;"><?= $otpRec['otp_display'] ?? 'N/A' ?></code>
-      &nbsp;| Expires: <?= $otpRec['expires_at'] ?>
-      &nbsp;| Attempts: <?= $otpRec['attempt_count'] ?>/<?= $otpRec['max_attempts'] ?>
+      <i class="bi bi-info-circle-fill"></i>
+      <strong>Demo OTP Code:</strong> <code style="font-size:1.2rem;font-weight:800;letter-spacing:4px;"><?= htmlspecialchars($demoCode) ?></code>
     </div>
-    <?php } ?>
+    <?php endif; ?>
 
     <p style="text-align:center;margin-top:var(--space-5);font-size:13px;color:var(--mc-text-muted);">
       <a href="<?= APP_URL ?>/doctor/verify.php">← Re-enter credentials</a>
@@ -164,6 +171,15 @@ $csrf = generateCsrfToken();
 
 <script src="<?= APP_URL ?>/assets/js/medcore.js"></script>
 <script>
+function autofillDemoOtp(code) {
+  const inputs = document.querySelectorAll('.otp-input');
+  [...code].forEach((char, idx) => {
+    if (inputs[idx]) inputs[idx].value = char;
+  });
+  const hidden = document.getElementById('otp-combined');
+  if (hidden) hidden.value = code;
+}
+
 document.getElementById('otp-form')?.addEventListener('submit', function() {
   const digits = [...document.querySelectorAll('.otp-input')].map(i => i.value).join('');
   document.getElementById('otp-combined').value = digits;

@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['switch_hospital_id'])
     if ($switched) {
         $_SESSION['hospital_id']   = $switched['hospital_id'];
         $_SESSION['hospital_name'] = $switched['hospital_name'];
+        $_SESSION['department_id'] = $switched['department_id'] ?? null;
         $_SESSION['selected_hospital_id']   = $switched['hospital_id'];
         $_SESSION['selected_hospital_name'] = $switched['hospital_name'];
 
@@ -330,10 +331,26 @@ $csrf = generateCsrfToken();
           <a href="<?= APP_URL ?>/doctor/medical-record.php?patient=<?= $s['patient_id'] ?>" class="btn btn-primary btn-sm">
             <i class="bi bi-folder2-open"></i> Open Record
           </a>
+          <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient=<?= $s['patient_id'] ?>" class="btn btn-sm" style="background:#10B981; color:white; font-weight:600;">
+            <i class="bi bi-prescription2"></i> Issue Rx
+          </a>
         </div>
         <?php endforeach; ?>
       </div>
       <?php endif; ?>
+
+      <!-- QUICK PATIENT SEARCH BAR -->
+      <div class="card mb-6" style="padding:16px 20px; background:white; border:1px solid var(--mc-border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm);">
+        <form method="GET" action="<?= APP_URL ?>/doctor/patient-search.php" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:0;">
+          <div style="flex:1; min-width:240px; position:relative;">
+            <i class="bi bi-search" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--mc-text-muted);"></i>
+            <input type="text" name="q" class="form-control" placeholder="Quick Patient Lookup: Enter Phone Number (017...), Patient UID (PT-000001), or NID..." style="padding-left:38px; height:44px; font-size:14px;" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="height:44px; padding:0 20px; font-weight:700;">
+            <i class="bi bi-search-heart-fill"></i> Find Patient
+          </button>
+        </form>
+      </div>
 
       <!-- STATS -->
       <div class="grid-4 mb-8">

@@ -6,7 +6,22 @@
 define('MEDCORE_VERSION', '1.0.0');
 define('APP_NAME', 'MedCore');
 define('APP_TAGLINE', 'One Record. Every Care.');
-define('APP_URL', 'http://localhost/medcore');
+// Auto-detect APP_URL for local and cloud environments (Vercel, Render, Railway, localhost)
+if (getenv('APP_URL')) {
+    define('APP_URL', rtrim(getenv('APP_URL'), '/'));
+} elseif (isset($_SERVER['HTTP_HOST'])) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    $scheme = $isHttps ? 'https://' : 'http://';
+    $subDir = '';
+    if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/medcore') === 0) {
+        $subDir = '/medcore';
+    }
+    define('APP_URL', $scheme . $_SERVER['HTTP_HOST'] . $subDir);
+} else {
+    define('APP_URL', 'http://localhost/medcore');
+}
 
 // Environment: 'development' | 'production'
 define('APP_ENV', 'development');

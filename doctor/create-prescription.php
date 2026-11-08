@@ -85,10 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
     $labTestNotes   = trim($_POST['lab_test_notes'] ?? '');
     $hasLabTests    = !empty($labTestNames);
 
+    $hasMedicines   = !empty($medNames) && !empty(trim($medNames[0] ?? ''));
+
     if (empty($diagnosis)) {
         $error = 'Please provide a clinical diagnosis or observation.';
-    } elseif (empty($medNames) || empty(trim($medNames[0] ?? ''))) {
-        $error = 'Please prescribe at least one medicine.';
+    } elseif (!$hasMedicines && !$hasLabTests) {
+        $error = 'Please prescribe at least one medicine or order at least one lab test.';
     } else {
         $db->beginTransaction();
         try {

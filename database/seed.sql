@@ -11,23 +11,21 @@ USE `medcore`;
 -- ============================================================
 INSERT INTO `users` (`role`, `email`, `phone`, `password_hash`, `status`, `email_verified`, `phone_verified`) VALUES
 -- System Admin
-('SYSTEM_ADMIN', 'admin@medcore.local', '01700000000', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
+('SYSTEM_ADMIN', 'admin@medcore.local', '01700000000', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
 -- Hospital Admins
-('HOSPITAL_ADMIN', 'admin@abc-hospital.com', '01711111111', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
-('HOSPITAL_ADMIN', 'admin@xyz-medical.com', '01722222222', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
-('HOSPITAL_ADMIN', 'admin@dhaka-care.com', '01733333333', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
+('HOSPITAL_ADMIN', 'admin@abc-hospital.com', '01711111111', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
+('HOSPITAL_ADMIN', 'admin@xyz-medical.com', '01722222222', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
+('HOSPITAL_ADMIN', 'admin@dhaka-care.com', '01733333333', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
 -- Doctors
-('DOCTOR', 'dr.rahman@medcore.local', '01755555555', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
-('DOCTOR', 'dr.karim@medcore.local', '01766666666', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
-('DOCTOR', 'dr.hasan@medcore.local', '01777777777', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
+('DOCTOR', 'dr.rahman@medcore.local', '01755555555', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
+('DOCTOR', 'dr.karim@medcore.local', '01766666666', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
+('DOCTOR', 'dr.hasan@medcore.local', '01777777777', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
 -- Patients
-('PATIENT', 'rahat@example.com', '01788888888', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
-('PATIENT', 'nasrin@example.com', '01799999999', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1),
-('PATIENT', 'kamal@example.com', '01800000001', '$2y$10$ZGg7dwO7DCf6ablxX4THTunIvPEH8n1HUTUex0cInoPC7a390xmm6', 'ACTIVE', 1, 1);
-
--- NOTE: password_hash above is bcrypt of 'password' (Laravel default dummy)
--- REAL password for demo: 'Demo123!' - update with actual hash after running:
--- php -r "echo password_hash('Demo123!', PASSWORD_BCRYPT);"
+('PATIENT', 'rahat@example.com', '01788888888', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
+('PATIENT', 'nasrin@example.com', '01799999999', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
+('PATIENT', 'kamal@example.com', '01800000001', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1),
+-- Diagnostic Lab
+('LABORATORY', 'lab@apexdiagnostics.com', '01744444444', '$2y$10$bKegWKXdQS.uiOtw00yKguIFli0QawgzZOwfN1DKE5qDjzUq2LiXO', 'ACTIVE', 1, 1);
 
 -- ============================================================
 -- HOSPITALS
@@ -198,3 +196,15 @@ INSERT INTO `audit_logs` (`user_id`, `action`, `target_type`, `patient_id`, `doc
 (5, 'PATIENT_SEARCH', 'patient', 1, 1, 1, '192.168.1.100', 'INFO', '{"search_by": "patient_uid", "query": "PT-000001"}'),
 (5, 'ACCESS_REQUEST', 'access_request', 1, 1, 1, '192.168.1.100', 'INFO', '{"requested_data": ["MEDICAL_HISTORY","PRESCRIPTIONS","MEDICATIONS","ALLERGIES"]}'),
 (5, 'CREATE_PRESCRIPTION', 'prescription', 1, 1, 1, '192.168.1.100', 'INFO', '{"prescription_uid": "RX-20260916-0001", "medicines_count": 1}');
+
+-- ============================================================
+-- DEMO DIAGNOSTIC LABORATORY & HOSPITAL AFFILIATION
+-- ============================================================
+INSERT INTO `laboratories` (`id`, `user_id`, `lab_uid`, `name`, `registration_number`, `contact_phone`, `contact_email`, `address`, `city`, `services`, `verification_status`, `verified_by`, `verified_at`) VALUES
+(1, 11, 'LAB-000001', 'Apex Diagnostics Ltd.', 'DGHS-LAB-2021-0421', '01744444444', 'lab@apexdiagnostics.com', 'House 24, Road 11, Dhanmondi', 'Dhaka', 'Hematology, Biochemistry, Radiology, Molecular Pathology', 'VERIFIED', 1, NOW())
+ON DUPLICATE KEY UPDATE `verification_status` = 'VERIFIED';
+
+INSERT INTO `hospital_laboratories` (`laboratory_id`, `hospital_id`, `status`, `approved_by`, `approved_at`) VALUES
+(1, 1, 'APPROVED', 1, NOW())
+ON DUPLICATE KEY UPDATE `status` = 'APPROVED';
+

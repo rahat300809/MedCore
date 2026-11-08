@@ -44,12 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($regId) || empty($email)) {
         $error = 'Please enter both your Medical Registration ID and email.';
     } else {
-        // Find doctor by registration ID or email
+        // Find doctor by registration ID and email
         $stmt = $db->prepare("
             SELECT d.*, u.email, u.phone, u.status AS user_status
             FROM doctors d
             JOIN users u ON u.id = d.user_id
-            WHERE (d.medical_registration_id = ? OR u.email = ?)
+            WHERE d.medical_registration_id = ? AND u.email = ?
             LIMIT 1
         ");
         $stmt->execute([$regId, $email]);

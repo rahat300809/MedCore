@@ -69,78 +69,80 @@ $recentUploads = $stmtRecent->fetchAll();
 <title>Lab Dashboard — <?= htmlspecialchars($lab['name'] ?? 'Lab') ?> — MedCore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= APP_URL ?>/public/assets/css/portal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
 <style>
-:root{--accent:#0ea5e9;--accent-dark:#0284c7;--lab:#6366f1;--border:rgba(255,255,255,0.1)}
+:root{--accent:#2563eb;--lab:#7c3aed;--border:#e2e8f0}
 *{box-sizing:border-box}
-body{background:#0f172a;font-family:'Inter',sans-serif;color:#f1f5f9;margin:0}
+body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 /* NAV */
-.nav{background:rgba(15,23,42,0.95);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;backdrop-filter:blur(16px)}
+.nav{background:#ffffff;border-bottom:1px solid #e2e8f0;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
 .nav-brand{display:flex;align-items:center;gap:.75rem;text-decoration:none}
-.nav-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--lab));display:flex;align-items:center;justify-content:center;font-size:1.1rem}
-.nav-title{font-size:1rem;font-weight:700;color:#f1f5f9}
-.nav-subtitle{font-size:.7rem;color:#64748b}
+.nav-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:white}
+.nav-title{font-size:1rem;font-weight:700;color:#0f172a}
+.nav-subtitle{font-size:.75rem;color:#64748b}
 .nav-right{display:flex;align-items:center;gap:.75rem}
-.nav-hospital{font-size:.8rem;color:#94a3b8;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:.35rem .75rem}
-.btn-logout{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:.35rem .75rem;color:#f87171;font-size:.8rem;text-decoration:none;transition:background .2s}
-.btn-logout:hover{background:rgba(239,68,68,0.2)}
+.nav-hospital{font-size:.8rem;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.35rem .75rem;font-weight:600}
+.btn-logout{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:.35rem .75rem;color:#dc2626;font-size:.8rem;text-decoration:none;font-weight:600;transition:background .2s}
+.btn-logout:hover{background:#fee2e2}
 /* LAYOUT */
 .page{max-width:1280px;margin:0 auto;padding:2rem 1.5rem}
 .page-header{margin-bottom:2rem}
-.page-header h1{font-size:1.75rem;font-weight:800;margin:0 0 .25rem}
-.page-header p{color:#94a3b8;margin:0;font-size:.9rem}
+.page-header h1{font-size:1.6rem;font-weight:800;color:#0f172a;margin:0 0 .25rem}
+.page-header p{color:#64748b;margin:0;font-size:.9rem}
 /* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem}
-.stat-card{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:16px;padding:1.25rem;text-align:center;transition:transform .2s,border-color .2s}
-.stat-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,0.2)}
+.stat-card{background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:1.25rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
 .stat-icon{font-size:1.5rem;margin-bottom:.5rem}
-.stat-val{font-size:1.75rem;font-weight:800;line-height:1}
-.stat-label{font-size:.75rem;color:#64748b;margin-top:.25rem}
-.stat-pending .stat-val{color:#f59e0b}
-.stat-progress .stat-val{color:var(--accent)}
-.stat-done .stat-val{color:#22c55e}
+.stat-val{font-size:1.85rem;font-weight:800;line-height:1;color:#0f172a}
+.stat-label{font-size:.78rem;color:#64748b;margin-top:.35rem;font-weight:600}
+.stat-pending .stat-val{color:#d97706}
+.stat-progress .stat-val{color:#2563eb}
+.stat-done .stat-val{color:#16a34a}
 /* ACTION CARD */
-.action-hero{background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(99,102,241,0.15));border:1px solid rgba(14,165,233,0.25);border-radius:20px;padding:2rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem}
-.action-text h2{font-size:1.25rem;font-weight:700;margin:0 0 .5rem}
-.action-text p{color:#94a3b8;margin:0;font-size:.875rem}
-.btn-primary{display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--accent),var(--lab));border:none;border-radius:12px;padding:.875rem 1.75rem;color:#fff;font-size:.9375rem;font-weight:600;text-decoration:none;cursor:pointer;transition:opacity .2s,transform .15s;white-space:nowrap}
-.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.action-hero{background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid #7c3aed;border-radius:16px;padding:1.75rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.action-text h2{font-size:1.2rem;font-weight:800;color:#0f172a;margin:0 0 .35rem}
+.action-text p{color:#64748b;margin:0;font-size:.875rem}
+.btn-primary{display:inline-flex;align-items:center;gap:.5rem;background:#2563eb;border:none;border-radius:10px;padding:.75rem 1.5rem;color:#fff;font-size:.9rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background .2s;white-space:nowrap}
+.btn-primary:hover{background:#1d4ed8}
 /* TWO COLUMN */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
-.panel{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.panel-head{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.panel-head h3{font-size:.9375rem;font-weight:700;margin:0}
-.panel-link{font-size:.8rem;color:var(--accent);text-decoration:none}
+.panel{background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03)}
+.panel-head{padding:1rem 1.25rem;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc}
+.panel-head h3{font-size:.9375rem;font-weight:700;color:#0f172a;margin:0}
+.panel-link{font-size:.8rem;color:#2563eb;text-decoration:none;font-weight:600}
 .panel-link:hover{text-decoration:underline}
 /* ORDER ROW */
-.order-row{padding:1rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.05);transition:background .15s;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.order-row{padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;transition:background .15s;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
 .order-row:last-child{border-bottom:none}
-.order-row:hover{background:rgba(255,255,255,0.03)}
+.order-row:hover{background:#f8fafc}
 .order-info{flex:1;min-width:0}
-.order-token{font-size:.75rem;font-weight:700;color:var(--accent);background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.2);border-radius:6px;padding:.15rem .5rem;font-family:monospace;display:inline-block;margin-bottom:.25rem}
-.order-patient{font-size:.875rem;font-weight:600;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.order-meta{font-size:.75rem;color:#64748b}
-.order-badge{font-size:.7rem;font-weight:600;border-radius:6px;padding:.2rem .5rem;flex-shrink:0}
-.badge-pending{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)}
-.badge-progress{background:rgba(14,165,233,0.12);color:var(--accent);border:1px solid rgba(14,165,233,0.25)}
-.badge-partial{background:rgba(168,85,247,0.12);color:#c084fc;border:1px solid rgba(168,85,247,0.25)}
-.btn-sm{font-size:.75rem;padding:.3rem .65rem;border-radius:7px;text-decoration:none;border:1px solid var(--border);color:#94a3b8;transition:background .15s,color .15s}
-.btn-sm:hover{background:rgba(255,255,255,0.08);color:#f1f5f9}
+.order-token{font-size:.78rem;font-weight:700;color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:.2rem .5rem;font-family:monospace;display:inline-block;margin-bottom:.25rem}
+.order-patient{font-size:.9rem;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.order-meta{font-size:.78rem;color:#64748b}
+.order-badge{font-size:.7rem;font-weight:700;border-radius:6px;padding:.2rem .5rem;flex-shrink:0}
+.badge-pending{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.badge-progress{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.badge-partial{background:#faf5ff;color:#6b21a8;border:1px solid #e9d5ff}
+.btn-sm{font-size:.75rem;padding:.35rem .75rem;border-radius:7px;text-decoration:none;border:1px solid #cbd5e1;color:#334155;background:#ffffff;font-weight:600;transition:background .15s}
+.btn-sm:hover{background:#f1f5f9;color:#0f172a}
 /* UPLOAD ROW */
-.upload-row{padding:1rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:flex-start;gap:.75rem}
+.upload-row{padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:flex-start;gap:.75rem}
 .upload-row:last-child{border-bottom:none}
-.upload-icon{width:36px;height:36px;border-radius:9px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.upload-icon{width:36px;height:36px;border-radius:9px;background:#dcfce7;color:#15803d;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
 .upload-body{flex:1;min-width:0}
-.upload-test{font-size:.875rem;font-weight:600;color:#f1f5f9}
-.upload-patient{font-size:.75rem;color:#64748b}
-.upload-time{font-size:.7rem;color:#475569;margin-top:.15rem}
-.result-badge{font-size:.65rem;font-weight:600;border-radius:5px;padding:.15rem .45rem;flex-shrink:0}
-.rb-normal{background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.2)}
-.rb-abnormal{background:rgba(245,158,11,0.12);color:#fbbf24;border:1px solid rgba(245,158,11,0.2)}
-.rb-critical{background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
-.rb-pending{background:rgba(100,116,139,0.12);color:#94a3b8;border:1px solid rgba(100,116,139,0.2)}
-.empty-state{padding:2.5rem 1.5rem;text-align:center;color:#475569;font-size:.875rem}
-.empty-state .empty-icon{font-size:2rem;margin-bottom:.5rem}
+.upload-test{font-size:.875rem;font-weight:700;color:#0f172a}
+.upload-patient{font-size:.78rem;color:#64748b}
+.upload-time{font-size:.72rem;color:#94a3b8;margin-top:.15rem}
+.result-badge{font-size:.68rem;font-weight:700;border-radius:5px;padding:.15rem .5rem;flex-shrink:0}
+.rb-normal{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.rb-abnormal{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.rb-critical{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.rb-pending{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+.empty-state{padding:2.5rem 1.5rem;text-align:center;color:#64748b;font-size:.875rem}
+.empty-state .empty-icon{font-size:2rem;margin-bottom:.5rem;color:#94a3b8}
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}.action-hero{flex-direction:column;text-align:center}}
 @media(max-width:560px){.stats-grid{grid-template-columns:1fr 1fr}}
 </style>
@@ -207,10 +209,15 @@ if (isset($_GET['logout'])) {
   <!-- Action Hero -->
   <div class="action-hero">
     <div class="action-text">
-      <h2>🔑 Enter Lab Token</h2>
-      <p>A patient brings a prescription with a Lab Token (e.g. <code style="background:rgba(14,165,233,0.1);padding:.1rem .4rem;border-radius:4px;font-family:monospace">LT-XK9F2</code>). Search it to see their test orders and upload results.</p>
+      <h2><i class="bi bi-qr-code-scan" style="color:#7c3aed;"></i> Fast Lab Token Search</h2>
+      <p>Enter the patient's short token (e.g. <strong>LT-8K2A9</strong>) to retrieve ordered tests and upload results immediately.</p>
     </div>
-    <a href="<?= APP_URL ?>/lab/search-token.php" class="btn-primary">🔍 Search Token</a>
+    <form method="GET" action="<?= APP_URL ?>/lab/search-token.php" style="display:flex; gap:10px; flex-wrap:wrap; margin:0;">
+      <input type="text" name="token" class="form-control" placeholder="Enter Token (LT-XXXXX)..." style="width:220px; height:44px; font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:1px;" required>
+      <button type="submit" class="btn-primary" style="height:44px;">
+        <i class="bi bi-search"></i> Look Up Token
+      </button>
+    </form>
   </div>
 
   <!-- Two Column -->

@@ -45,6 +45,7 @@ if ($selectedHospFilter > 0) {
 $rxWhereSql = implode(' AND ', $rxWhere);
 
 // Top Overview Metrics
+$totalsParams = array_merge([$doctorId], $rxParams);
 $stmtTotals = $db->prepare("
     SELECT
         COUNT(DISTINCT rx.patient_id) AS total_patients,
@@ -53,7 +54,7 @@ $stmtTotals = $db->prepare("
     FROM prescriptions rx
     WHERE {$rxWhereSql}
 ");
-$stmtTotals->execute($rxParams);
+$stmtTotals->execute($totalsParams);
 $totals = $stmtTotals->fetch();
 
 // Medicine Breakdown: which medicines provided and how many times
@@ -61,9 +62,9 @@ $stmtMeds = $db->prepare("
     SELECT
         pm.medicine_name,
         pm.strength,
-        pm.dosage,
-        pm.frequency,
-        pm.route,
+        MAX(pm.dosage) AS dosage,
+        MAX(pm.frequency) AS frequency,
+        MAX(pm.route) AS route,
         COUNT(pm.id) AS prescribe_count,
         COUNT(DISTINCT rx.patient_id) AS unique_patients
     FROM prescription_medicines pm

@@ -206,7 +206,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_result'])) {
 <title>Upload Result — <?= htmlspecialchars($test['test_name']) ?> — MedCore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= APP_URL ?>/public/assets/css/portal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
 <style>
 :root{--accent:#0ea5e9;--lab:#6366f1;--border:rgba(255,255,255,0.1)}
 *{box-sizing:border-box}

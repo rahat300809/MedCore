@@ -16,21 +16,29 @@ $error  = '';
 $accessSession = null;
 
 if ($query) {
-    // Search by patient UID or NID last4
+    // Search by patient UID, phone number, or NID last 4 digits
+    $cleanQuery = trim($query);
+    $normalizedUid = (stripos($cleanQuery, 'PT-') === 0) ? strtoupper($cleanQuery) : ('PT-' . str_pad($cleanQuery, 6, '0', STR_PAD_LEFT));
+    $phoneWithZero = (strlen($cleanQuery) === 10 && substr($cleanQuery, 0, 1) === '1') ? '0' . $cleanQuery : $cleanQuery;
+
     $stmt = $db->prepare("
         SELECT p.*, u.email, u.status AS user_status,
                u.last_login_at,
                (SELECT COUNT(*) FROM patient_allergies pa WHERE pa.patient_id = p.id AND pa.severity IN ('SEVERE','LIFE_THREATENING')) AS critical_allergy_count
         FROM patients p
         JOIN users u ON u.id = p.user_id
-        WHERE p.patient_uid = ? OR p.nid_last4 = ?
+        WHERE p.patient_uid = ?
+           OR p.patient_uid = ?
+           OR p.nid_last4 = ?
+           OR u.phone = ?
+           OR u.phone = ?
         LIMIT 1
     ");
-    $stmt->execute([$query, ltrim($query, '0')]);
+    $stmt->execute([$cleanQuery, $normalizedUid, $cleanQuery, $cleanQuery, $phoneWithZero]);
     $found = $stmt->fetch();
 
     if (!$found) {
-        $error = 'No patient found with ID "' . htmlspecialchars($query) . '". Try the full Patient ID (PT-000001) or NID last 4 digits.';
+        $error = 'No patient found with "' . htmlspecialchars($query) . '". Try Patient UID (PT-000001), Registered Phone Number, or NID last 4 digits.';
     } else {
         $age = date_diff(new DateTime($found['date_of_birth']), new DateTime())->y;
 
@@ -132,6 +140,143 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_request'])) {
         ]);
 
         $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Access request sent successfully! Waiting for patient approval.'];
+    }
+    header('Location: ' . APP_URL . '/doctor/patient-search.php?q=' . urlencode($query));
+    exit;
+}
+
+// Handle verbal/demo OTP submission (Instant in-chamber approval)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_verbal_otp'])) {
+    validateCsrf();
+    $patientId = (int)$_POST['patient_id'];
+    $otpCode   = trim($_POST['otp_code'] ?? '');
+    $reason    = trim($_POST['access_reason'] ?? 'In-Chamber Clinical Consultation');
+
+    // Accept demo code 1234 or verify against database
+    $isValid = ($otpCode === '1234');
+
+    if (!$isValid) {
+        $stmtOtp = $db->prepare("
+            SELECT ov.* FROM otp_verifications ov
+            JOIN patients p ON p.user_id = ov.user_id
+            WHERE p.id = ? AND ov.status = 'PENDING' AND ov.expires_at > NOW()
+            ORDER BY ov.id DESC LIMIT 1
+        ");
+        $stmtOtp->execute([$patientId]);
+        $otpRow = $stmtOtp->fetch();
+        if ($otpRow && password_verify($otpCode, $otpRow['otp_hash'])) {
+            $isValid = true;
+            $db->prepare("UPDATE otp_verifications SET status = 'VERIFIED', verified_at = NOW() WHERE id = ?")->execute([$otpRow['id']]);
+        }
+    }
+
+    if ($isValid) {
+        $db->beginTransaction();
+        try {
+            $stmt = $db->prepare("
+                INSERT INTO access_requests
+                    (doctor_id, patient_id, hospital_id, doctor_notes, status, approved_at, expires_at)
+                VALUES (?, ?, ?, ?, 'APPROVED', NOW(), DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+            ");
+            $stmt->execute([$doctorId, $patientId, $hospitalId, $reason . ' (Verified via Verbal OTP)']);
+            $newReqId = (int)$db->lastInsertId();
+
+            $sessionToken = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $sessionToken);
+            $stmtSess = $db->prepare("
+                INSERT INTO access_sessions
+                    (access_request_id, doctor_id, patient_id, hospital_id, token_hash, status, expires_at)
+                VALUES (?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+            ");
+            $stmtSess->execute([$newReqId, $doctorId, $patientId, $hospitalId, $tokenHash]);
+
+            $db->commit();
+
+            AuditService::log(AuditService::ACCESS_GRANTED, [
+                'user_id'    => $_SESSION['user_id'],
+                'doctor_id'  => $doctorId,
+                'patient_id' => $patientId,
+                'hospital_id'=> $hospitalId,
+                'metadata'   => ['method' => 'verbal_otp', 'reason' => $reason]
+            ]);
+
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Patient consent verified via OTP! 30-minute clinical session active.'];
+            header('Location: ' . APP_URL . '/doctor/medical-record.php?patient=' . $patientId);
+            exit;
+        } catch (Exception $e) {
+            $db->rollBack();
+            $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Failed to initialize session: ' . $e->getMessage()];
+        }
+    } else {
+        $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Invalid OTP code. Please enter the demo code 1234 or the patient\'s code.'];
+    }
+    header('Location: ' . APP_URL . '/doctor/patient-search.php?q=' . urlencode($query));
+    exit;
+}
+
+// Handle emergency break-glass override
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['emergency_break_glass'])) {
+    validateCsrf();
+    $patientId = (int)$_POST['patient_id'];
+    $emgReason = trim($_POST['emergency_reason'] ?? '');
+
+    if (empty($emgReason)) {
+        $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Clinical justification is required for Emergency Override.'];
+    } else {
+        $db->beginTransaction();
+        try {
+            $stmt = $db->prepare("
+                INSERT INTO access_requests
+                    (doctor_id, patient_id, hospital_id, doctor_notes, status, approved_at, expires_at)
+                VALUES (?, ?, ?, ?, 'APPROVED', NOW(), DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+            ");
+            $stmt->execute([$doctorId, $patientId, $hospitalId, '[EMERGENCY_OVERRIDE]: ' . $emgReason]);
+            $newReqId = (int)$db->lastInsertId();
+
+            $sessionToken = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $sessionToken);
+            $stmtSess = $db->prepare("
+                INSERT INTO access_sessions
+                    (access_request_id, doctor_id, patient_id, hospital_id, token_hash, status, expires_at)
+                VALUES (?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+            ");
+            $stmtSess->execute([$newReqId, $doctorId, $patientId, $hospitalId, $tokenHash]);
+
+            $db->prepare("
+                INSERT INTO notifications (user_id, type, title, message, reference_type, reference_id, action_url)
+                SELECT u.id, 'ACCESS_GRANTED',
+                       'EMERGENCY ACCESS OVERRIDE ALERT',
+                       CONCAT('Emergency access initiated by Dr. ', :dname, ' at ', :hname, '. Reason: ', :emgreason),
+                       'access_session', :req_id, :action_url
+                FROM patients p JOIN users u ON u.id = p.user_id
+                WHERE p.id = :pid
+            ")->execute([
+                ':dname'      => $_SESSION['name'] ?? 'Doctor',
+                ':hname'      => $_SESSION['hospital_name'] ?? 'Hospital',
+                ':emgreason'  => $emgReason,
+                ':req_id'     => $newReqId,
+                ':action_url' => APP_URL . '/patient/access-history.php',
+                ':pid'        => $patientId,
+            ]);
+
+            $db->commit();
+
+            AuditService::log(AuditService::ACCESS_GRANTED, [
+                'user_id'    => $_SESSION['user_id'],
+                'doctor_id'  => $doctorId,
+                'patient_id' => $patientId,
+                'hospital_id'=> $hospitalId,
+                'severity'   => 'CRITICAL',
+                'metadata'   => ['protocol' => 'BREAK_GLASS_OVERRIDE', 'reason' => $emgReason]
+            ]);
+
+            $_SESSION['flash'] = ['type' => 'warning', 'msg' => 'Emergency override logged. 30-minute clinical access granted.'];
+            header('Location: ' . APP_URL . '/doctor/medical-record.php?patient=' . $patientId);
+            exit;
+        } catch (Exception $e) {
+            $db->rollBack();
+            $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Emergency override failed: ' . $e->getMessage()];
+        }
     }
     header('Location: ' . APP_URL . '/doctor/patient-search.php?q=' . urlencode($query));
     exit;
@@ -314,59 +459,158 @@ $csrf = generateCsrfToken();
                class="btn btn-success btn-lg">
               <i class="bi bi-file-earmark-medical-fill"></i> New Prescription
             </a>
-            <a href="<?= APP_URL ?>/doctor/new-consultation.php?patient=<?= $found['id'] ?>&session=<?= $accessSession['id'] ?>"
+            <a href="<?= APP_URL ?>/doctor/consultations.php"
                class="btn btn-secondary btn-lg">
-              <i class="bi bi-clipboard2-pulse-fill"></i> New Consultation
+              <i class="bi bi-clock-history"></i> Past Consultations
             </a>
           </div>
 
           <?php elseif ($pendingRequest): ?>
-          <!-- WAITING -->
-          <div class="record-locked" style="border-color:var(--mc-amber);">
-            <div style="font-size:2rem;color:var(--mc-amber);margin-bottom:var(--space-4);" class="waiting-pulse">
+          <!-- WAITING WITH INSTANT OTP FALLBACK -->
+          <div class="record-locked" style="border-color:var(--mc-amber); max-width:620px; margin:0 auto; padding:28px 24px;">
+            <div style="font-size:2.2rem;color:var(--mc-amber);margin-bottom:var(--space-3);" class="waiting-pulse">
               <i class="bi bi-hourglass-split"></i>
             </div>
-            <h4 style="font-weight:700;margin-bottom:var(--space-3);">Waiting for Patient Approval</h4>
-            <p style="font-size:14px;color:var(--mc-text-secondary);">
-              A consent request has been sent to <?= htmlspecialchars($found['full_name']) ?>.
-              They must approve it on their MedCore portal to grant you access.
+            <h4 style="font-weight:700;margin-bottom:8px;font-size:1.15rem;">Waiting for In-App Patient Approval</h4>
+            <p style="font-size:13px;color:var(--mc-text-secondary);margin-bottom:16px;">
+              A consent prompt was sent to <strong><?= htmlspecialchars($found['full_name']) ?></strong>.
+              They can approve it on their MedCore mobile/web portal.
             </p>
-            <p style="font-size:12px;color:var(--mc-text-muted);margin-top:var(--space-3);">
-              Request expires: <?= date('h:i A', strtotime($pendingRequest['expires_at'])) ?>
+
+            <div style="background:#FFFBEB; border:1px dashed #F59E0B; border-radius:12px; padding:16px; margin-top:16px; text-align:left;">
+              <div style="font-size:12px; font-weight:700; color:#92400E; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                <i class="bi bi-chat-quote-fill"></i> Or Verify Patient OTP In-Chamber:
+              </div>
+              <form method="POST" style="display:flex; gap:10px; flex-wrap:wrap;">
+                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                <input type="hidden" name="verify_verbal_otp" value="1">
+                <input type="hidden" name="patient_id" value="<?= $found['id'] ?>">
+                <input type="text" name="otp_code" class="form-control" placeholder="Enter OTP (Demo: 1234)" style="flex:1; min-width:180px; font-family:var(--font-mono); font-weight:700; letter-spacing:2px; height:42px;" value="1234" required>
+                <button type="submit" class="btn btn-success" style="height:42px; font-weight:700;">
+                  <i class="bi bi-unlock-fill"></i> Verify &amp; Unlock
+                </button>
+              </form>
+              <div style="font-size:11px; color:#B45309; margin-top:6px;">
+                <i class="bi bi-info-circle"></i> Demo Mode Active: You can use code <strong>1234</strong> for testing without SMS.
+              </div>
+            </div>
+
+            <p style="font-size:11px;color:var(--mc-text-muted);margin-top:12px;margin-bottom:0;">
+              Request expires at <?= date('h:i A', strtotime($pendingRequest['expires_at'])) ?>
             </p>
           </div>
 
           <?php else: ?>
-          <!-- LOCKED — Request form -->
-          <div class="record-locked">
-            <div class="record-locked-icon"><i class="bi bi-lock-fill"></i></div>
-            <h4 style="font-weight:700;margin-bottom:var(--space-3);">Medical Record Locked</h4>
-            <p style="font-size:14px;color:var(--mc-text-secondary);margin-bottom:var(--space-6);">
-              You must request and receive patient consent to access <?= htmlspecialchars($found['full_name']) ?>'s medical record.
-            </p>
-
-            <form method="POST" style="max-width:400px;margin:0 auto;text-align:left;">
-              <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-              <input type="hidden" name="send_request" value="1">
-              <input type="hidden" name="patient_id" value="<?= $found['id'] ?>">
-              <div class="form-group">
-                <label class="form-label">Reason for Access</label>
-                <select name="access_reason" class="form-control" required>
-                  <option value="">Select clinical reason...</option>
-                  <option value="General Consultation">General Consultation</option>
-                  <option value="Emergency Assessment">Emergency Assessment</option>
-                  <option value="Prescription Review">Prescription Review</option>
-                  <option value="Follow-up Consultation">Follow-up Consultation</option>
-                  <option value="Lab Report Review">Lab Report Review</option>
-                  <option value="Referral Assessment">Referral Assessment</option>
-                  <option value="Pre-operative Assessment">Pre-operative Assessment</option>
-                </select>
+          <!-- LOCKED — DUAL ACCESS MODES (OTP vs IN-APP vs EMERGENCY) -->
+          <div style="max-width:700px; margin:0 auto;">
+            <!-- Primary Box: In-Chamber OTP -->
+            <div class="card mb-4" style="border:1px solid #E2E8F0; border-radius:16px; padding:24px; box-shadow:0 4px 16px rgba(0,0,0,0.04); text-align:left;">
+              <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:18px;">
+                <div style="width:44px; height:44px; border-radius:12px; background:var(--mc-blue-light); color:var(--mc-blue); display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;">
+                  <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                  <h4 style="font-size:1.1rem; font-weight:800; color:var(--mc-navy); margin:0 0 4px;">Instant Chamber Consent (OTP)</h4>
+                  <div style="font-size:13px; color:var(--mc-text-secondary);">
+                    Ask patient for their 4-digit verification code to start an instant 30-minute clinical session.
+                  </div>
+                </div>
               </div>
-              <button type="submit" class="btn btn-primary w-100">
-                <i class="bi bi-send-fill"></i>
-                Send Consent Request to Patient
-              </button>
-            </form>
+
+              <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                <input type="hidden" name="verify_verbal_otp" value="1">
+                <input type="hidden" name="patient_id" value="<?= $found['id'] ?>">
+
+                <div class="form-group mb-3">
+                  <label class="form-label" style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--mc-text-secondary);">Clinical Consultation Reason</label>
+                  <select name="access_reason" class="form-control" style="height:42px;">
+                    <option value="General Outpatient Consultation">General Outpatient Consultation</option>
+                    <option value="Prescription & Medication Review">Prescription &amp; Medication Review</option>
+                    <option value="Follow-up Consultation">Follow-up Consultation</option>
+                    <option value="Diagnostic Lab Evaluation">Diagnostic Lab Evaluation</option>
+                    <option value="Pre-operative Assessment">Pre-operative Assessment</option>
+                  </select>
+                </div>
+
+                <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+                  <div style="flex:1; min-width:200px;">
+                    <label class="form-label" style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--mc-text-secondary);">Patient Verification Code</label>
+                    <input type="text" name="otp_code" class="form-control" placeholder="Enter 4-digit code (Demo: 1234)" value="1234" style="height:46px; font-family:var(--font-mono); font-size:1.1rem; font-weight:700; letter-spacing:2px;" required>
+                  </div>
+                  <button type="submit" class="btn btn-primary" style="height:46px; padding:0 24px; font-weight:700; display:inline-flex; align-items:center; gap:8px;">
+                    <i class="bi bi-unlock-fill"></i> Unlock &amp; Open Record
+                  </button>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:6px; margin-top:10px; font-size:12px; color:var(--mc-blue); font-weight:600;">
+                  <i class="bi bi-info-circle-fill"></i> Demo Mode Active: Use demo code <code>1234</code> to open record instantly.
+                </div>
+              </form>
+            </div>
+
+            <!-- Alternative Options: In-App Request & Emergency Override -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+              <!-- Option B: In-App Request -->
+              <div class="card" style="padding:18px; border:1px solid var(--mc-border); border-radius:12px;">
+                <div style="font-weight:700; font-size:13px; color:var(--mc-navy); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                  <i class="bi bi-phone" style="color:var(--mc-teal);"></i> Send In-App Request
+                </div>
+                <p style="font-size:12px; color:var(--mc-text-muted); margin-bottom:12px; line-height:1.4;">
+                  Patient will receive a push notification to review and tap Accept on their mobile phone.
+                </p>
+                <form method="POST">
+                  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                  <input type="hidden" name="send_request" value="1">
+                  <input type="hidden" name="patient_id" value="<?= $found['id'] ?>">
+                  <input type="hidden" name="access_reason" value="Outpatient Consultation (In-App Review)">
+                  <button type="submit" class="btn btn-outline btn-sm w-100">
+                    <i class="bi bi-send"></i> Send to Patient App
+                  </button>
+                </form>
+              </div>
+
+              <!-- Option C: Emergency Override (Break Glass) -->
+              <div class="card" style="padding:18px; border:1px solid #FECACA; background:#FEF2F2; border-radius:12px;">
+                <div style="font-weight:700; font-size:13px; color:#DC2626; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                  <i class="bi bi-exclamation-octagon-fill"></i> Emergency Override
+                </div>
+                <p style="font-size:12px; color:#991B1B; margin-bottom:12px; line-height:1.4;">
+                  For unconscious or trauma patients in ER/ICU. Strictly logged with central audit trail.
+                </p>
+                <button type="button" class="btn btn-secondary btn-sm w-100" style="color:#DC2626; border-color:#FCA5A5; background:white; font-weight:700;" onclick="document.getElementById('emg-modal').style.display='flex'">
+                  <i class="bi bi-lightning-charge-fill"></i> Break-Glass Access
+                </button>
+              </div>
+            </div>
+
+            <!-- Emergency Modal -->
+            <div id="emg-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+              <div style="background:white; border-radius:16px; max-width:480px; width:100%; padding:24px; box-shadow:var(--shadow-lg);">
+                <div style="display:flex; align-items:center; gap:10px; color:#DC2626; margin-bottom:12px;">
+                  <i class="bi bi-shield-exclamation" style="font-size:1.8rem;"></i>
+                  <h3 style="font-size:1.15rem; font-weight:800; margin:0;">Emergency Clinical Override</h3>
+                </div>
+                <p style="font-size:13px; color:var(--mc-text-secondary); margin-bottom:16px;">
+                  You are invoking emergency Break-Glass protocol for <strong><?= htmlspecialchars($found['full_name']) ?></strong>.
+                  State the critical clinical reason. This action will be flagged with <strong>HIGH SEVERITY</strong> in the central health audit log.
+                </p>
+                <form method="POST">
+                  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                  <input type="hidden" name="emergency_break_glass" value="1">
+                  <input type="hidden" name="patient_id" value="<?= $found['id'] ?>">
+                  <div class="form-group mb-4">
+                    <label class="form-label" style="font-size:12px; font-weight:700;">Emergency Clinical Reason</label>
+                    <textarea name="emergency_reason" class="form-control" rows="3" placeholder="e.g. Unconscious road trauma patient in ED; required immediate allergy & blood group verification." required></textarea>
+                  </div>
+                  <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('emg-modal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm" style="background:#DC2626; color:white; font-weight:700;">Confirm Emergency Access</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
           </div>
           <?php endif; ?>
 

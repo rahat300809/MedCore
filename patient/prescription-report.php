@@ -6,9 +6,9 @@ require_once __DIR__ . '/../app/services/AuditService.php';
 
 initSession();
 
-// Allowed roles: PATIENT (owner), DOCTOR, HOSPITAL_ADMIN, SYSTEM_ADMIN
+// Allowed roles: PATIENT (owner), DOCTOR, HOSPITAL_ADMIN, SYSTEM_ADMIN, LABORATORY
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
-    header('Location: ' . APP_URL . '/login.php');
+    header('Location: ' . APP_URL . '/role-selection.php');
     exit;
 }
 
@@ -61,6 +61,32 @@ if ($userRole === 'PATIENT') {
     if ($myHospId !== (int)$rx['hospital_id']) {
         http_response_code(403);
         exit("Unauthorized access.");
+    }
+} elseif ($userRole === 'DOCTOR') {
+    $currentDocId = (int)($_SESSION['doctor_id'] ?? 0);
+    if ($currentDocId !== (int)$rx['doctor_id']) {
+        $stmtSess = $db->prepare("
+            SELECT id FROM access_sessions
+            WHERE doctor_id = ? AND patient_id = ? AND status = 'ACTIVE' AND expires_at > NOW()
+            LIMIT 1
+        ");
+        $stmtSess->execute([$currentDocId, $patientId]);
+        if (!$stmtSess->fetch()) {
+            http_response_code(403);
+            exit("Active consent session required to view this patient's prescription.");
+        }
+    }
+} elseif ($userRole === 'LABORATORY') {
+    $currentLabId = (int)($_SESSION['lab_id'] ?? 0);
+    $stmtLabOrd = $db->prepare("
+        SELECT id FROM prescription_lab_orders
+        WHERE prescription_id = ? AND (laboratory_id = ? OR hospital_id = ?)
+        LIMIT 1
+    ");
+    $stmtLabOrd->execute([$rxId, $currentLabId, (int)($_SESSION['hospital_id'] ?? 0)]);
+    if (!$stmtLabOrd->fetch()) {
+        http_response_code(403);
+        exit("Unauthorized access to this prescription.");
     }
 }
 

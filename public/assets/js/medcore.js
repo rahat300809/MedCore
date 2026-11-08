@@ -157,3 +157,34 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Universal Mobile Sidebar & Navbar Toggle Handler
+document.addEventListener('DOMContentLoaded', () => {
+  const hamburgerBtns = document.querySelectorAll('#hamburger-btn, .hamburger');
+  const sidebar = document.getElementById('sidebar') || document.querySelector('.sidebar');
+  const navMenu = document.getElementById('nav-menu') || document.querySelector('.navbar-nav');
+
+  hamburgerBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', !isExpanded);
+
+      if (sidebar) {
+        sidebar.classList.toggle('open');
+      }
+      if (navMenu) {
+        navMenu.classList.toggle('open');
+      }
+    });
+  });
+
+  // Close sidebar when clicking outside on mobile
+  document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('open') && !sidebar.contains(e.target)) {
+      sidebar.classList.remove('open');
+      hamburgerBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+    }
+  });
+});
+

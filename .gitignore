@@ -1,11 +1,12 @@
 # MedCore .gitignore
 
-# Sensitive configuration (copy database.example.php and configure locally)
-app/config/database.php
+# Sensitive local overrides (if using a distinct local config file)
+# app/config/database.local.php
 
 # Uploaded files (not tracked in git)
 storage/uploads/
 storage/logs/
+uploads/
 
 # IDE files
 .vscode/
