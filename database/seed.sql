@@ -3,7 +3,7 @@
 -- Demo accounts + sample healthcare data
 -- ============================================================
 
-USE `medcore`;
+-- Optional: USE `medcore`;
 
 -- ============================================================
 -- USERS (passwords: all use 'Demo123!' hashed with bcrypt)

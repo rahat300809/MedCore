@@ -8,11 +8,9 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+06:00";
 
-CREATE DATABASE IF NOT EXISTS `medcore`
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE `medcore`;
+-- Optional: Create and use database if running locally with root privileges
+-- CREATE DATABASE IF NOT EXISTS `medcore` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE `medcore`;
 
 -- ============================================================
 -- TABLE 1: users
