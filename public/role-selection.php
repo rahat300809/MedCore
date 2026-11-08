@@ -497,6 +497,13 @@ if (isset($_SESSION['role'])) {
     <h1 class="role-title">Who Are You Accessing As?</h1>
     <p class="role-subtitle">All access is cryptographically authenticated and audit-logged. Select your role to continue to your portal.</p>
 
+    <!-- Emergency Access Callout -->
+    <div style="margin-bottom: 28px;">
+      <a href="<?= APP_URL ?>/emergency.php" class="admin-access-btn" style="border-color: rgba(239,68,68,0.3); color: #DC2626; background: #FEF2F2; padding: 10px 24px; font-size: 13px;">
+        <i class="bi bi-shield-exclamation text-danger fs-6"></i> First Responder / ER Staff? Open Emergency ICE Profile
+      </a>
+    </div>
+
     <div class="role-grid">
       <!-- Patient -->
       <div class="role-card patient" id="patient-role-card">

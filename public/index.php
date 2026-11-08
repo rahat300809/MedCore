@@ -60,6 +60,9 @@ if (isset($_SESSION['role'])) {
     </ul>
 
     <div class="navbar-actions">
+      <a href="<?= APP_URL ?>/emergency.php" class="btn btn-sm" id="btn-emergency-nav" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; font-weight: 600;" title="Emergency Profile">
+        <i class="bi bi-shield-exclamation text-danger"></i> ICE
+      </a>
       <a href="<?= APP_URL ?>/role-selection.php" class="btn btn-secondary btn-sm" id="btn-login">
         <i class="bi bi-box-arrow-in-right"></i> Log In
       </a>
