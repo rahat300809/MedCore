@@ -13,6 +13,8 @@ define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 define('DB_CHARSET', 'utf8mb4');
 
+require_once __DIR__ . '/embedded_db.php';
+
 function getDB(): PDO {
     static $pdo = null;
     if ($pdo !== null) {
@@ -87,14 +89,23 @@ function getDB(): PDO {
         }
     }
 
-    if ($bundleDb) {
-        // In serverless environments like Vercel Lambda, the deployment directory is read-only.
-        // We copy the database file to /tmp/medcore.sqlite so write operations work.
-        $tmpDb = sys_get_temp_dir() . '/medcore.sqlite';
-        if (!file_exists($tmpDb) || filemtime($bundleDb) > filemtime($tmpDb)) {
+    // In serverless environments like Vercel Lambda, the deployment directory is read-only.
+    // We ensure /tmp/medcore.sqlite exists and is populated with zero external dependencies.
+    $tmpDb = sys_get_temp_dir() . '/medcore.sqlite';
+    if (!file_exists($tmpDb) || filesize($tmpDb) < 1000) {
+        if ($bundleDb && file_exists($bundleDb)) {
             @copy($bundleDb, $tmpDb);
+        } elseif (function_exists('getEmbeddedDbBinary')) {
+            @file_put_contents($tmpDb, getEmbeddedDbBinary());
         }
-        $sqliteFile = file_exists($tmpDb) ? $tmpDb : $bundleDb;
+    }
+    $sqliteFile = file_exists($tmpDb) ? $tmpDb : $bundleDb;
+    if (!$sqliteFile && function_exists('getEmbeddedDbBinary')) {
+        @file_put_contents($tmpDb, getEmbeddedDbBinary());
+        $sqliteFile = $tmpDb;
+    }
+
+    if ($sqliteFile) {
 
         if (!class_exists('MedCoreSQLitePDO', false)) {
             class MedCoreSQLitePDO extends PDO {
