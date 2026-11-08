@@ -21,18 +21,22 @@ function getDB(): PDO {
 
     $lastError = '';
 
-    // 1. Try MySQL first if DB_HOST is explicitly configured (remote MySQL or local XAMPP)
-    $dbHost = getenv('DB_HOST');
+    // 1. Detect Vercel / Cloud serverless environment
+    $dbHost = getenv('DB_HOST') ?: null;
     $isVercel = strpos(__DIR__, '/var/task') !== false 
+        || strpos(__DIR__, 'var' . DIRECTORY_SEPARATOR . 'task') !== false
         || getenv('VERCEL') == '1' 
         || isset($_SERVER['VERCEL']) 
-        || getenv('VERCEL_REGION');
+        || getenv('VERCEL_REGION')
+        || isset($_SERVER['VERCEL_URL'])
+        || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
 
-    // On Vercel, only try MySQL if a real remote host (not localhost) is given
-    $shouldTryMySql = (!$isVercel) || ($dbHost && $dbHost !== 'localhost');
+    // On Vercel, only attempt MySQL if a real remote host (e.g. Aiven, TiDB, Railway) is provided
+    $shouldTryMySql = (!$isVercel) || (!empty($dbHost) && $dbHost !== 'localhost' && $dbHost !== '127.0.0.1');
 
     if ($shouldTryMySql) {
-        $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
+        $host = $dbHost ?: DB_HOST;
+        $dsn = 'mysql:host=' . $host . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -48,23 +52,31 @@ function getDB(): PDO {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
             return $pdo;
         } catch (\Throwable $e) {
-            $lastError = 'MySQL (' . DB_HOST . '): ' . $e->getMessage();
+            $lastError = 'MySQL (' . $host . '): ' . $e->getMessage();
             // Silently fall through to embedded SQLite so the live site never breaks
         }
     }
 
     // 2. Embedded SQLite Fallback (Bundled DB for 1-click Vercel / demo deployments)
     $candidatePaths = [
+        __DIR__ . '/medcore.sqlite',
+        dirname(__DIR__, 2) . '/app/config/medcore.sqlite',
         dirname(__DIR__, 2) . '/api/medcore.sqlite',
         dirname(__DIR__, 2) . '/database/medcore.sqlite',
-        dirname(__DIR__) . '/api/medcore.sqlite',
+        dirname(__DIR__, 2) . '/public/medcore.sqlite',
+        dirname(__DIR__) . '/config/medcore.sqlite',
         dirname(__DIR__) . '/database/medcore.sqlite',
+        dirname(__DIR__) . '/api/medcore.sqlite',
+        dirname(__DIR__) . '/medcore.sqlite',
+        '/var/task/app/config/medcore.sqlite',
+        '/var/task/user/app/config/medcore.sqlite',
         '/var/task/api/medcore.sqlite',
         '/var/task/user/api/medcore.sqlite',
         '/var/task/database/medcore.sqlite',
         '/var/task/user/database/medcore.sqlite',
-        __DIR__ . '/../../api/medcore.sqlite',
-        __DIR__ . '/../../database/medcore.sqlite',
+        '/var/task/medcore.sqlite',
+        '/var/task/user/medcore.sqlite',
+        sys_get_temp_dir() . '/medcore.sqlite',
     ];
 
     $bundleDb = null;
@@ -72,24 +84,6 @@ function getDB(): PDO {
         if ($p && file_exists($p)) {
             $bundleDb = $p;
             break;
-        }
-    }
-
-    // Dynamic search across /var/task or project root if not found in standard paths
-    if (!$bundleDb) {
-        $searchRoots = array_filter(['/var/task', dirname(__DIR__, 2), dirname(__DIR__)]);
-        foreach ($searchRoots as $root) {
-            if (is_dir($root)) {
-                try {
-                    $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
-                    foreach ($it as $file) {
-                        if ($file->isFile() && $file->getExtension() === 'sqlite') {
-                            $bundleDb = $file->getPathname();
-                            break 2;
-                        }
-                    }
-                } catch (\Throwable $e) {}
-            }
         }
     }
 
