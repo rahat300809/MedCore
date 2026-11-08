@@ -16,6 +16,38 @@ $rootDir = dirname(__DIR__);
 $rawUri = $_SERVER['REQUEST_URI'] ?? '/';
 $uri = parse_url($rawUri, PHP_URL_PATH) ?: '/';
 
+// Quick Diagnostics & Health Check
+if (isset($_GET['health']) || $uri === '/health') {
+    header('Content-Type: application/json');
+    $dbStatus = 'UNKNOWN';
+    $dbError = null;
+    $dbDriver = null;
+    $userCount = 0;
+    try {
+        require_once $rootDir . '/app/config/database.php';
+        $db = getDB();
+        $dbStatus = 'OK';
+        $dbDriver = $db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $userCount = (int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn();
+    } catch (\Throwable $e) {
+        $dbStatus = 'FAILED';
+        $dbError = $e->getMessage();
+    }
+    echo json_encode([
+        'status' => 'OK',
+        'php_version' => PHP_VERSION,
+        'rootDir' => $rootDir,
+        'dir' => __DIR__,
+        'db_status' => $dbStatus,
+        'db_driver' => $dbDriver,
+        'user_count' => $userCount,
+        'db_error' => $dbError,
+        'scandir_root' => @scandir($rootDir) ?: [],
+        'scandir_dir' => @scandir(__DIR__) ?: [],
+    ], JSON_PRETTY_PRINT);
+    exit;
+}
+
 // Normalize subfolder prefix if any
 $uri = preg_replace('#^/medcore#', '', $uri);
 if ($uri === '' || $uri === '/') {
