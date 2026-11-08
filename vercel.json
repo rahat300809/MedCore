@@ -3,7 +3,7 @@
   "functions": {
     "api/*.php": {
       "runtime": "vercel-php@0.9.0",
-      "includeFiles": "database/medcore.sqlite"
+      "includeFiles": "{database/**,api/**}"
     }
   },
   "routes": [

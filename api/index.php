@@ -16,6 +16,26 @@ $rootDir = dirname(__DIR__);
 $rawUri = $_SERVER['REQUEST_URI'] ?? '/';
 $uri = parse_url($rawUri, PHP_URL_PATH) ?: '/';
 
+// Diagnostic hook
+if (isset($_SERVER['HTTP_X_DEBUG_MEDCORE']) || isset($_GET['diag']) || strpos($rawUri, 'diag') !== false) {
+    header('Content-Type: application/json');
+    $files = [];
+    $checkDirs = ['/var/task', '/var/task/user', '/var/task/user/database', '/var/task/database', '/var/task/api', $rootDir, $rootDir . '/database', $rootDir . '/api', sys_get_temp_dir()];
+    foreach ($checkDirs as $d) {
+        $files[$d] = file_exists($d) ? @scandir($d) : 'NOT_FOUND';
+    }
+    echo json_encode([
+        'REQUEST_URI' => $_SERVER['REQUEST_URI'] ?? null,
+        'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'] ?? null,
+        'PHP_SELF'    => $_SERVER['PHP_SELF'] ?? null,
+        'rootDir'     => $rootDir,
+        'dir'         => __DIR__,
+        'cwd'         => getcwd(),
+        'files'       => $files,
+    ], JSON_PRETTY_PRINT);
+    exit;
+}
+
 // Quick Diagnostics & Health Check
 if (isset($_GET['health']) || $uri === '/health') {
     header('Content-Type: application/json');

@@ -75,6 +75,24 @@ function getDB(): PDO {
         }
     }
 
+    // Dynamic search across /var/task or project root if not found in standard paths
+    if (!$bundleDb) {
+        $searchRoots = array_filter(['/var/task', dirname(__DIR__, 2), dirname(__DIR__)]);
+        foreach ($searchRoots as $root) {
+            if (is_dir($root)) {
+                try {
+                    $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
+                    foreach ($it as $file) {
+                        if ($file->isFile() && $file->getExtension() === 'sqlite') {
+                            $bundleDb = $file->getPathname();
+                            break 2;
+                        }
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+    }
+
     if ($bundleDb) {
         // In serverless environments like Vercel Lambda, the deployment directory is read-only.
         // We copy the database file to /tmp/medcore.sqlite so write operations work.
