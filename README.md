@@ -47,10 +47,10 @@ All OTP verification prompts accept the universal demo code: **`1234`**.
 | Role | Portal URL | Email Address | Password | Demo OTP | Description |
 |---|---|---|---|---|---|
 | **Patient** | [`/patient/login.php`](https://medcore1-tan.vercel.app/patient/login.php) | `rahat@example.com` | `Demo123!` | `1234` | Rahat Mahamud (`PT-000001`), O+ Blood, Allergies & Active Prescriptions |
-| **Doctor** | [`/doctor/select-hospital.php`](https://medcore1-tan.vercel.app/doctor/select-hospital.php) | `ayesha@example.com` | `Demo123!` | `1234` | Dr. Ayesha Rahman (`DOC-000001`), BMDC `BMDC-A-54321`, Internal Medicine |
-| **Hospital Admin** | [`/hospital/login.php`](https://medcore1-tan.vercel.app/hospital/login.php) | `admin@dmch.gov.bd` | `Demo123!` | — | Dhaka Medical College Hospital (`HOSP-000001`), Roster & Lab Approvals |
-| **Diagnostic Lab** | [`/lab/login.php`](https://medcore1-tan.vercel.app/lab/login.php) | `tech@popular.com.bd` | `Demo123!` | — | Popular Diagnostic Centre (`LAB-000001`), Token Lookup & Batch Upload |
-| **System Admin** | [`/admin/login.php`](https://medcore1-tan.vercel.app/admin/login.php) | `admin@medcore.gov.bd` | `Demo123!` | — | Central National Registry, BMDC Verifications & System Audit Trail |
+| **Doctor** | [`/doctor/select-hospital.php`](https://medcore1-tan.vercel.app/doctor/select-hospital.php) | `dr.rahman@medcore.local` | `Demo123!` | `1234` | Dr. Farhana Rahman (`DR-000001`), BMDC `BMDC-A-12345`, ABC General Hospital |
+| **Hospital Admin** | [`/hospital/login.php`](https://medcore1-tan.vercel.app/hospital/login.php) | `admin@abc-hospital.com` | `Demo123!` | `1234` | ABC General Hospital Admin (`HOSP-000001`), Dhanmondi, Dhaka |
+| **Diagnostic Lab** | [`/lab/login.php`](https://medcore1-tan.vercel.app/lab/login.php) | `lab@apexdiagnostics.com` | `Demo123!` | `1234` | Apex Diagnostics Ltd. (`LAB-000001`), Token search & upload manager |
+| **System Admin** | [`/admin/login.php`](https://medcore1-tan.vercel.app/admin/login.php) | `admin@medcore.local` | `Demo123!` | `1234` | Platform Root Administrator, audit compliance & hospital licensing |
 | **Emergency ICE** | [`/emergency.php?uid=PT-000001`](https://medcore1-tan.vercel.app/emergency.php?uid=PT-000001) | *No Login Required* | — | — | Public Emergency First-Responder Profile with 1-Click Call & Blood Group |
 
 ---
