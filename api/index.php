@@ -3,9 +3,14 @@
  * MedCore — Vercel Serverless Master Router & Entry Point
  */
 
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
+// Enable output buffering so headers, cookies, and redirects work cleanly
+if (!ob_get_level()) {
+    ob_start();
+}
+
+// Suppress deprecations so PHP 8.5 notices do not corrupt HTTP response headers
+ini_set('display_errors', '0');
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_NOTICE);
 
 $rootDir = dirname(__DIR__);
 $rawUri = $_SERVER['REQUEST_URI'] ?? '/';

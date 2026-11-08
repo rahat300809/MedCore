@@ -21,7 +21,12 @@ function getDB(): PDO {
 
     // 1. Try MySQL first if DB_HOST is explicitly configured (or local XAMPP)
     $hasCustomDbHost = getenv('DB_HOST') && getenv('DB_HOST') !== 'localhost';
-    $isVercel = getenv('VERCEL') == '1' || isset($_SERVER['VERCEL']);
+    $isVercel = getenv('VERCEL') == '1' 
+        || isset($_SERVER['VERCEL']) 
+        || getenv('VERCEL_REGION') 
+        || getenv('LAMBDA_TASK_ROOT')
+        || isset($_SERVER['LAMBDA_TASK_ROOT'])
+        || strpos(__DIR__, '/var/task') !== false;
 
     if ($hasCustomDbHost || !$isVercel) {
         $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
@@ -40,7 +45,7 @@ function getDB(): PDO {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
             return $pdo;
         } catch (\Throwable $e) {
-            // If explicit remote MySQL was given and failed, we don't fall back silently
+            // If explicit remote MySQL was given and failed, render friendly error
             if ($hasCustomDbHost) {
                 renderDbError($e->getMessage());
             }
@@ -65,13 +70,21 @@ function getDB(): PDO {
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ]);
 
-            // Register MySQL-compatible SQL functions in SQLite
-            $pdo->sqliteCreateFunction('CURDATE', fn() => date('Y-m-d'));
-            $pdo->sqliteCreateFunction('NOW', fn() => date('Y-m-d H:i:s'));
-            $pdo->sqliteCreateFunction('DATE', fn($d) => substr((string)$d, 0, 10));
-            $pdo->sqliteCreateFunction('SHA2', fn($val, $bits = 256) => hash('sha256', (string)$val));
-            $pdo->sqliteCreateFunction('TIMESTAMPDIFF', function($unit, $t1, $t2) {
-                $sec = strtotime($t2) - strtotime($t1);
+            // Register MySQL-compatible SQL functions in SQLite safely without PHP 8.5 deprecation warnings
+            $reg = function($name, $fn) use ($pdo) {
+                if (method_exists($pdo, 'createFunction')) {
+                    @$pdo->createFunction($name, $fn);
+                } elseif (method_exists($pdo, 'sqliteCreateFunction')) {
+                    @$pdo->sqliteCreateFunction($name, $fn);
+                }
+            };
+
+            $reg('CURDATE', fn() => date('Y-m-d'));
+            $reg('NOW', fn() => date('Y-m-d H:i:s'));
+            $reg('DATE', fn($d) => substr((string)$d, 0, 10));
+            $reg('SHA2', fn($val, $bits = 256) => hash('sha256', (string)$val));
+            $reg('TIMESTAMPDIFF', function($unit, $t1, $t2) {
+                $sec = strtotime((string)$t2) - strtotime((string)$t1);
                 $u = strtoupper((string)$unit);
                 if ($u === 'SECOND') return $sec;
                 if ($u === 'MINUTE') return (int)floor($sec / 60);
