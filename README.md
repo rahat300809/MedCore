@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-medcore1--tan.vercel.app-0070F3?style=for-the-badge&logo=vercel&logoColor=white)](https://medcore1-tan.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-medcore1.vercel.app-0070F3?style=for-the-badge&logo=vercel&logoColor=white)](https://medcore1-git-main-md-rahat-mahamuds-projects.vercel.app/)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![Database](https://img.shields.io/badge/Database-MySQL_8.0_%7C_SQLite_3-4479A1?style=for-the-badge&logo=sqlite&logoColor=white)](https://github.com/rahat300809/MedCore)
 [![Architecture](https://img.shields.io/badge/Architecture-Pure_PHP_%7C_Serverless-0F766E?style=for-the-badge)](https://github.com/rahat300809/MedCore)
@@ -13,7 +13,7 @@
 
 **A Unified, Consent-Driven National Electronic Health Record (EHR) & Clinical Workflow Platform**
 
-[🌐 Live Vercel Demo](https://medcore1-tan.vercel.app/) • [🔑 Demo Accounts](#-demo-accounts--credentials) • [Key Features](#-core-features) • [Laboratory Token Flow](#-laboratory-management--token-workflow) • [System Architecture](#-system-architecture) • [Quick Start](#-installation--quick-start)
+[🌐 Live Vercel Demo](https://medcore1-git-main-md-rahat-mahamuds-projects.vercel.app/) • [🔑 Demo Accounts](#-demo-accounts--credentials) • [Key Features](#-core-features) • [Laboratory Token Flow](#-laboratory-management--token-workflow) • [System Architecture](#-system-architecture) • [Quick Start](#-installation--quick-start)
 
 </div>
 
@@ -23,9 +23,8 @@
 
 MedCore is deployed live on Vercel Serverless with zero-configuration embedded database support:
 
-- **Production Live URL:** [https://medcore1-tan.vercel.app/](https://medcore1-tan.vercel.app/)
-- **Git Branch Preview URL:** [https://medcore1-git-main-md-rahat-mahamuds-projects.vercel.app/](https://medcore1-git-main-md-rahat-mahamuds-projects.vercel.app/)
-- **Public Emergency ICE Profile (Direct):** [https://medcore1-tan.vercel.app/emergency.php?uid=PT-000001](https://medcore1-tan.vercel.app/emergency.php?uid=PT-000001)
+- **Live URL:** [https://medcore1-git-main-md-rahat-mahamuds-projects.vercel.app/](https://medcore1-git-main-md-rahat-mahamuds-projects.vercel.app/)
+- **Public Emergency ICE Profile (Direct):** [https://medcore1-git-main-md-rahat-mahamuds-projects.vercel.app/emergency.php?uid=PT-000001](https://medcore1-git-main-md-rahat-mahamuds-projects.vercel.app/emergency.php?uid=PT-000001)
 
 > **Universal Demo OTP:** For all two-factor authentication and patient consent verifications, use the universal test code: **`1234`** (no SMS balance or SIM required).
 
