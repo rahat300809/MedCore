@@ -25,7 +25,10 @@ function getDB(): PDO {
 
     // 1. Detect Vercel / Cloud serverless environment
     $dbHost = getenv('DB_HOST') ?: null;
-    $isVercel = strpos(__DIR__, '/var/task') !== false 
+    $isVercel = is_dir('/var/task')
+        || getenv('LAMBDA_TASK_ROOT')
+        || getenv('AWS_LAMBDA_FUNCTION_NAME')
+        || strpos(__DIR__, '/var/task') !== false 
         || strpos(__DIR__, 'var' . DIRECTORY_SEPARATOR . 'task') !== false
         || getenv('VERCEL') == '1' 
         || isset($_SERVER['VERCEL']) 
@@ -94,17 +97,24 @@ function getDB(): PDO {
     $tmpDb = sys_get_temp_dir() . '/medcore.sqlite';
     if ($isVercel || !file_exists($tmpDb) || filesize($tmpDb) < 50000) {
         if (!file_exists($tmpDb) || filesize($tmpDb) < 50000 || ($bundleDb && @filemtime($bundleDb) > @filemtime($tmpDb))) {
-            if (function_exists('getEmbeddedDbBinary')) {
-                @file_put_contents($tmpDb, getEmbeddedDbBinary());
-            } elseif ($bundleDb && file_exists($bundleDb)) {
+            if ($bundleDb && file_exists($bundleDb) && filesize($bundleDb) >= 50000) {
                 @copy($bundleDb, $tmpDb);
+            }
+            if ((!file_exists($tmpDb) || filesize($tmpDb) < 50000) && function_exists('getEmbeddedDbBinary')) {
+                $bin = getEmbeddedDbBinary();
+                if ($bin && strlen($bin) >= 50000) {
+                    @file_put_contents($tmpDb, $bin);
+                }
             }
         }
     }
     $sqliteFile = (file_exists($tmpDb) && filesize($tmpDb) >= 50000) ? $tmpDb : $bundleDb;
     if ((!$sqliteFile || (file_exists($sqliteFile) && filesize($sqliteFile) < 50000)) && function_exists('getEmbeddedDbBinary')) {
-        @file_put_contents($tmpDb, getEmbeddedDbBinary());
-        $sqliteFile = $tmpDb;
+        $bin = getEmbeddedDbBinary();
+        if ($bin && strlen($bin) >= 50000) {
+            @file_put_contents($tmpDb, $bin);
+            $sqliteFile = $tmpDb;
+        }
     }
 
     if ($sqliteFile) {
