@@ -3,12 +3,16 @@ require_once __DIR__ . '/../app/config/app.php';
 require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/services/AuditService.php';
+require_once __DIR__ . '/includes/session_bar.php';
 
 requireDoctorHospitalContext();
 
 $db = getDB();
 $doctorId   = (int)$_SESSION['doctor_id'];
 $hospitalId = (int)$_SESSION['hospital_id'];
+
+// Get active patient session if one exists
+$activeSession = getDoctorActivePatientSession($db, $doctorId, $hospitalId);
 
 $query  = trim($_GET['q'] ?? '');
 $found  = null;
@@ -85,6 +89,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_request'])) {
     $patientId = (int)$_POST['patient_id'];
     $reason    = trim($_POST['access_reason'] ?? '');
 
+    // Strict single-patient lock: cannot request another patient while session is active
+    if ($activeSession && (int)$activeSession['patient_id'] !== $patientId) {
+        $_SESSION['flash'] = [
+            'type' => 'error',
+            'msg'  => 'Active consultation with ' . htmlspecialchars($activeSession['full_name']) . ' is ongoing. Please end the active session before requesting another patient.'
+        ];
+        header('Location: ' . APP_URL . '/doctor/patient-search.php');
+        exit;
+    }
+
     // Auto-expire stale requests first
     $db->prepare("UPDATE access_requests SET status = 'EXPIRED' WHERE status = 'PENDING' AND expires_at IS NOT NULL AND expires_at < NOW()")->execute();
 
@@ -152,6 +166,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_verbal_otp']))
     $patientId = (int)$_POST['patient_id'];
     $otpCode   = trim($_POST['otp_code'] ?? '');
     $reason    = trim($_POST['access_reason'] ?? 'In-Chamber Clinical Consultation');
+
+    // Strict single-patient lock: cannot unlock another patient while session is active
+    if ($activeSession && (int)$activeSession['patient_id'] !== $patientId) {
+        $_SESSION['flash'] = [
+            'type' => 'error',
+            'msg'  => 'Active consultation with ' . htmlspecialchars($activeSession['full_name']) . ' is ongoing. Please end the active session before consulting with another patient.'
+        ];
+        header('Location: ' . APP_URL . '/doctor/patient-search.php');
+        exit;
+    }
 
     // Accept demo code 1234 or verify against database
     $isValid = ($otpCode === '1234');
@@ -221,6 +245,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['emergency_break_glass
     validateCsrf();
     $patientId = (int)$_POST['patient_id'];
     $emgReason = trim($_POST['emergency_reason'] ?? '');
+
+    // Strict single-patient lock
+    if ($activeSession && (int)$activeSession['patient_id'] !== $patientId) {
+        $_SESSION['flash'] = [
+            'type' => 'error',
+            'msg'  => 'Active consultation with ' . htmlspecialchars($activeSession['full_name']) . ' is ongoing. Please end the active session before initiating emergency access for another patient.'
+        ];
+        header('Location: ' . APP_URL . '/doctor/patient-search.php');
+        exit;
+    }
 
     if (empty($emgReason)) {
         $_SESSION['flash'] = ['type' => 'error', 'msg' => 'Clinical justification is required for Emergency Override.'];
@@ -336,6 +370,8 @@ $csrf = generateCsrfToken();
   </aside>
 
   <main class="portal-main">
+    <?php renderActivePatientSessionBar($activeSession, 'patient-search'); ?>
+
     <header class="portal-topbar">
       <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
       <div style="flex:1;">
@@ -346,6 +382,41 @@ $csrf = generateCsrfToken();
     </header>
 
     <div class="portal-content">
+
+      <!-- Active Patient Consultation Strict Lock Banner -->
+      <?php if ($activeSession): ?>
+        <div class="session-lock-card mb-4" role="alert">
+          <div class="lock-icon"><i class="bi bi-shield-lock-fill"></i></div>
+          <div class="lock-body">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="badge" style="background:#EF4444;color:#fff;font-weight:700;font-size:11px;letter-spacing:0.5px;">ACTIVE CONSULTATION IN PROGRESS / রোগী চলমান</span>
+              <span class="clinical-elapsed-badge" style="background:#FEF3C7;color:#92400E;border-color:#FCD34D;"><i class="bi bi-hourglass-split"></i> 30-min Clinical Window Active</span>
+            </div>
+            <h3 style="margin:4px 0 8px;font-size:1.15rem;font-weight:800;color:var(--mc-text-dark);">
+              Currently Consulting with <?= htmlspecialchars($activeSession['full_name']) ?> (<?= htmlspecialchars($activeSession['patient_uid']) ?>)
+            </h3>
+            <p style="margin:0 0 12px;font-size:13px;color:var(--mc-text-secondary);line-height:1.5;">
+              Under clinical safety and data privacy protocols, you cannot initiate or verify consultation with another patient without ending the current active session.
+            </p>
+            <div class="lock-actions">
+              <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $activeSession['patient_id'] ?>" class="btn btn-primary btn-sm" style="font-weight:700;">
+                <i class="bi bi-file-earmark-medical-fill"></i> Return to <?= htmlspecialchars($activeSession['full_name']) ?>'s Record
+              </a>
+              <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $activeSession['patient_id'] ?>" class="btn btn-secondary btn-sm">
+                <i class="bi bi-prescription2"></i> Write Prescription
+              </a>
+              <form method="POST" action="<?= APP_URL ?>/doctor/end-session.php" style="display:inline;margin:0;" onsubmit="return confirm('End current consultation with <?= htmlspecialchars(addslashes($activeSession['full_name'])) ?> to switch patients?');">
+                <?= csrfField() ?>
+                <input type="hidden" name="session_id" value="<?= $activeSession['id'] ?>">
+                <input type="hidden" name="redirect_to" value="/doctor/patient-search.php">
+                <button type="submit" class="btn btn-danger btn-sm" style="font-weight:700;">
+                  <i class="bi bi-x-circle-fill"></i> End Session &amp; Switch Patient
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <?php endif; ?>
 
       <!-- Flash -->
       <?php if ($flash): ?>
@@ -452,7 +523,37 @@ $csrf = generateCsrfToken();
 
         <!-- Patient body -->
         <div class="patient-result-body">
-          <?php if ($accessSession): ?>
+          <?php if ($activeSession && (int)$found['id'] !== (int)$activeSession['patient_id']): ?>
+          <!-- ACTIVE SESSION WITH ANOTHER PATIENT LOCKED -->
+          <div class="session-lock-card" style="margin:16px 0;">
+            <div class="lock-icon"><i class="bi bi-shield-lock-fill"></i></div>
+            <div class="lock-body">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge" style="background:#EF4444;color:#fff;font-weight:700;">SWITCH BLOCKED / অন্য রোগী দেখা সম্ভব নয়</span>
+              </div>
+              <h4 style="font-size:1.1rem;font-weight:800;color:var(--mc-text-dark);margin:4px 0 8px;">
+                Consultation in Progress with <?= htmlspecialchars($activeSession['full_name']) ?>
+              </h4>
+              <p style="font-size:13px;color:var(--mc-text-secondary);margin:0 0 16px;">
+                You cannot request consent or verify OTP for <strong><?= htmlspecialchars($found['full_name']) ?></strong> until your active consultation with <strong><?= htmlspecialchars($activeSession['full_name']) ?></strong> is explicitly ended.
+              </p>
+              <div class="lock-actions">
+                <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $activeSession['patient_id'] ?>" class="btn btn-primary btn-sm">
+                  <i class="bi bi-arrow-left-circle-fill"></i> Continue with <?= htmlspecialchars($activeSession['full_name']) ?>
+                </a>
+                <form method="POST" action="<?= APP_URL ?>/doctor/end-session.php" style="display:inline;margin:0;">
+                  <?= csrfField() ?>
+                  <input type="hidden" name="session_id" value="<?= $activeSession['id'] ?>">
+                  <input type="hidden" name="redirect_to" value="/doctor/patient-search.php?q=<?= urlencode($query) ?>">
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('End session with <?= htmlspecialchars(addslashes($activeSession['full_name'])) ?> and switch to <?= htmlspecialchars(addslashes($found['full_name'])) ?>?');">
+                    <i class="bi bi-x-circle-fill"></i> End Session &amp; Consult <?= htmlspecialchars($found['full_name']) ?>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <?php elseif ($accessSession): ?>
           <!-- RECORD UNLOCKED -->
           <div class="d-flex gap-3" style="flex-wrap:wrap;margin-bottom:var(--space-5);">
             <a href="<?= APP_URL ?>/doctor/medical-record.php?patient=<?= $found['id'] ?>" class="btn btn-primary btn-lg" style="flex:1;">

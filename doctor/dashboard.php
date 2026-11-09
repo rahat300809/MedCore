@@ -3,12 +3,17 @@ require_once __DIR__ . '/../app/config/app.php';
 require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/services/AuditService.php';
+require_once __DIR__ . '/includes/session_bar.php';
 
 requireDoctorHospitalContext();
 
 $db = getDB();
 $doctorId   = (int)$_SESSION['doctor_id'];
 $hospitalId = (int)$_SESSION['hospital_id'];
+
+// Active patient session & clinical briefing
+$activePatientSession = getDoctorActivePatientSession($db, $doctorId, $hospitalId);
+$activeClinicalSummary = $activePatientSession ? getPatientExecutiveClinicalSummary($db, (int)$activePatientSession['patient_id']) : null;
 
 // Handle quick hospital switch
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['switch_hospital_id'])) {
@@ -268,6 +273,8 @@ $csrf = generateCsrfToken();
 
   <!-- MAIN -->
   <main class="portal-main">
+    <?php renderActivePatientSessionBar($activePatientSession, 'dashboard'); ?>
+
     <header class="portal-topbar">
       <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar" aria-expanded="false">
         <i class="bi bi-list"></i>
@@ -314,6 +321,37 @@ $csrf = generateCsrfToken();
       <div class="alert alert-success mb-4" data-auto-dismiss="5000">
         <i class="bi bi-check-circle-fill"></i> Switched practice location to <strong><?= htmlspecialchars($doctor['hospital_name']) ?></strong>.
       </div>
+      <?php endif; ?>
+
+      <!-- ACTIVE PATIENT EXECUTIVE CLINICAL SUMMARY AT LOGIN / CONSULTATION -->
+      <?php if ($activePatientSession && !empty($activeClinicalSummary)): ?>
+        <div style="margin-bottom: var(--space-6);">
+          <?php renderExecutiveClinicalSummary($activeClinicalSummary, true); ?>
+        </div>
+      <?php endif; ?>
+
+      <!-- CHAMBER READY SHORTCUT IF NO PATIENT ACTIVE -->
+      <?php if (!$activePatientSession): ?>
+        <div class="card mb-4" style="background:linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%); color:#fff; border:none; padding:20px 24px; border-radius:16px; box-shadow:0 8px 24px rgba(30,64,175,0.2);">
+          <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:16px;">
+            <div>
+              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.85;">
+                <i class="bi bi-person-bounding-box"></i> Chamber Ready
+              </div>
+              <h3 style="font-size:1.25rem; font-weight:800; margin:4px 0; color:#fff;">
+                Ready for Next Patient Consultation
+              </h3>
+              <div style="font-size:13px; opacity:0.9;">
+                Search patient by UID (e.g. PT-000001), phone number, or NID to instantly unlock medical records &amp; summary.
+              </div>
+            </div>
+            <div>
+              <a href="<?= APP_URL ?>/doctor/patient-search.php" class="btn" style="background:#fff; color:#1E40AF; font-weight:700; padding:10px 20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                <i class="bi bi-search-heart-fill"></i> Find Patient to Start
+              </a>
+            </div>
+          </div>
+        </div>
       <?php endif; ?>
 
       <!-- ACTIVE ACCESS SESSIONS BANNER -->

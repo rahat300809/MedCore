@@ -3,12 +3,14 @@ require_once __DIR__ . '/../app/config/app.php';
 require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/services/AuditService.php';
+require_once __DIR__ . '/includes/session_bar.php';
 
 requireDoctorHospitalContext();
 
 $db        = getDB();
 $doctorId  = (int)$_SESSION['doctor_id'];
 $activeHospId = (int)$_SESSION['hospital_id'];
+$activeSession = getDoctorActivePatientSession($db, $doctorId, $activeHospId);
 
 // Get doctor profile details
 $stmtDoc = $db->prepare("SELECT * FROM doctors WHERE id = ?");
@@ -240,10 +242,17 @@ AuditService::log('REPORTS_VIEW', [
 
   <!-- MAIN -->
   <main class="portal-main">
+    <?php renderActivePatientSessionBar($activeSession, 'reports'); ?>
+
     <header class="portal-header">
-      <div>
-        <span class="eyebrow" style="color: var(--mc-teal-dark); font-size: 11px; font-weight: 700;">CLINICAL AUDIT &amp; DETAILED PRACTICE REPORTS</span>
-        <h1 class="portal-title" style="font-size: 1.3rem; margin: 0;">Practice Analytics &amp; Prescribed Medicines</h1>
+      <div class="d-flex align-items-center gap-3">
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
+        <div>
+          <span class="eyebrow" style="color: var(--mc-teal-dark); font-size: 11px; font-weight: 700;">CLINICAL AUDIT &amp; DETAILED PRACTICE REPORTS</span>
+          <h1 class="portal-title" style="font-size: 1.3rem; margin: 0;">Practice Analytics &amp; Prescribed Medicines</h1>
+        </div>
       </div>
       <div class="header-actions no-print">
         <button onclick="window.print()" class="btn btn-outline btn-sm">

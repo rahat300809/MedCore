@@ -301,9 +301,14 @@ $activeTab = $_GET['tab'] ?? 'all';
   <!-- MAIN -->
   <main class="portal-main">
     <header class="portal-header">
-      <div>
-        <span class="eyebrow" style="color: var(--mc-blue); font-size: 11px; font-weight: 700;">CENTRALIZED MEDICAL RECORD</span>
-        <h1 class="portal-title" style="font-size: 1.25rem; margin: 0;">Diagnostic Imaging &amp; Lab Reports</h1>
+      <div class="d-flex align-items-center gap-3">
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
+        <div>
+          <span class="eyebrow" style="color: var(--mc-blue); font-size: 11px; font-weight: 700;">CENTRALIZED MEDICAL RECORD</span>
+          <h1 class="portal-title" style="font-size: 1.25rem; margin: 0;">Diagnostic Imaging &amp; Lab Reports</h1>
+        </div>
       </div>
       <div class="header-actions">
         <button class="btn btn-outline btn-sm" onclick="document.getElementById('upload-modal').style.display='block'">

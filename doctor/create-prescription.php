@@ -3,6 +3,7 @@ require_once __DIR__ . '/../app/config/app.php';
 require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/services/AuditService.php';
+require_once __DIR__ . '/includes/session_bar.php';
 
 requireDoctorHospitalContext();
 
@@ -46,6 +47,7 @@ if (!$patient) {
     exit;
 }
 $age = date_diff(new DateTime($patient['date_of_birth']), new DateTime())->y;
+$patientClinicalSummary = getPatientExecutiveClinicalSummary($db, $patientId);
 
 // 3. Fetch Patient Allergies for Warning
 $stmtAllergies = $db->prepare("
@@ -356,8 +358,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
 
   <!-- MAIN -->
   <main class="portal-main">
+    <?php renderActivePatientSessionBar($accessSession, 'create-prescription'); ?>
+
     <header class="portal-header">
       <div class="d-flex align-items-center gap-3">
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
         <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $patientId ?>" class="btn btn-secondary btn-sm">
           <i class="bi bi-arrow-left"></i> Medical Record
         </a>
@@ -372,6 +379,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
 
       <?php if ($error): ?>
         <div class="alert alert-danger mb-4"><i class="bi bi-exclamation-circle-fill"></i> <?= htmlspecialchars($error) ?></div>
+      <?php endif; ?>
+
+      <!-- Quick Expandable Clinical Reference -->
+      <?php if (!empty($patientClinicalSummary)): ?>
+        <details class="card mb-4" style="border: 1px solid #BFDBFE; background:#F8FAFC; border-radius:12px; overflow:hidden;">
+          <summary style="padding:14px 18px; font-weight:700; color:#1E40AF; cursor:pointer; display:flex; align-items:center; justify-content:space-between; user-select:none;">
+            <span><i class="bi bi-stars"></i> Quick Clinical History: Past Diagnoses, Medicines &amp; Lab Tests (এক নজরে অতীত বিবরণ)</span>
+            <span style="font-size:12px; font-weight:600; color:#2563EB;">Toggle Reference <i class="bi bi-chevron-down"></i></span>
+          </summary>
+          <div style="padding:16px; border-top:1px solid #E2E8F0; background:#fff;">
+            <?php renderExecutiveClinicalSummary($patientClinicalSummary, true); ?>
+          </div>
+        </details>
       <?php endif; ?>
 
       <!-- Patient Summary Card -->

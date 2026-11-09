@@ -2,12 +2,15 @@
 require_once __DIR__ . '/../app/config/app.php';
 require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
+require_once __DIR__ . '/includes/session_bar.php';
 
 requireDoctorHospitalContext();
 
-$db       = getDB();
-$doctorId = (int)$_SESSION['doctor_id'];
-$search   = trim($_GET['search'] ?? '');
+$db         = getDB();
+$doctorId   = (int)$_SESSION['doctor_id'];
+$hospitalId = (int)$_SESSION['hospital_id'];
+$activeSession = getDoctorActivePatientSession($db, $doctorId, $hospitalId);
+$search     = trim($_GET['search'] ?? '');
 
 $query = "
     SELECT c.*, p.full_name AS patient_name, p.patient_uid, p.gender, p.date_of_birth,
@@ -100,8 +103,13 @@ $consultations = $stmt->fetchAll();
 
   <!-- MAIN -->
   <main class="portal-main">
+    <?php renderActivePatientSessionBar($activeSession, 'consultations'); ?>
+
     <header class="portal-header">
       <div class="d-flex align-items-center gap-3">
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
         <h1 class="portal-title" style="font-size: 1.25rem; margin: 0;">Consultation History</h1>
       </div>
       <div class="header-actions">

@@ -169,6 +169,9 @@ if ($targetRx) {
   <main class="portal-main">
     <header class="portal-header no-print">
       <div class="d-flex align-items-center gap-3">
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
         <h1 class="portal-title" style="font-size: 1.25rem; margin: 0;">Digital Prescriptions</h1>
       </div>
     </header>

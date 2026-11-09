@@ -3,6 +3,7 @@ require_once __DIR__ . '/../app/config/app.php';
 require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/services/AuditService.php';
+require_once __DIR__ . '/includes/session_bar.php';
 
 requireAuth('DOCTOR');
 
@@ -164,8 +165,17 @@ $csrf = generateCsrfToken();
   </aside>
 
   <main class="portal-content">
+    <?php
+    if (isset($_SESSION['hospital_id'])) {
+        $activeSession = getDoctorActivePatientSession($db, $doctorId, (int)$_SESSION['hospital_id']);
+        renderActivePatientSessionBar($activeSession, 'request-affiliation');
+    }
+    ?>
     <header class="top-nav">
-      <div class="top-nav-left">
+      <div class="top-nav-left" style="display:flex;align-items:center;gap:12px;">
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
         <div>
           <span class="eyebrow" style="color:var(--mc-blue);">Doctor Portal</span>
           <h1 class="page-title">Request Hospital Affiliation</h1>

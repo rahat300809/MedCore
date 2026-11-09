@@ -3,6 +3,7 @@ require_once __DIR__ . '/../app/config/app.php';
 require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/services/AuditService.php';
+require_once __DIR__ . '/includes/session_bar.php';
 
 requireDoctorHospitalContext();
 
@@ -77,6 +78,7 @@ if (!$patient) {
 }
 
 $age = date_diff(new DateTime($patient['date_of_birth']), new DateTime())->y;
+$clinicalSummary = getPatientExecutiveClinicalSummary($db, $patientId);
 
 // Log authorized access
 AuditService::log(AuditService::VIEW_MEDICAL_HISTORY, [
@@ -310,9 +312,14 @@ foreach ($allergies as $alg) {
 
   <!-- MAIN CONTENT -->
   <main class="portal-main">
+    <?php renderActivePatientSessionBar($accessSession, 'medical-record'); ?>
+
     <!-- Top Header -->
     <header class="portal-header">
       <div class="d-flex align-items-center gap-3">
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
         <a href="<?= APP_URL ?>/doctor/patient-search.php" class="btn btn-secondary btn-sm">
           <i class="bi bi-arrow-left"></i> Back to Search
         </a>
@@ -399,7 +406,10 @@ foreach ($allergies as $alg) {
 
       <!-- TAB NAVIGATION -->
       <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('tab-conditions', this)">
+        <button class="tab-btn active" onclick="switchTab('tab-summary', this)">
+          <i class="bi bi-stars"></i> Executive Summary (ক্লিনিক্যাল সামারি)
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-conditions', this)">
           <i class="bi bi-heart-pulse-fill"></i> Medical History (<?= count($conditions) ?>)
         </button>
         <button class="tab-btn" onclick="switchTab('tab-allergies', this)">
@@ -419,8 +429,13 @@ foreach ($allergies as $alg) {
         </button>
       </div>
 
+      <!-- TAB 0: EXECUTIVE CLINICAL SUMMARY -->
+      <div id="tab-summary" class="tab-pane active">
+        <?php renderExecutiveClinicalSummary($clinicalSummary, false); ?>
+      </div>
+
       <!-- TAB 1: MEDICAL HISTORY / CONDITIONS -->
-      <div id="tab-conditions" class="tab-pane active">
+      <div id="tab-conditions" class="tab-pane">
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title"><i class="bi bi-heart-pulse"></i> Chronic Illnesses &amp; Diagnosed Conditions</h3>
