@@ -149,7 +149,9 @@ function getDB(): PDO {
                 if (method_exists($pdo, 'createFunction')) {
                     $pdo->createFunction($name, $fn, $numArgs);
                 } elseif (method_exists($pdo, 'sqliteCreateFunction')) {
+                    $old = error_reporting(0);
                     @$pdo->sqliteCreateFunction($name, $fn, $numArgs);
+                    error_reporting($old);
                 }
             };
 
