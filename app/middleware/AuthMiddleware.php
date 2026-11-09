@@ -13,13 +13,17 @@ require_once __DIR__ . '/../services/AuditService.php';
  */
 function initSession(): void {
     if (session_status() === PHP_SESSION_NONE) {
+        $tempDir = sys_get_temp_dir();
+        if ($tempDir && is_dir($tempDir) && is_writable($tempDir)) {
+            @session_save_path($tempDir);
+        }
         session_name(SESSION_NAME);
         session_set_cookie_params([
             'lifetime' => SESSION_LIFETIME,
             'path'     => '/',
             'secure'   => false, // Set to true with HTTPS
             'httponly' => true,
-            'samesite' => 'Strict',
+            'samesite' => 'Lax',
         ]);
         session_start();
     }

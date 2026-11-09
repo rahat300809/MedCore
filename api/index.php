@@ -12,6 +12,12 @@ if (!ob_get_level()) {
 ini_set('display_errors', '0');
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_NOTICE);
 
+// Ensure serverless environment (/tmp) is used for sessions
+$tempDir = sys_get_temp_dir();
+if ($tempDir && is_dir($tempDir) && is_writable($tempDir)) {
+    @ini_set('session.save_path', $tempDir);
+}
+
 $rootDir = dirname(__DIR__);
 $rawUri = $_SERVER['REQUEST_URI'] ?? '/';
 $uri = parse_url($rawUri, PHP_URL_PATH) ?: '/';
