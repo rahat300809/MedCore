@@ -575,6 +575,53 @@ if (isset($_SESSION['role'])) {
       </div>
     </div>
 
+    <!-- Quick Demo Access Credentials Card -->
+    <div style="width:100%;max-width:980px;background:#FFFFFF;border:1.5px solid #E2E8F0;border-radius:20px;padding:24px;margin-top:28px;box-shadow:0 4px 20px rgba(15,23,42,0.05);text-align:left;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #F1F5F9;padding-bottom:12px;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="width:28px;height:28px;border-radius:8px;background:#EFF6FF;color:#0284C7;display:flex;align-items:center;justify-content:center;font-size:14px;"><i class="bi bi-key-fill"></i></span>
+          <h4 style="margin:0;font-size:15px;font-weight:900;color:#0A2540;">পরীক্ষামূলক ডেমো লগইন ক্রেডেনশিয়াল (Instant Demo Credentials)</h4>
+        </div>
+        <span style="font-size:11.5px;font-weight:800;background:#ECFDF5;color:#059669;padding:4px 10px;border-radius:999px;border:1px solid #A7F3D0;">
+          Universal Demo Pass: Demo123! · OTP: 1234
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+        <!-- Patient Demo -->
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:12px 14px;">
+          <div style="font-size:11px;font-weight:800;color:#2563EB;text-transform:uppercase;margin-bottom:4px;">🧑‍💼 Citizen / Patient</div>
+          <div style="font-size:12px;color:#0F172A;">Email: <strong>rahat@example.com</strong></div>
+          <div style="font-size:12px;color:#0F172A;">Pass: <strong>Demo123!</strong> (OTP: 1234)</div>
+          <a href="<?= APP_URL ?>/patient/login.php" style="display:inline-block;margin-top:8px;font-size:11px;font-weight:800;color:#2563EB;text-decoration:none;">Login as Patient &rarr;</a>
+        </div>
+
+        <!-- Doctor Demo -->
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:12px 14px;">
+          <div style="font-size:11px;font-weight:800;color:#059669;text-transform:uppercase;margin-bottom:4px;">🩺 BMDC Doctor</div>
+          <div style="font-size:12px;color:#0F172A;">Reg ID: <strong>BMDC-A-12345</strong></div>
+          <div style="font-size:12px;color:#0F172A;">Email: <strong>dr.rahman@medcore.local</strong></div>
+          <a href="<?= APP_URL ?>/doctor/select-hospital.php" style="display:inline-block;margin-top:8px;font-size:11px;font-weight:800;color:#059669;text-decoration:none;">Login as Doctor &rarr;</a>
+        </div>
+
+        <!-- Hospital Demo -->
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:12px 14px;">
+          <div style="font-size:11px;font-weight:800;color:#7C3AED;text-transform:uppercase;margin-bottom:4px;">🏥 Hospital Admin</div>
+          <div style="font-size:12px;color:#0F172A;">Email: <strong>admin@abc-hospital.com</strong></div>
+          <div style="font-size:12px;color:#0F172A;">Pass: <strong>Demo123!</strong></div>
+          <a href="<?= APP_URL ?>/hospital/login.php" style="display:inline-block;margin-top:8px;font-size:11px;font-weight:800;color:#7C3AED;text-decoration:none;">Login as Hospital &rarr;</a>
+        </div>
+
+        <!-- Lab Demo -->
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:12px 14px;">
+          <div style="font-size:11px;font-weight:800;color:#D97706;text-transform:uppercase;margin-bottom:4px;">🔬 Diagnostic Lab</div>
+          <div style="font-size:12px;color:#0F172A;">Email: <strong>lab@apexdiagnostics.com</strong></div>
+          <div style="font-size:12px;color:#0F172A;">Pass: <strong>Demo123!</strong></div>
+          <a href="<?= APP_URL ?>/lab/login.php" style="display:inline-block;margin-top:8px;font-size:11px;font-weight:800;color:#D97706;text-decoration:none;">Login as Lab &rarr;</a>
+        </div>
+      </div>
+    </div>
+
     <div class="security-note">
       <i class="bi bi-shield-fill-check"></i>
       <span>All sessions are AES-256 encrypted · BMDC registry verified · Audit-logged</span>

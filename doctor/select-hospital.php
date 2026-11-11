@@ -108,6 +108,16 @@ $errorMessages = [
     </div>
     <?php endif; ?>
 
+    <!-- Demo Tip -->
+    <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="font-size:12.5px;color:#1E40AF;">
+        <strong>💡 পরীক্ষামূলক ডেমো ডাক্তার:</strong> নিচে তালিকা থেকে <strong>ABC General Hospital</strong> সিলেক্ট করুন (ডাঃ ফারহানা রহমানের চেম্বার)।
+      </div>
+      <button type="button" onclick="selectDemoHospital()" style="background:#2563EB;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;">
+        ⚡ Auto-Select ABC
+      </button>
+    </div>
+
     <!-- Search -->
     <div class="search-bar mb-6" style="margin-bottom:var(--space-5);">
       <i class="bi bi-search" aria-hidden="true"></i>
@@ -170,6 +180,13 @@ $errorMessages = [
 </div>
 
 <script>
+function selectDemoHospital() {
+  const abcCard = document.querySelector('.hospital-card[data-id="1"]');
+  if (abcCard) {
+    selectHospital(abcCard);
+  }
+}
+
 function selectHospital(card) {
   document.querySelectorAll('.hospital-card').forEach(c => c.classList.remove('selected'));
   card.classList.add('selected');

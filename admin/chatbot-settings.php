@@ -68,9 +68,9 @@ $csrf = generateCsrfToken();
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
       line-height: 1.6;
-      background: #0F172A;
-      color: #F8FAFC;
-      border: 1px solid #334155;
+      background: #FFFFFF;
+      color: #0F172A;
+      border: 1.5px solid #CBD5E1;
       border-radius: 12px;
       padding: 16px;
       width: 100%;
@@ -79,8 +79,8 @@ $csrf = generateCsrfToken();
       outline: none;
     }
     .prompt-box:focus {
-      border-color: #38BDF8;
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+      border-color: #0284C7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
     }
     .badge-custom {
       background: #FEF3C7;

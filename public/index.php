@@ -983,48 +983,49 @@ if (isset($_SESSION['role'])) {
           </a>
         </div>
 
-        <!-- 4 Official Portals Access Grid -->
-        <div style="font-size:12px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px;">
-          সরাসরি প্রাতিষ্ঠানিক ও নাগরিক লগইন
+        <!-- 4 Dedicated Sector Portals Access Grid -->
+        <div style="font-size:12px; font-weight:800; color:#0A2540; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>
+          আপনার ভূমিকা অনুযায়ী ডেডিকেটেড ওয়েবসাইট বেছে নিন (Dedicated Sector Websites)
         </div>
         <div class="gov-portals-grid">
-          <a href="<?= APP_URL ?>/patient/login.php" class="gov-quick-card">
+          <a href="<?= APP_URL ?>/for-patients.php" class="gov-quick-card" style="border-left:3.5px solid #2563EB;">
             <div class="gov-quick-icon" style="background:#EFF6FF; color:#2563EB;">
               <i class="bi bi-person-heart"></i>
             </div>
             <div class="gov-quick-info">
-              <h4>Citizen Portal</h4>
-              <p>আমার স্বাস্থ্য রেকর্ড</p>
+              <h4>Use as Patient</h4>
+              <p>নাগরিক স্বাস্থ্য পোর্টাল &rarr;</p>
             </div>
           </a>
 
-          <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="gov-quick-card">
+          <a href="<?= APP_URL ?>/for-doctors.php" class="gov-quick-card" style="border-left:3.5px solid #059669;">
             <div class="gov-quick-icon" style="background:#ECFDF5; color:#059669;">
               <i class="bi bi-stethoscope"></i>
             </div>
             <div class="gov-quick-info">
-              <h4>Doctor Chamber</h4>
-              <p>বিএমডিসি ডাক্তার কিউ</p>
+              <h4>Use as Doctor</h4>
+              <p>বিএমডিসি চেম্বার পোর্টাল &rarr;</p>
             </div>
           </a>
 
-          <a href="<?= APP_URL ?>/hospital/login.php" class="gov-quick-card">
+          <a href="<?= APP_URL ?>/for-hospitals.php" class="gov-quick-card" style="border-left:3.5px solid #7C3AED;">
             <div class="gov-quick-icon" style="background:#F5F3FF; color:#7C3AED;">
               <i class="bi bi-building-fill-cross"></i>
             </div>
             <div class="gov-quick-info">
-              <h4>Hospital Desk</h4>
-              <p>ওপিডি রিসেপশন ডেস্ক</p>
+              <h4>Use as Hospital</h4>
+              <p>ওপিডি রিসেপশন ডেস্ক &rarr;</p>
             </div>
           </a>
 
-          <a href="<?= APP_URL ?>/lab/login.php" class="gov-quick-card">
+          <a href="<?= APP_URL ?>/for-labs.php" class="gov-quick-card" style="border-left:3.5px solid #D97706;">
             <div class="gov-quick-icon" style="background:#FFFBEB; color:#D97706;">
               <i class="bi bi-flask-fill"></i>
             </div>
             <div class="gov-quick-info">
-              <h4>Diagnostic Lab</h4>
-              <p>টোকেন সার্চ ও রেজাল্ট</p>
+              <h4>Use as Diagnostic Lab</h4>
+              <p>টোকেন ও রেজাল্ট সিঙ্ক &rarr;</p>
             </div>
           </a>
         </div>
@@ -1207,9 +1208,14 @@ if (isset($_SESSION['role'])) {
             <li><i class="bi bi-check2 text-primary"></i> ল্যাব টোকেন ও ওষুধ রিমাইন্ডার</li>
           </ul>
         </div>
-        <a href="<?= APP_URL ?>/patient/login.php" class="gov-portal-btn" style="background:#2563EB; color:#FFFFFF;">
-          <i class="bi bi-box-arrow-in-right"></i> Citizen Login
-        </a>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="<?= APP_URL ?>/patient/login.php" class="gov-portal-btn" style="background:#2563EB; color:#FFFFFF;">
+            <i class="bi bi-box-arrow-in-right"></i> Citizen Login
+          </a>
+          <a href="<?= APP_URL ?>/for-patients.php" class="gov-portal-btn" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE;">
+            <i class="bi bi-globe"></i> পেশেন্ট ওয়েবসাইট দেখুন &rarr;
+          </a>
+        </div>
       </div>
 
       <!-- Doctor Chamber -->
@@ -1227,9 +1233,14 @@ if (isset($_SESSION['role'])) {
             <li><i class="bi bi-check2 text-success"></i> বাংলা ডোজ প্রিসেট সহ ই-প্রেসক্রিপশন</li>
           </ul>
         </div>
-        <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="gov-portal-btn" style="background:#059669; color:#FFFFFF;">
-          <i class="bi bi-box-arrow-in-right"></i> Doctor Login
-        </a>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="gov-portal-btn" style="background:#059669; color:#FFFFFF;">
+            <i class="bi bi-box-arrow-in-right"></i> Doctor Login
+          </a>
+          <a href="<?= APP_URL ?>/for-doctors.php" class="gov-portal-btn" style="background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0;">
+            <i class="bi bi-globe"></i> ডাক্তার ওয়েবসাইট দেখুন &rarr;
+          </a>
+        </div>
       </div>
 
       <!-- Hospital Portal -->
@@ -1247,9 +1258,14 @@ if (isset($_SESSION['role'])) {
             <li><i class="bi bi-check2 text-purple" style="color:#7C3AED;"></i> দৈনিক ওপিডি রেজিস্টার ও অডিট</li>
           </ul>
         </div>
-        <a href="<?= APP_URL ?>/hospital/login.php" class="gov-portal-btn" style="background:#FFFFFF; color:#0A2540; border:1.5px solid #CBD5E1;">
-          <i class="bi bi-box-arrow-in-right"></i> Hospital Login
-        </a>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="<?= APP_URL ?>/hospital/login.php" class="gov-portal-btn" style="background:#FFFFFF; color:#0A2540; border:1.5px solid #CBD5E1;">
+            <i class="bi bi-box-arrow-in-right"></i> Hospital Login
+          </a>
+          <a href="<?= APP_URL ?>/for-hospitals.php" class="gov-portal-btn" style="background:#F5F3FF; color:#6D28D9; border:1px solid #DDD6FE;">
+            <i class="bi bi-globe"></i> হাসপাতাল ওয়েবসাইট দেখুন &rarr;
+          </a>
+        </div>
       </div>
 
       <!-- Diagnostic Lab Portal -->
@@ -1267,9 +1283,14 @@ if (isset($_SESSION['role'])) {
             <li><i class="bi bi-check2 text-warning" style="color:#D97706;"></i> রোগীর অ্যাকাউন্টে তাৎক্ষণিক সিঙ্ক</li>
           </ul>
         </div>
-        <a href="<?= APP_URL ?>/lab/login.php" class="gov-portal-btn" style="background:#D97706; color:#FFFFFF;">
-          <i class="bi bi-box-arrow-in-right"></i> Lab Login
-        </a>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="<?= APP_URL ?>/lab/login.php" class="gov-portal-btn" style="background:#D97706; color:#FFFFFF;">
+            <i class="bi bi-box-arrow-in-right"></i> Lab Login
+          </a>
+          <a href="<?= APP_URL ?>/for-labs.php" class="gov-portal-btn" style="background:#FFFBEB; color:#92400E; border:1px solid #FDE68A;">
+            <i class="bi bi-globe"></i> ল্যাব ওয়েবসাইট দেখুন &rarr;
+          </a>
+        </div>
       </div>
 
     </div>

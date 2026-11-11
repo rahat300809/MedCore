@@ -92,25 +92,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= APP_URL ?>/public/assets/css/portal.css">
 <style>
-:root{--accent:#0ea5e9;--accent-dark:#0284c7;--glass:rgba(255,255,255,0.07);--border:rgba(255,255,255,0.12)}
-body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);font-family:'Inter',sans-serif}
-.login-wrap{width:100%;max-width:420px;padding:1rem}
-.login-card{background:rgba(15,23,42,0.8);border:1px solid var(--border);border-radius:20px;padding:2.5rem;backdrop-filter:blur(20px);box-shadow:0 25px 60px rgba(0,0,0,0.5)}
-.lab-icon{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent),#6366f1);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:1.8rem;box-shadow:0 8px 24px rgba(14,165,233,0.4)}
-h1{text-align:center;font-size:1.5rem;font-weight:700;color:#f1f5f9;margin-bottom:.25rem}
-.subtitle{text-align:center;color:#94a3b8;font-size:.875rem;margin-bottom:2rem}
+:root{--accent:#0284c7;--accent-dark:#0369a1;--border:#e2e8f0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f8fafc;font-family:'Plus Jakarta Sans','Inter',-apple-system,sans-serif;margin:0;padding:20px}
+.login-wrap{width:100%;max-width:440px}
+.login-card{background:#ffffff;border:1.5px solid #e2e8f0;border-radius:24px;padding:2.5rem 2rem;box-shadow:0 12px 35px rgba(15,23,42,0.06)}
+.lab-icon{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#0a2540,#0284c7);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.8rem;color:#ffffff;box-shadow:0 6px 20px rgba(2,132,199,0.25)}
+h1{text-align:center;font-size:1.55rem;font-weight:900;color:#0a2540;margin:0 0 .35rem}
+.subtitle{text-align:center;color:#64748b;font-size:.875rem;margin:0 0 1.75rem}
 .form-group{margin-bottom:1.25rem}
-label{display:block;color:#cbd5e1;font-size:.8125rem;font-weight:500;margin-bottom:.5rem}
-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;color:#f1f5f9;font-size:.9375rem;outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,0.15)}
-.btn-login{width:100%;background:linear-gradient(135deg,var(--accent),#6366f1);border:none;border-radius:10px;padding:.875rem;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;transition:opacity .2s,transform .15s;margin-top:.5rem}
-.btn-login:hover{opacity:.9;transform:translateY(-1px)}
-.alert-error{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:.875rem 1rem;color:#fca5a5;font-size:.875rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
-.links{text-align:center;margin-top:1.5rem;font-size:.8125rem;color:#64748b}
-.links a{color:var(--accent);text-decoration:none}
+label{display:block;color:#334155;font-size:.8125rem;font-weight:700;margin-bottom:.4rem}
+input{width:100%;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px;padding:.75rem 1rem;color:#0f172a;font-size:.9375rem;outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(2,132,199,0.15)}
+.btn-login{width:100%;background:linear-gradient(135deg,#0a2540,#0284c7);border:none;border-radius:10px;padding:.9rem;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;transition:all .15s;margin-top:.5rem;box-shadow:0 4px 14px rgba(10,37,64,0.2)}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(10,37,64,0.3)}
+.alert-error{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:.875rem 1rem;color:#991b1b;font-size:.875rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem;font-weight:600}
+.links{text-align:center;margin-top:1.5rem;font-size:.82rem;color:#64748b}
+.links a{color:var(--accent);text-decoration:none;font-weight:700}
 .links a:hover{text-decoration:underline}
-.badge{display:inline-flex;align-items:center;gap:.35rem;background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.2);border-radius:20px;padding:.25rem .75rem;font-size:.75rem;color:var(--accent);margin:0 auto .5rem;width:fit-content}
-.badge-wrap{text-align:center;margin-bottom:1.25rem}
 </style>
 </head>
 <body>
@@ -118,7 +116,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,0.15
   <div class="login-card">
     <div class="lab-icon">🔬</div>
     <h1>Laboratory Portal</h1>
-    <p class="subtitle">Sign in to manage test orders and upload results</p>
+    <p class="subtitle">ল্যাব টেস্ট অর্ডার পরিচালনা ও রেজাল্ট আপলোড পোর্টাল</p>
 
     <?php if ($error): ?>
     <div class="alert-error">⚠️ <?= htmlspecialchars($error) ?></div>
@@ -140,14 +138,42 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,0.15
         <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
       </div>
       <button type="submit" name="login" class="btn-login">Sign In to Lab Portal</button>
+
+      <!-- Demo Credentials Card -->
+      <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:14px;padding:14px 16px;margin-top:20px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:800;color:#B45309;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:5px;">
+            <i class="bi bi-key-fill"></i> পরীক্ষামূলক ডায়াগনস্টিক ল্যাব ডেমো আইডি
+          </span>
+          <span style="font-size:10px;font-weight:800;background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:4px;">DEMO</span>
+        </div>
+        <div style="font-size:12px;color:#334155;line-height:1.6;margin-bottom:10px;">
+          <div>ল্যাব ইমেইল: <strong style="color:#0A2540;font-family:monospace;">lab@apexdiagnostics.com</strong></div>
+          <div>পাসওয়ার্ড: <strong style="color:#0A2540;font-family:monospace;">Demo123!</strong></div>
+          <div style="font-size:11px;color:#64748B;">ল্যাব: Apex Diagnostics Ltd. (ABC General Hospital Affiliated)</div>
+        </div>
+        <button type="button" onclick="fillLabDemo()" style="width:100%;background:#D97706;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 6px rgba(217,119,6,0.25);">
+          <i class="bi bi-lightning-charge-fill"></i> ⚡ ১-ক্লিকে ল্যাব তথ্য পূরণ করুন (Auto-Fill)
+        </button>
+      </div>
     </form>
 
     <div class="links">
       <a href="<?= APP_URL ?>/lab/register.php">Register your laboratory</a>
       &nbsp;·&nbsp;
-      <a href="<?= APP_URL ?>/role-selection.php">← Back</a>
+      <a href="<?= APP_URL ?>/role-selection.php">← Back to Portals</a>
     </div>
   </div>
 </div>
+<script>
+function fillLabDemo() {
+  const emailInput = document.getElementById('email');
+  const passInput = document.getElementById('password');
+  if (emailInput && passInput) {
+    emailInput.value = 'lab@apexdiagnostics.com';
+    passInput.value = 'Demo123!';
+  }
+}
+</script>
 </body>
 </html>

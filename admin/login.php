@@ -149,6 +149,23 @@ $csrf = generateCsrfToken();
     <button type="submit" class="btn btn-primary w-100 btn-lg" style="background: linear-gradient(135deg, #1E40AF, #1D4ED8); border: none; margin-top: var(--space-2);">
       <i class="bi bi-shield-check"></i> Authenticate & Enter Console
     </button>
+
+    <!-- Demo Credentials Card -->
+    <div style="background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:14px;padding:14px 16px;margin-top:20px;text-align:left;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:12px;font-weight:800;color:#0369A1;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:5px;">
+          <i class="bi bi-key-fill"></i> পরীক্ষামূলক সিস্টেম অ্যাডমিন ডেমো আইডি
+        </span>
+        <span style="font-size:10px;font-weight:800;background:#E0F2FE;color:#0369A1;padding:2px 6px;border-radius:4px;">DEMO</span>
+      </div>
+      <div style="font-size:12px;color:#334155;line-height:1.6;margin-bottom:10px;">
+        <div>অ্যাডমিন ইমেইল: <strong style="color:#0A2540;font-family:monospace;">admin@medcore.local</strong></div>
+        <div>পাসওয়ার্ড: <strong style="color:#0A2540;font-family:monospace;">Demo123!</strong></div>
+      </div>
+      <button type="button" onclick="fillAdminDemo()" style="width:100%;background:#0284C7;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 6px rgba(2,132,199,0.25);">
+        <i class="bi bi-lightning-charge-fill"></i> ⚡ ১-ক্লিকে অ্যাডমিন তথ্য পূরণ করুন (Auto-Fill)
+      </button>
+    </div>
   </form>
 
   <div style="text-align: center; margin-top: var(--space-6); font-size: 13px; color: var(--mc-text-muted);">
@@ -166,6 +183,15 @@ $csrf = generateCsrfToken();
 </div>
 
 <script>
+function fillAdminDemo() {
+  const emailInput = document.getElementById('email');
+  const passInput = document.getElementById('password');
+  if (emailInput && passInput) {
+    emailInput.value = 'admin@medcore.local';
+    passInput.value = 'Demo123!';
+  }
+}
+
 function togglePassword(id, btn) {
   const input = document.getElementById(id);
   const eye = document.getElementById(id + '-eye');
