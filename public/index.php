@@ -32,265 +32,988 @@ if (isset($_SESSION['role'])) {
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/landing.css">
+
   <style>
-    /* Clean White Theme Custom Styles */
+    /* ============================================================
+       MEDCORE ULTRA-CLEAN WHITE THEME STYLES (SCOPED & BULLETPROOF)
+       ============================================================ */
     body.landing-page {
       background: #FFFFFF !important;
       color: #0F172A !important;
-      font-family: 'Plus Jakarta Sans', var(--font-main);
+      font-family: 'Plus Jakarta Sans', var(--font-main), -apple-system, sans-serif !important;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
     }
-    .hero-clean {
-      padding: 70px 0 60px;
-      background: radial-gradient(circle at 85% 15%, rgba(2, 132, 199, 0.07) 0%, #FFFFFF 65%, #F8FAFC 100%);
-      border-bottom: 1px solid #E2E8F0;
+
+    /* --- TOPBAR (NAVBAR) --- */
+    .mc-navbar {
+      background: #FFFFFF !important;
+      border-bottom: 1px solid #E2E8F0 !important;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 1000 !important;
+      height: 70px !important;
+      display: flex !important;
+      align-items: center !important;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
     }
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 48px;
+    .mc-navbar-container {
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
       align-items: center;
+      justify-content: space-between;
+      gap: 16px;
     }
-    .role-quick-card {
+    .mc-nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .mc-brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0284C7, #2563EB);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+    }
+    .mc-brand-text {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #0F172A;
+    }
+    .mc-brand-text span {
+      color: #0284C7;
+    }
+
+    /* Center Nav Links (Compact, Only 3 Core Links) */
+    .mc-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      white-space: nowrap;
+    }
+    .mc-nav-link {
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+    }
+    .mc-nav-link:hover {
+      color: #0284C7;
+      background: #F0F9FF;
+    }
+
+    /* Right Action Buttons (Compact, Zero Overlapping, Never Wrapping) */
+    .mc-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .mc-btn-serial {
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #BFDBFE;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .mc-btn-serial:hover {
+      background: #DBEAFE;
+      color: #1E40AF;
+      transform: translateY(-1px);
+    }
+    .mc-btn-ice {
+      background: #FEF2F2;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+    .mc-btn-ice:hover {
+      background: #FEE2E2;
+      color: #B91C1C;
+    }
+    .mc-btn-login {
+      background: #FFFFFF;
+      color: #334155;
+      border: 1px solid #CBD5E1;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .mc-btn-login:hover {
+      background: #F8FAFC;
+      border-color: #94A3B8;
+      color: #0F172A;
+    }
+    .mc-btn-register {
+      background: linear-gradient(135deg, #0284C7, #2563EB);
+      color: #FFFFFF;
+      border: none;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+      transition: all 0.2s ease;
+    }
+    .mc-btn-register:hover {
+      background: linear-gradient(135deg, #0369A1, #1D4ED8);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+      color: #FFFFFF;
+    }
+
+    .mc-hamburger {
+      display: none;
+      background: transparent;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 20px;
+      color: #0F172A;
+      cursor: pointer;
+    }
+
+    /* Responsive Breakpoints for Navbar */
+    @media (max-width: 1024px) {
+      .mc-nav-links {
+        display: none;
+      }
+      .mc-hamburger {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+    @media (max-width: 640px) {
+      .mc-btn-ice {
+        display: none;
+      }
+      .mc-navbar-container {
+        padding: 0 16px;
+      }
+    }
+
+    /* Mobile Dropdown Drawer */
+    .mc-mobile-drawer {
+      display: none;
+      position: absolute;
+      top: 70px;
+      left: 0;
+      width: 100%;
+      background: #FFFFFF;
+      border-bottom: 1px solid #E2E8F0;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      padding: 20px 24px;
+      z-index: 999;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .mc-mobile-drawer.active {
+      display: flex;
+    }
+
+    /* --- HERO SECTION (ABSOLUTELY NO OVERLAPPING) --- */
+    .mc-hero-section {
+      position: relative !important;
+      display: block !important;
+      clear: both !important;
+      width: 100% !important;
+      background: #FFFFFF !important;
+      padding: 56px 0 60px !important;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .mc-hero-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      box-sizing: border-box;
+    }
+    .mc-hero-layout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 48px;
+      width: 100%;
+    }
+    .mc-hero-content {
+      flex: 1 1 58%;
+      min-width: 0;
+    }
+    .mc-hero-preview {
+      flex: 0 0 420px;
+      max-width: 440px;
+      min-width: 320px;
+    }
+
+    /* Trust Pill */
+    .mc-trust-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #F0F9FF;
+      border: 1px solid #BAE6FD;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0369A1;
+      margin-bottom: 20px;
+    }
+
+    /* Hero Heading & Subheading */
+    .mc-hero-title {
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 900;
+      line-height: 1.18;
+      color: #0F172A;
+      margin: 0 0 16px;
+      letter-spacing: -0.03em;
+    }
+    .mc-hero-title span {
+      color: #0284C7;
+    }
+    .mc-hero-subtitle {
+      font-size: 16px;
+      color: #475569;
+      line-height: 1.65;
+      max-width: 580px;
+      margin: 0 0 28px;
+    }
+
+    /* Hero Main Buttons */
+    .mc-hero-ctas {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+    .mc-cta-primary {
+      background: linear-gradient(135deg, #0284C7 0%, #1D4ED8 100%);
+      color: #FFFFFF !important;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 13px 26px;
+      border-radius: 12px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.3);
+      transition: all 0.2s ease;
+    }
+    .mc-cta-primary:hover {
+      background: linear-gradient(135deg, #0369A1 0%, #1E40AF 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
+    }
+    .mc-cta-secondary {
+      background: #FFFFFF;
+      color: #0F172A !important;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 13px 22px;
+      border-radius: 12px;
+      border: 1px solid #CBD5E1;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .mc-cta-secondary:hover {
+      background: #F8FAFC;
+      border-color: #94A3B8;
+      transform: translateY(-2px);
+    }
+
+    /* Quick Role Cards */
+    .mc-quick-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .mc-quick-card {
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
-      border-radius: 14px;
-      padding: 16px;
+      border-radius: 12px;
+      padding: 14px 16px;
       text-decoration: none;
       color: inherit;
       display: flex;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
       transition: all 0.2s ease;
     }
-    .role-quick-card:hover {
+    .mc-quick-card:hover {
       border-color: #0284C7;
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.12);
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.1);
     }
-    .feature-card-clean {
+    .mc-quick-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .mc-quick-info h4 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 800;
+      color: #0F172A;
+    }
+    .mc-quick-info p {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: #64748B;
+    }
+
+    /* Live EHR Interactive Card Preview */
+    .mc-live-card {
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
-      border-radius: 18px;
-      padding: 28px 24px;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+      border-radius: 20px;
+      padding: 26px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07);
+    }
+    .mc-live-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #F1F5F9;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+    }
+    .mc-user-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .mc-user-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0284C7, #2563EB);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .mc-user-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0;
+    }
+    .mc-user-meta {
+      font-size: 12px;
+      color: #64748B;
+      margin-top: 2px;
+    }
+    .mc-status-pill {
+      background: #ECFDF5;
+      color: #047857;
+      border: 1px solid #A7F3D0;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    /* Allergy Alert Box */
+    .mc-alert-box {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .mc-alert-icon {
+      font-size: 18px;
+    }
+    .mc-alert-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #DC2626;
+      margin: 0;
+    }
+    .mc-alert-desc {
+      font-size: 11px;
+      color: #64748B;
+      margin: 1px 0 0;
+    }
+
+    /* Live Serial Box */
+    .mc-serial-box {
+      background: linear-gradient(135deg, #0284C7 0%, #1D4ED8 100%);
+      border-radius: 14px;
+      padding: 16px;
+      color: #FFFFFF;
+      margin-bottom: 16px;
+    }
+    .mc-serial-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+    .mc-serial-body {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .mc-serial-number {
+      background: #FFFFFF;
+      color: #1D4ED8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 30px;
+      font-weight: 900;
+      padding: 4px 12px;
+      border-radius: 10px;
+      line-height: 1;
+    }
+    .mc-serial-details h5 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      color: #FFFFFF;
+    }
+    .mc-serial-details p {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: #DBEAFE;
+    }
+
+    /* Lab Token Widget */
+    .mc-lab-box {
+      background: #FAF5FF;
+      border: 1px solid #E9D5FF;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .mc-lab-token {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 800;
+      color: #6D28D9;
+      margin: 2px 0 0;
+    }
+
+    @media (max-width: 991px) {
+      .mc-hero-layout {
+        flex-direction: column;
+        gap: 36px;
+      }
+      .mc-hero-preview {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: 460px;
+      }
+    }
+
+    /* --- CORE SERVICES SECTION --- */
+    .mc-services-section {
+      position: relative !important;
+      display: block !important;
+      clear: both !important;
+      width: 100% !important;
+      background: #F8FAFC !important;
+      padding: 64px 0 !important;
+      border-top: 1px solid #E2E8F0;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .mc-section-header {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 44px;
+    }
+    .mc-section-badge {
+      font-size: 12px;
+      font-weight: 800;
+      color: #0284C7;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .mc-section-title {
+      font-size: 30px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 8px 0 10px;
+      letter-spacing: -0.02em;
+    }
+    .mc-section-desc {
+      font-size: 15px;
+      color: #64748B;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .mc-services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .mc-feature-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 26px 22px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
       transition: all 0.25s ease;
     }
-    .feature-card-clean:hover {
+    .mc-feature-card:hover {
       border-color: #93C5FD;
-      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
-      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.08);
+      transform: translateY(-3px);
     }
-    .portal-box-clean {
+    .mc-feature-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+    .mc-feature-card h3 {
+      font-size: 17px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0 0 8px;
+    }
+    .mc-feature-card p {
+      font-size: 13.5px;
+      color: #64748B;
+      line-height: 1.6;
+      margin: 0 0 16px;
+    }
+    .mc-feature-link {
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* --- PORTALS SECTION --- */
+    .mc-portals-section {
+      position: relative !important;
+      display: block !important;
+      clear: both !important;
+      width: 100% !important;
+      background: #FFFFFF !important;
+      padding: 64px 0 !important;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .mc-portals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .mc-portal-box {
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
-      border-radius: 18px;
-      padding: 30px;
+      border-radius: 16px;
+      padding: 28px 24px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
       transition: all 0.25s ease;
     }
-    .portal-box-clean:hover {
+    .mc-portal-box:hover {
       border-color: #38BDF8;
-      box-shadow: 0 12px 30px rgba(2, 132, 199, 0.12);
-      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(2, 132, 199, 0.1);
+      transform: translateY(-3px);
     }
-    @media (max-width: 980px) {
-      .hero-grid {
-        grid-template-columns: 1fr;
-        gap: 36px;
-      }
-      .hero-visual-col {
-        order: -1;
-      }
+    .mc-portal-box h3 {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0 0 6px;
+    }
+    .mc-portal-box p {
+      font-size: 13px;
+      color: #64748B;
+      margin: 0 0 16px;
+    }
+    .mc-portal-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.8;
+    }
+    .mc-portal-features li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mc-portal-btn {
+      width: 100%;
+      padding: 11px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    /* --- EMERGENCY BANNER --- */
+    .mc-ice-section {
+      position: relative !important;
+      display: block !important;
+      clear: both !important;
+      width: 100% !important;
+      background: #FEF2F2 !important;
+      padding: 44px 0 !important;
+      border-bottom: 1px solid #FECACA;
+    }
+    .mc-ice-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .mc-ice-content h3 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #991B1B;
+      margin: 6px 0 6px;
+    }
+    .mc-ice-content p {
+      font-size: 14px;
+      color: #7F1D1D;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .mc-ice-btn {
+      background: #DC2626;
+      color: #FFFFFF !important;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .mc-ice-btn:hover {
+      background: #B91C1C;
+      transform: translateY(-2px);
+    }
+
+    /* --- FOOTER --- */
+    .mc-footer {
+      position: relative !important;
+      display: block !important;
+      clear: both !important;
+      width: 100% !important;
+      background: #FFFFFF !important;
+      padding: 48px 0 24px !important;
+      font-size: 13.5px;
+      color: #64748B;
+    }
+    .mc-footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      margin-bottom: 36px;
+    }
+    .mc-footer-heading {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0 0 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .mc-footer-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      line-height: 2.2;
+    }
+    .mc-footer-list a {
+      color: #64748B;
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .mc-footer-list a:hover {
+      color: #0284C7;
+    }
+    .mc-footer-bottom {
+      border-top: 1px solid #F1F5F9;
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: #94A3B8;
     }
   </style>
 </head>
 <body class="landing-page">
 
 <!-- =====================================================
-     NAVBAR (CLEAN, SPACIOUS & PROPERLY ARRANGED)
+     NAVBAR (PERFECTLY ARRANGED & SPACIOUS — NO WRAPPING)
      ===================================================== -->
-<nav class="navbar" id="main-navbar" role="navigation" aria-label="Main navigation">
-  <div class="navbar-inner">
+<nav class="mc-navbar" id="main-navbar" role="navigation" aria-label="Main navigation">
+  <div class="mc-navbar-container">
     
-    <!-- Logo -->
-    <a href="<?= APP_URL ?>/" class="navbar-logo" aria-label="MedCore Home">
-      <div class="logo-icon" aria-hidden="true">
+    <!-- Brand Logo -->
+    <a href="<?= APP_URL ?>/" class="mc-nav-brand" aria-label="MedCore Home">
+      <div class="mc-brand-icon" aria-hidden="true">
         <i class="bi bi-heart-pulse-fill"></i>
       </div>
-      <span>MedCore</span>
+      <div class="mc-brand-text">Med<span>Core</span></div>
     </a>
 
-    <!-- Clean Navigation Links (No wrapping, no duplicate Book Doctor) -->
-    <ul class="navbar-nav" id="nav-menu" role="menubar">
-      <li role="none"><a href="#services" role="menuitem">সেবাসমূহ (Services)</a></li>
-      <li role="none"><a href="#portals" role="menuitem">পোর্টালসমূহ (Portals)</a></li>
-      <li role="none"><a href="<?= APP_URL ?>/for-patients.php" role="menuitem">For Patients</a></li>
-      <li role="none"><a href="<?= APP_URL ?>/for-doctors.php" role="menuitem">For Doctors</a></li>
-      <li role="none"><a href="<?= APP_URL ?>/for-hospitals.php" role="menuitem">For Hospitals</a></li>
-      <li role="none"><a href="<?= APP_URL ?>/security.php" role="menuitem">Security</a></li>
+    <!-- Center Navigation Links (Compact & Clean) -->
+    <ul class="mc-nav-links" id="desktop-nav-menu" role="menubar">
+      <li role="none"><a href="#services" class="mc-nav-link" role="menuitem">সেবাসমূহ</a></li>
+      <li role="none"><a href="#portals" class="mc-nav-link" role="menuitem">পোর্টালসমূহ</a></li>
+      <li role="none"><a href="<?= APP_URL ?>/security.php" class="mc-nav-link" role="menuitem">নিরাপত্তা</a></li>
     </ul>
 
-    <!-- Action Buttons (Neatly Arranged & Aligned) -->
-    <div class="navbar-actions">
-      <a href="<?= APP_URL ?>/book-doctor.php" class="btn btn-sm" id="btn-book-nav" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+    <!-- Right Actions (High Contrast, Clearly Arranged, Zero Truncation) -->
+    <div class="mc-nav-actions">
+      <a href="<?= APP_URL ?>/book-doctor.php" class="mc-btn-serial" title="অনলাইন ডাক্তার সিরিয়াল বুক করুন">
         <i class="bi bi-calendar2-check-fill text-primary"></i> ডাক্তার সিরিয়াল
       </a>
-      <a href="<?= APP_URL ?>/emergency.php" class="btn btn-sm" id="btn-emergency-nav" style="background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; font-weight:700;" title="Emergency Profile">
+      <a href="<?= APP_URL ?>/emergency.php" class="mc-btn-ice" title="জরুরি পাবলিক হেলথ কার্ড">
         <i class="bi bi-shield-exclamation text-danger"></i> ICE
       </a>
-      <a href="<?= APP_URL ?>/role-selection.php" class="btn btn-secondary btn-sm" id="btn-login" style="font-weight:600; border-color:#CBD5E1;">
-        <i class="bi bi-box-arrow-in-right"></i> Log In
+      <a href="<?= APP_URL ?>/role-selection.php" class="mc-btn-login">
+        <i class="bi bi-box-arrow-in-right"></i> লগইন
       </a>
-      <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-primary btn-sm" id="btn-get-started" style="font-weight:700; background:linear-gradient(135deg, #0284c7, #2563eb);">
-        <i class="bi bi-person-plus-fill"></i> Get Started
+      <a href="<?= APP_URL ?>/patient/register.php" class="mc-btn-register">
+        <i class="bi bi-person-plus-fill"></i> রেজিস্ট্রেশন
       </a>
+      
+      <!-- Mobile Toggle -->
+      <button class="mc-hamburger" id="mc-mobile-btn" aria-label="Toggle menu" aria-expanded="false">
+        <i class="bi bi-list"></i>
+      </button>
     </div>
 
-    <!-- Mobile Hamburger Toggle -->
-    <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation" aria-expanded="false">
-      <i class="bi bi-list" aria-hidden="true" style="font-size:22px;"></i>
-    </button>
+  </div>
+
+  <!-- Mobile Drawer -->
+  <div class="mc-mobile-drawer" id="mc-mobile-drawer">
+    <a href="#services" class="mc-nav-link">সেবাসমূহ (Core Features)</a>
+    <a href="#portals" class="mc-nav-link">পোর্টালসমূহ (Access Portals)</a>
+    <a href="<?= APP_URL ?>/for-patients.php" class="mc-nav-link">রোগীদের জন্য (For Patients)</a>
+    <a href="<?= APP_URL ?>/for-doctors.php" class="mc-nav-link">ডাক্তারদের জন্য (For Doctors)</a>
+    <a href="<?= APP_URL ?>/for-hospitals.php" class="mc-nav-link">হাসপাতালের জন্য (For Hospitals)</a>
+    <a href="<?= APP_URL ?>/security.php" class="mc-nav-link">নিরাপত্তা ও প্রাইভেসি (Security)</a>
   </div>
 </nav>
 
 <!-- =====================================================
-     HERO SECTION (WHITE THEME — CLEAN & HIGH IMPACT)
+     HERO SECTION (WHITE THEME — SCOPED & CLEAN)
      ===================================================== -->
-<section class="hero-clean" id="hero">
-  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
-    <div class="hero-grid">
+<section class="mc-hero-section" id="hero">
+  <div class="mc-hero-container">
+    <div class="mc-hero-layout">
       
-      <!-- Left Column: Copy & Actions -->
-      <div>
-        <div style="display:inline-flex; align-items:center; gap:8px; background:#EFF6FF; border:1px solid #DBEAFE; padding:5px 14px; border-radius:999px; font-size:12px; font-weight:700; color:#1D4ED8; margin-bottom:16px;">
-          <i class="bi bi-shield-fill-check text-primary"></i> DGDA Aligned · AES-256 Encrypted · 100% Patient Consent
+      <!-- Left Column: Main Message & Quick Actions -->
+      <div class="mc-hero-content">
+        <div class="mc-trust-pill">
+          <i class="bi bi-shield-fill-check text-primary"></i> DGDA স্ট্যান্ডার্ড · AES-256 সুরক্ষিত · ১০০% রোগী-সম্মতি
         </div>
 
-        <h1 style="font-size:clamp(32px, 4.2vw, 52px); font-weight:900; line-height:1.15; color:#0F172A; margin:0 0 16px; letter-spacing:-0.03em;">
-          Your Complete Medical History.<br>
-          <span style="color:#0284C7;">One Unified Digital Record.</span>
+        <h1 class="mc-hero-title">
+          আপনার সম্পূর্ণ স্বাস্থ্য ইতিহাস।<br>
+          <span>এক সেন্ট্রালাইজড প্ল্যাটফর্মে।</span>
         </h1>
 
-        <p style="font-size:16px; color:#475569; line-height:1.6; max-width:580px; margin:0 0 28px;">
-          রোগী, বিশেষজ্ঞ ডাক্তার, হাসপাতাল এবং ডায়াগনস্টিক ল্যাব—সবাই একই সেন্ট্রালাইজড প্ল্যাটফর্মে সংযুক্ত। সহজে ডাক্তার সিরিয়াল বুক করুন এবং আজীবন স্বাস্থ্য ইতিহাস নিরাপদে সংরক্ষণ করুন।
+        <p class="mc-hero-subtitle">
+          রোগী, বিশেষজ্ঞ ডাক্তার, হাসপাতাল এবং ডায়াগনস্টিক ল্যাব—সবাই একই নেটওয়ার্কে সংযুক্ত। সহজে ডাক্তার সিরিয়াল বুক করুন এবং আজীবন স্বাস্থ্য রেকর্ড রাখুন সম্পূর্ণ নিজের নিয়ন্ত্রণে।
         </p>
 
-        <!-- Main Hero CTAs -->
-        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:36px;">
-          <a href="<?= APP_URL ?>/book-doctor.php" class="btn btn-lg" style="background:linear-gradient(135deg, #0284c7 0%, #1e40af 100%); color:#fff; font-weight:800; border-radius:12px; padding:14px 26px; box-shadow:0 8px 24px rgba(37,99,235,0.3); display:inline-flex; align-items:center; gap:8px;">
+        <!-- Main CTAs -->
+        <div class="mc-hero-ctas">
+          <a href="<?= APP_URL ?>/book-doctor.php" class="mc-cta-primary">
             <i class="bi bi-calendar2-check-fill"></i>
             অনলাইন ডাক্তার সিরিয়াল বুক করুন
           </a>
-          <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-secondary btn-lg" style="background:#fff; color:#0F172A; font-weight:700; border:1px solid #CBD5E1; border-radius:12px; padding:14px 22px;">
+          <a href="<?= APP_URL ?>/patient/register.php" class="mc-cta-secondary">
             <i class="bi bi-person-plus-fill"></i> ফ্রি অ্যাকাউন্ট খুলুন
           </a>
         </div>
 
-        <!-- Quick 4 Portal Access Cards -->
+        <!-- Quick 4 Portal Access Pills -->
         <div style="font-size:12px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
-          Quick Portal Access / সরাসরি লগইন করুন
+          সরাসরি লগইন পোর্টালসমূহ
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
-          <a href="<?= APP_URL ?>/patient/login.php" class="role-quick-card">
-            <div style="width:36px; height:36px; border-radius:10px; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; font-size:18px;">
+        <div class="mc-quick-grid">
+          <a href="<?= APP_URL ?>/patient/login.php" class="mc-quick-card">
+            <div class="mc-quick-icon" style="background:#EFF6FF; color:#2563EB;">
               <i class="bi bi-person-heart"></i>
             </div>
-            <div>
-              <div style="font-size:13px; font-weight:800; color:#0F172A;">Patient Portal</div>
-              <div style="font-size:11px; color:#64748B;">আমার স্বাস্থ্য রেকর্ড</div>
+            <div class="mc-quick-info">
+              <h4>Patient Portal</h4>
+              <p>আমার স্বাস্থ্য রেকর্ড</p>
             </div>
           </a>
 
-          <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="role-quick-card">
-            <div style="width:36px; height:36px; border-radius:10px; background:#ECFDF5; color:#059669; display:flex; align-items:center; justify-content:center; font-size:18px;">
+          <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="mc-quick-card">
+            <div class="mc-quick-icon" style="background:#ECFDF5; color:#059669;">
               <i class="bi bi-stethoscope"></i>
             </div>
-            <div>
-              <div style="font-size:13px; font-weight:800; color:#0F172A;">Doctor Chamber</div>
-              <div style="font-size:11px; color:#64748B;">চেম্বার ও সিরিয়াল কিউ</div>
+            <div class="mc-quick-info">
+              <h4>Doctor Chamber</h4>
+              <p>চেম্বার ও সিরিয়াল কিউ</p>
             </div>
           </a>
 
-          <a href="<?= APP_URL ?>/hospital/login.php" class="role-quick-card">
-            <div style="width:36px; height:36px; border-radius:10px; background:#F5F3FF; color:#7C3AED; display:flex; align-items:center; justify-content:center; font-size:18px;">
+          <a href="<?= APP_URL ?>/hospital/login.php" class="mc-quick-card">
+            <div class="mc-quick-icon" style="background:#F5F3FF; color:#7C3AED;">
               <i class="bi bi-building-fill-cross"></i>
             </div>
-            <div>
-              <div style="font-size:13px; font-weight:800; color:#0F172A;">Hospital Desk</div>
-              <div style="font-size:11px; color:#64748B;">ওপিডি রিসেপশন ডেস্ক</div>
+            <div class="mc-quick-info">
+              <h4>Hospital Desk</h4>
+              <p>ওপিডি রিসেপশন ডেস্ক</p>
             </div>
           </a>
 
-          <a href="<?= APP_URL ?>/lab/login.php" class="role-quick-card">
-            <div style="width:36px; height:36px; border-radius:10px; background:#FFFBEB; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:18px;">
+          <a href="<?= APP_URL ?>/lab/login.php" class="mc-quick-card">
+            <div class="mc-quick-icon" style="background:#FFFBEB; color:#D97706;">
               <i class="bi bi-flask-fill"></i>
             </div>
-            <div>
-              <div style="font-size:13px; font-weight:800; color:#0F172A;">Diagnostic Lab</div>
-              <div style="font-size:11px; color:#64748B;">টোকেন সার্চ ও রেজাল্ট</div>
+            <div class="mc-quick-info">
+              <h4>Diagnostic Lab</h4>
+              <p>টোকেন সার্চ ও রেজাল্ট</p>
             </div>
           </a>
         </div>
 
       </div>
 
-      <!-- Right Column: Visual Live Interactive Preview Card -->
-      <div class="hero-visual-col">
-        <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:22px; padding:28px; box-shadow:0 20px 48px rgba(15,23,42,0.08); position:relative;">
+      <!-- Right Column: Interactive Live Digital Card Preview -->
+      <div class="mc-hero-preview">
+        <div class="mc-live-card">
           
           <!-- Card Header -->
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #F1F5F9; padding-bottom:16px; margin-bottom:18px;">
-            <div style="display:flex; align-items:center; gap:12px;">
-              <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800;">
-                R
-              </div>
+          <div class="mc-live-header">
+            <div class="mc-user-badge">
+              <div class="mc-user-avatar">R</div>
               <div>
-                <h3 style="margin:0; font-size:16px; font-weight:800; color:#0F172A;">Rahat Mahamud</h3>
-                <div style="font-size:12px; color:#64748B;">PT-000001 · Age: 28 · <strong style="color:#059669;">O+ Positive</strong></div>
+                <h3 class="mc-user-name">Rahat Mahamud</h3>
+                <div class="mc-user-meta">PT-000001 · Age: 28 · <strong style="color:#059669;">O+ Positive</strong></div>
               </div>
             </div>
-            <span style="background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px;">
-              ● ACTIVE EHR
-            </span>
+            <span class="mc-status-pill">● ACTIVE EHR</span>
           </div>
 
           <!-- Allergy Warning Box -->
-          <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:12px; padding:12px; display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-            <span style="font-size:20px;">⚠️</span>
-            <div style="font-size:12px;">
-              <strong style="color:#DC2626; display:block;">Severe Penicillin Allergy</strong>
-              <span style="color:#64748B;">Cross-reactive: Amoxicillin (Flagged in all doctor views)</span>
+          <div class="mc-alert-box">
+            <span class="mc-alert-icon">⚠️</span>
+            <div>
+              <div class="mc-alert-title">Severe Penicillin Allergy</div>
+              <div class="mc-alert-desc">Cross-reactive: Amoxicillin (Flagged in all doctor views)</div>
             </div>
           </div>
 
           <!-- Today's Live Serial Card -->
-          <div style="background:linear-gradient(135deg, #0284c7 0%, #1e40af 100%); border-radius:16px; padding:18px; color:#fff; margin-bottom:16px;">
-            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; opacity:0.9; margin-bottom:8px;">
+          <div class="mc-serial-box">
+            <div class="mc-serial-header">
               <span>TODAY'S APPOINTMENT SERIAL</span>
               <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px;">CONFIRMED</span>
             </div>
-            <div style="display:flex; align-items:center; gap:16px;">
-              <div style="background:#fff; color:#1e40af; font-family:'JetBrains Mono', monospace; font-size:32px; font-weight:900; padding:6px 14px; border-radius:10px; line-height:1;">
-                #02
-              </div>
-              <div>
-                <h4 style="margin:0 0 2px; font-size:15px; font-weight:800;">Dr. Farhana Rahman</h4>
-                <div style="font-size:12px; opacity:0.9;">Cardiology · ABC General Hospital</div>
+            <div class="mc-serial-body">
+              <div class="mc-serial-number">#02</div>
+              <div class="mc-serial-details">
+                <h5>Dr. Farhana Rahman</h5>
+                <p>Cardiology · ABC General Hospital</p>
                 <div style="font-size:11px; color:#BFDBFE; margin-top:3px;">Slot: 05:30 PM · Serial Token Ready</div>
               </div>
             </div>
           </div>
 
           <!-- Active Lab Token Widget -->
-          <div style="background:#FAF5FF; border:1px solid #E9D5FF; border-radius:14px; padding:14px; display:flex; justify-content:space-between; align-items:center;">
+          <div class="mc-lab-box">
             <div>
               <div style="font-size:11px; font-weight:800; color:#7C3AED; text-transform:uppercase;">Short Lab Token</div>
-              <div style="font-family:'JetBrains Mono', monospace; font-size:18px; font-weight:800; color:#5B21B6; margin-top:2px;">LT-99B2A</div>
-              <div style="font-size:11px; color:#6B7280;">Test: Complete Blood Count (CBC)</div>
+              <div class="mc-lab-token">LT-99B2A</div>
+              <div style="font-size:11px; color:#6B7280; margin-top:2px;">Test: Complete Blood Count (CBC)</div>
             </div>
             <span style="background:#EDE9FE; color:#6D28D9; font-size:11px; font-weight:700; padding:4px 10px; border-radius:6px;">
               Show at Lab Desk
@@ -305,71 +1028,63 @@ if (isset($_SESSION['role'])) {
 </section>
 
 <!-- =====================================================
-     CORE SERVICES (CLEAN, NO UNWANTED TEXT WALLS)
+     CORE SERVICES (CLEAN WHITE THEME, NO JARGON WALLS)
      ===================================================== -->
-<section id="services" style="padding:70px 0; background:#FFFFFF;">
-  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
+<section class="mc-services-section" id="services">
+  <div class="mc-hero-container">
     
-    <div style="text-align:center; max-width:640px; margin:0 auto 48px;">
-      <span style="font-size:12px; font-weight:800; color:#0284C7; text-transform:uppercase; letter-spacing:0.8px;">Core Capabilities</span>
-      <h2 style="font-size:32px; font-weight:800; color:#0F172A; margin:8px 0 10px;">প্রধান সেবাসমূহ</h2>
-      <p style="font-size:15px; color:#64748B; margin:0;">সহজে ডাক্তার সিরিয়াল বুকিং থেকে শুরু করে টেস্ট রিপোর্ট ও আজীবন স্বাস্থ্য রেকর্ড—সব এক প্ল্যাটফর্মে।</p>
+    <div class="mc-section-header">
+      <span class="mc-section-badge">Core Capabilities</span>
+      <h2 class="mc-section-title">প্রধান সেবাসমূহ</h2>
+      <p class="mc-section-desc">সহজে ডাক্তার সিরিয়াল বুকিং থেকে শুরু করে টেস্ট রিপোর্ট ও আজীবন স্বাস্থ্য রেকর্ড—সব এক প্ল্যাটফর্মে।</p>
     </div>
 
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:24px;">
+    <div class="mc-services-grid">
       
       <!-- Feature 1 -->
-      <div class="feature-card-clean">
-        <div style="width:48px; height:48px; border-radius:12px; background:#EFF6FF; color:#0284C7; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:18px;">
+      <div class="mc-feature-card">
+        <div class="mc-feature-icon" style="background:#EFF6FF; color:#0284C7;">
           <i class="bi bi-calendar2-check-fill"></i>
         </div>
-        <h3 style="font-size:18px; font-weight:800; color:#0F172A; margin:0 0 8px;">ডাক্তার সিরিয়াল ও লাইভ কিউ</h3>
-        <p style="font-size:14px; color:#64748B; line-height:1.6; margin:0 0 16px;">
-          বিভাগ ও হাসপাতাল অনুযায়ী বিশেষজ্ঞ ডাক্তার বাছাই করুন, রেটিং ও ফি দেখুন এবং রিয়েল-টাইম চেম্বার সিরিয়াল টোকেন নিন।
-        </p>
-        <a href="<?= APP_URL ?>/book-doctor.php" style="font-size:13px; font-weight:700; color:#0284C7; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+        <h3>ডাক্তার সিরিয়াল ও লাইভ কিউ</h3>
+        <p>বিভাগ ও হাসপাতাল অনুযায়ী বিশেষজ্ঞ ডাক্তার বাছাই করুন, রেটিং ও ফি দেখুন এবং রিয়েল-টাইম চেম্বার সিরিয়াল টোকেন নিন।</p>
+        <a href="<?= APP_URL ?>/book-doctor.php" class="mc-feature-link" style="color:#0284C7;">
           সিরিয়াল বুক করুন &rarr;
         </a>
       </div>
 
       <!-- Feature 2 -->
-      <div class="feature-card-clean">
-        <div style="width:48px; height:48px; border-radius:12px; background:#ECFDF5; color:#059669; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:18px;">
+      <div class="mc-feature-card">
+        <div class="mc-feature-icon" style="background:#ECFDF5; color:#059669;">
           <i class="bi bi-clipboard2-pulse-fill"></i>
         </div>
-        <h3 style="font-size:18px; font-weight:800; color:#0F172A; margin:0 0 8px;">আজীবন মেডিক্যাল রেকর্ড</h3>
-        <p style="font-size:14px; color:#64748B; line-height:1.6; margin:0 0 16px;">
-          কাগজের প্রেসক্রিপশন হারানোর ভয় নেই। অতীতের প্রেসক্রিপশন, ডায়াগনস্টিক রিপোর্ট ও ওষুধ হিস্ট্রি একটি মাত্র নিরাপদ প্রোফাইলে সংরক্ষিত।
-        </p>
-        <a href="<?= APP_URL ?>/for-patients.php" style="font-size:13px; font-weight:700; color:#059669; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+        <h3>আজীবন মেডিক্যাল রেকর্ড</h3>
+        <p>কাগজের প্রেসক্রিপশন হারানোর ভয় নেই। অতীতের প্রেসক্রিপশন, ডায়াগনস্টিক রিপোর্ট ও ওষুধ হিস্ট্রি একটি মাত্র নিরাপদ প্রোফাইলে সংরক্ষিত।</p>
+        <a href="<?= APP_URL ?>/for-patients.php" class="mc-feature-link" style="color:#059669;">
           বিস্তারিত জানুন &rarr;
         </a>
       </div>
 
       <!-- Feature 3 -->
-      <div class="feature-card-clean">
-        <div style="width:48px; height:48px; border-radius:12px; background:#F5F3FF; color:#7C3AED; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:18px;">
+      <div class="mc-feature-card">
+        <div class="mc-feature-icon" style="background:#F5F3FF; color:#7C3AED;">
           <i class="bi bi-qr-code-scan"></i>
         </div>
-        <h3 style="font-size:18px; font-weight:800; color:#0F172A; margin:0 0 8px;">শর্ট ডায়াগনস্টিক টোকেন</h3>
-        <p style="font-size:14px; color:#64748B; line-height:1.6; margin:0 0 16px;">
-          প্রেসক্রিপশনের সাথে তৈরি হওয়া ইউনিক শর্ট টোকেন (LT-XXXXX) যেকোনো অনুমোদিত ল্যাবে দেখালেই অটো-সিঙ্ক হয়ে যাবে রিপোর্ট।
-        </p>
-        <a href="<?= APP_URL ?>/for-hospitals.php" style="font-size:13px; font-weight:700; color:#7C3AED; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+        <h3>শর্ট ডায়াগনস্টিক টোকেন</h3>
+        <p>প্রেসক্রিপশনের সাথে তৈরি হওয়া ইউনিক শর্ট টোকেন (LT-XXXXX) যেকোনো অনুমোদিত ল্যাবে দেখালেই অটো-সিঙ্ক হয়ে যাবে রিপোর্ট।</p>
+        <a href="<?= APP_URL ?>/for-hospitals.php" class="mc-feature-link" style="color:#7C3AED;">
           ল্যাব নেটওয়ার্ক &rarr;
         </a>
       </div>
 
       <!-- Feature 4 -->
-      <div class="feature-card-clean">
-        <div style="width:48px; height:48px; border-radius:12px; background:#FEF2F2; color:#DC2626; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:18px;">
+      <div class="mc-feature-card">
+        <div class="mc-feature-icon" style="background:#FEF2F2; color:#DC2626;">
           <i class="bi bi-shield-lock-fill"></i>
         </div>
-        <h3 style="font-size:18px; font-weight:800; color:#0F172A; margin:0 0 8px;">রোগী-নিয়ন্ত্রিত নিরাপত্তা</h3>
-        <p style="font-size:14px; color:#64748B; line-height:1.6; margin:0 0 16px;">
-          রোগীর ওটিপি (OTP) বা অনুমতি ছাড়া কোনো ডাক্তার রেকর্ড দেখতে পারেন না। প্রতিটি সেশন ৩০ মিনিট পর স্বয়ংক্রিয়ভাবে লক হয়ে যায়।
-        </p>
-        <a href="<?= APP_URL ?>/security.php" style="font-size:13px; font-weight:700; color:#DC2626; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+        <h3>রোগী-নিয়ন্ত্রিত নিরাপত্তা</h3>
+        <p>রোগীর ওটিপি (OTP) বা অনুমতি ছাড়া কোনো ডাক্তার রেকর্ড দেখতে পারেন না। প্রতিটি সেশন ৩০ মিনিট পর স্বয়ংক্রিয়ভাবে লক হয়ে যায়।</p>
+        <a href="<?= APP_URL ?>/security.php" class="mc-feature-link" style="color:#DC2626;">
           নিরাপত্তা স্ট্যান্ডার্ড &rarr;
         </a>
       </div>
@@ -379,95 +1094,95 @@ if (isset($_SESSION['role'])) {
 </section>
 
 <!-- =====================================================
-     PORTALS SECTION (CLEAN WHITE CARDS FOR EVERY ROLE)
+     PORTALS SECTION (CLEAN CARDS FOR EVERY ROLE)
      ===================================================== -->
-<section id="portals" style="padding:70px 0; background:#F8FAFC; border-top:1px solid #E2E8F0; border-bottom:1px solid #E2E8F0;">
-  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
+<section class="mc-portals-section" id="portals">
+  <div class="mc-hero-container">
     
-    <div style="text-align:center; max-width:640px; margin:0 auto 48px;">
-      <span style="font-size:12px; font-weight:800; color:#0284C7; text-transform:uppercase; letter-spacing:0.8px;">Tailored Access</span>
-      <h2 style="font-size:32px; font-weight:800; color:#0F172A; margin:8px 0 10px;">আপনার পোর্টাল নির্বাচন করুন</h2>
-      <p style="font-size:15px; color:#64748B; margin:0;">প্রতিটি ভূমিকার জন্য আলাদা ডেডিকেটেড ওয়ার্কস্পেস ও ক্লিনিক্যাল টুলস।</p>
+    <div class="mc-section-header">
+      <span class="mc-section-badge">Tailored Portals</span>
+      <h2 class="mc-section-title">আপনার পোর্টাল নির্বাচন করুন</h2>
+      <p class="mc-section-desc">প্রতিটি ভূমিকার জন্য আলাদা ডেডিকেটেড ওয়ার্কস্পেস ও ক্লিনিক্যাল টুলস।</p>
     </div>
 
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(270px, 1fr)); gap:24px;">
+    <div class="mc-portals-grid">
       
       <!-- Patient Portal -->
-      <div class="portal-box-clean">
+      <div class="mc-portal-box">
         <div>
-          <div style="width:48px; height:48px; border-radius:14px; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:18px;">
+          <div class="mc-feature-icon" style="background:#EFF6FF; color:#2563EB;">
             <i class="bi bi-person-heart"></i>
           </div>
-          <h3 style="font-size:20px; font-weight:800; color:#0F172A; margin:0 0 6px;">Patient Portal</h3>
-          <p style="font-size:13px; color:#64748B; margin:0 0 18px;">আমার স্বাস্থ্য রেকর্ড, আমার নিয়ন্ত্রণে।</p>
-          <ul style="padding-left:18px; font-size:13px; color:#475569; line-height:1.8; margin-bottom:24px;">
-            <li>আজীবন প্রেসক্রিপশন ও রিপোর্ট হিস্ট্রি</li>
-            <li>লাইভ ডাক্তার সিরিয়াল ট্র্যাকিং</li>
-            <li>ডাক্তারের অ্যাক্সেস অনুমোদন বা বাতিল</li>
-            <li>ল্যাব টোকেন ও ওষুধ গ্রহণের রিমাইন্ডার</li>
+          <h3>Patient Portal</h3>
+          <p>আমার স্বাস্থ্য রেকর্ড, আমার নিয়ন্ত্রণে।</p>
+          <ul class="mc-portal-features">
+            <li><i class="bi bi-check2 text-primary"></i> আজীবন প্রেসক্রিপশন ও রিপোর্ট হিস্ট্রি</li>
+            <li><i class="bi bi-check2 text-primary"></i> লাইভ ডাক্তার সিরিয়াল ট্র্যাকিং</li>
+            <li><i class="bi bi-check2 text-primary"></i> ডাক্তারের অ্যাক্সেস অনুমোদন বা বাতিল</li>
+            <li><i class="bi bi-check2 text-primary"></i> ল্যাব টোকেন ও ওষুধ রিমাইন্ডার</li>
           </ul>
         </div>
-        <a href="<?= APP_URL ?>/patient/login.php" class="btn btn-primary w-100" style="padding:12px; border-radius:10px; font-weight:700; background:#2563EB;">
+        <a href="<?= APP_URL ?>/patient/login.php" class="mc-portal-btn" style="background:#2563EB; color:#FFFFFF;">
           <i class="bi bi-box-arrow-in-right"></i> Patient Login
         </a>
       </div>
 
-      <!-- Doctor Portal -->
-      <div class="portal-box-clean" style="border-top:3px solid #059669;">
+      <!-- Doctor Chamber -->
+      <div class="mc-portal-box" style="border-top:3px solid #059669;">
         <div>
-          <div style="width:48px; height:48px; border-radius:14px; background:#ECFDF5; color:#059669; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:18px;">
+          <div class="mc-feature-icon" style="background:#ECFDF5; color:#059669;">
             <i class="bi bi-stethoscope"></i>
           </div>
-          <h3 style="font-size:20px; font-weight:800; color:#0F172A; margin:0 0 6px;">Doctor Chamber</h3>
-          <p style="font-size:13px; color:#64748B; margin:0 0 18px;">দ্রুত ক্লিনিক্যাল কনসালটেশন ও প্রেসক্রিপশন।</p>
-          <ul style="padding-left:18px; font-size:13px; color:#475569; line-height:1.8; margin-bottom:24px;">
-            <li>মাল্টি-হাসপাতাল চেম্বার ম্যানেজমেন্ট</li>
-            <li>লাইভ পেশেন্ট কিউ ও ইমার্জেন্সি অগ্রাধিকার</li>
-            <li>এক্সিকিউটিভ ক্লিনিক্যাল হিস্ট্রি সারসংক্ষেপ</li>
-            <li>বাংলা ডোজ প্রিসেট সহ ডিজিটাল প্রেসক্রিপশন</li>
+          <h3>Doctor Chamber</h3>
+          <p>দ্রুত ক্লিনিক্যাল কনসালটেশন ও প্রেসক্রিপশন।</p>
+          <ul class="mc-portal-features">
+            <li><i class="bi bi-check2 text-success"></i> মাল্টি-হাসপাতাল চেম্বার ম্যানেজমেন্ট</li>
+            <li><i class="bi bi-check2 text-success"></i> লাইভ পেশেন্ট কিউ ও সিরিয়াল রস্টার</li>
+            <li><i class="bi bi-check2 text-success"></i> এক্সিকিউটিভ পেশেন্ট মেডিক্যাল হিস্ট্রি</li>
+            <li><i class="bi bi-check2 text-success"></i> বাংলা ডোজ প্রিসেট সহ ই-প্রেসক্রিপশন</li>
           </ul>
         </div>
-        <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="btn w-100" style="padding:12px; border-radius:10px; font-weight:700; background:#059669; color:#fff;">
+        <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="mc-portal-btn" style="background:#059669; color:#FFFFFF;">
           <i class="bi bi-box-arrow-in-right"></i> Doctor Login
         </a>
       </div>
 
       <!-- Hospital Portal -->
-      <div class="portal-box-clean">
+      <div class="mc-portal-box">
         <div>
-          <div style="width:48px; height:48px; border-radius:14px; background:#F5F3FF; color:#7C3AED; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:18px;">
+          <div class="mc-feature-icon" style="background:#F5F3FF; color:#7C3AED;">
             <i class="bi bi-building-fill-cross"></i>
           </div>
-          <h3 style="font-size:20px; font-weight:800; color:#0F172A; margin:0 0 6px;">Hospital Portal</h3>
-          <p style="font-size:13px; color:#64748B; margin:0 0 18px;">সম্পূর্ণ প্রাতিষ্ঠানিক ও ওপিডি প্রশাসন।</p>
-          <ul style="padding-left:18px; font-size:13px; color:#475569; line-height:1.8; margin-bottom:24px;">
-            <li>ওপিডি অভ্যর্থনা ও লবি চেক-ইন ডেস্ক</li>
-            <li>অ্যাফিলিয়েটেড ডাক্তার ও ডিপার্টমেন্ট রস্টার</li>
-            <li>ডায়াগনস্টিক ল্যাবরেটরি নেটওয়ার্ক</li>
-            <li>দৈনিক ওপিডি রোগী রেজিস্টার ও অডিট</li>
+          <h3>Hospital Desk</h3>
+          <p>সম্পূর্ণ প্রাতিষ্ঠানিক ও ওপিডি প্রশাসন।</p>
+          <ul class="mc-portal-features">
+            <li><i class="bi bi-check2 text-purple" style="color:#7C3AED;"></i> ওপিডি অভ্যর্থনা ও লবি চেক-ইন</li>
+            <li><i class="bi bi-check2 text-purple" style="color:#7C3AED;"></i> অ্যাফিলিয়েটেড ডাক্তার ও ডিপার্টমেন্ট রস্টার</li>
+            <li><i class="bi bi-check2 text-purple" style="color:#7C3AED;"></i> ডায়াগনস্টিক ল্যাবরেটরি নেটওয়ার্ক</li>
+            <li><i class="bi bi-check2 text-purple" style="color:#7C3AED;"></i> দৈনিক ওপিডি রেজিস্টার ও অডিট</li>
           </ul>
         </div>
-        <a href="<?= APP_URL ?>/hospital/login.php" class="btn btn-secondary w-100" style="padding:12px; border-radius:10px; font-weight:700; border-color:#CBD5E1;">
+        <a href="<?= APP_URL ?>/hospital/login.php" class="mc-portal-btn" style="background:#FFFFFF; color:#334155; border:1px solid #CBD5E1;">
           <i class="bi bi-box-arrow-in-right"></i> Hospital Login
         </a>
       </div>
 
       <!-- Diagnostic Lab Portal -->
-      <div class="portal-box-clean">
+      <div class="mc-portal-box">
         <div>
-          <div style="width:48px; height:48px; border-radius:14px; background:#FFFBEB; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:18px;">
+          <div class="mc-feature-icon" style="background:#FFFBEB; color:#D97706;">
             <i class="bi bi-flask-fill"></i>
           </div>
-          <h3 style="font-size:20px; font-weight:800; color:#0F172A; margin:0 0 6px;">Diagnostic Lab</h3>
-          <p style="font-size:13px; color:#64748B; margin:0 0 18px;">দ্রুত টোকেন সার্চ ও সরাসরি রেজাল্ট আপলোড।</p>
-          <ul style="padding-left:18px; font-size:13px; color:#475569; line-height:1.8; margin-bottom:24px;">
-            <li>৮ ডিজিটের শর্ট ল্যাব টোকেন ওমনিবার সার্চ</li>
-            <li>ডাক্তারের নির্দেশিত টেস্ট ও প্রায়োরিটি ভেরিফাই</li>
-            <li>টেস্ট ফাইন্ডিংস এন্ট্রি ও পিডিএফ আপলোড</li>
-            <li>রোগীর মোবাইল রেকর্ডে তাৎক্ষণিক সিঙ্ক</li>
+          <h3>Diagnostic Lab</h3>
+          <p>দ্রুত টোকেন সার্চ ও সরাসরি রেজাল্ট আপলোড।</p>
+          <ul class="mc-portal-features">
+            <li><i class="bi bi-check2 text-warning" style="color:#D97706;"></i> ৮ ডিজিটের শর্ট ল্যাব টোকেন সার্চ</li>
+            <li><i class="bi bi-check2 text-warning" style="color:#D97706;"></i> ডাক্তারের নির্দেশিত টেস্ট ভেরিফাই</li>
+            <li><i class="bi bi-check2 text-warning" style="color:#D97706;"></i> টেস্ট ফাইন্ডিংস এন্ট্রি ও রিপোর্ট আপলোড</li>
+            <li><i class="bi bi-check2 text-warning" style="color:#D97706;"></i> রোগীর অ্যাকাউন্টে তাৎক্ষণিক সিঙ্ক</li>
           </ul>
         </div>
-        <a href="<?= APP_URL ?>/lab/login.php" class="btn w-100" style="padding:12px; border-radius:10px; font-weight:700; background:#D97706; color:#fff;">
+        <a href="<?= APP_URL ?>/lab/login.php" class="mc-portal-btn" style="background:#D97706; color:#FFFFFF;">
           <i class="bi bi-box-arrow-in-right"></i> Lab Login
         </a>
       </div>
@@ -477,19 +1192,17 @@ if (isset($_SESSION['role'])) {
 </section>
 
 <!-- =====================================================
-     EMERGENCY ICE BANNER (CRISP & PURPOSEFUL)
+     EMERGENCY ICE BANNER (CRISP & CLEAN)
      ===================================================== -->
-<section style="padding:60px 0; background:#FFFFFF;">
-  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
-    <div style="background:linear-gradient(135deg, #FEF2F2 0%, #FFF5F5 100%); border:1px solid #FECACA; border-radius:20px; padding:36px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:24px;">
-      <div style="max-width:680px;">
+<section class="mc-ice-section">
+  <div class="mc-hero-container">
+    <div class="mc-ice-banner">
+      <div class="mc-ice-content">
         <span style="background:#DC2626; color:#fff; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:0.5px;">First Responder ICE</span>
-        <h3 style="font-size:24px; font-weight:800; color:#991B1B; margin:10px 0 6px;">রোড এক্সিডেন্ট ও জরুরি পরিস্থিতি?</h3>
-        <p style="font-size:14px; color:#7F1D1D; line-height:1.6; margin:0;">
-          লগইন ছাড়াই ফার্স্ট-রেসপন্ডার ও প্যারামেডিকদের জন্য ১-ক্লিকে রক্তের গ্রুপ দেখা, মারাত্মক ওষুধের অ্যালার্জি জানা এবং স্বজনকে তাৎক্ষণিক কল করার পাবলিক প্রোফাইল।
-        </p>
+        <h3>রোড এক্সিডেন্ট বা জরুরি অবস্থা?</h3>
+        <p>লগইন ছাড়াই ফার্স্ট-রেসপন্ডার ও চিকিৎসকদের জন্য রক্তের গ্রুপ, প্রাণঘাতী অ্যালার্জি এবং স্বজনের জরুরি যোগাযোগের উন্মুক্ত কার্ড।</p>
       </div>
-      <a href="<?= APP_URL ?>/emergency.php?uid=PT-000001" target="_blank" class="btn btn-lg" style="background:#DC2626; color:#fff; font-weight:800; border-radius:12px; padding:14px 26px; box-shadow:0 6px 18px rgba(220,38,38,0.25); text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+      <a href="<?= APP_URL ?>/emergency.php?uid=PT-000001" target="_blank" class="mc-ice-btn">
         <i class="bi bi-heart-pulse-fill"></i> ওপেন ইমার্জেন্সি ICE কার্ড
       </a>
     </div>
@@ -499,20 +1212,20 @@ if (isset($_SESSION['role'])) {
 <!-- =====================================================
      FOOTER (CLEAN WHITE THEME)
      ===================================================== -->
-<footer style="background:#FFFFFF; border-top:1px solid #E2E8F0; padding:60px 0 30px; font-size:14px; color:#64748B;">
-  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
+<footer class="mc-footer">
+  <div class="mc-hero-container">
     
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:36px; margin-bottom:48px;">
+    <div class="mc-footer-grid">
       
       <!-- Brand Col -->
       <div>
-        <div style="display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px; color:#0F172A; margin-bottom:12px;">
-          <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px;">M</div>
+        <div style="display:flex; align-items:center; gap:8px; font-weight:800; font-size:18px; color:#0F172A; margin-bottom:12px;">
+          <div style="width:30px; height:30px; border-radius:8px; background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px;">M</div>
           MedCore
         </div>
         <p style="font-size:13px; line-height:1.6; color:#64748B; margin:0 0 14px;">
           One Record. Every Care.<br>
-          A unified, consent-driven digital healthcare network for Bangladesh.
+          বাংলাদেশের সেন্ট্রালাইজড ডিজিটাল হেলথকেয়ার নেটওয়ার্ক।
         </p>
         <div style="font-size:12px; color:#94A3B8;">
           Universal Demo OTP: <code style="background:#F1F5F9; padding:2px 6px; border-radius:4px; font-weight:700; color:#0F172A;">1234</code>
@@ -521,41 +1234,41 @@ if (isset($_SESSION['role'])) {
 
       <!-- Quick Portals -->
       <div>
-        <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 14px; text-transform:uppercase; letter-spacing:0.5px;">Portals</h4>
-        <ul style="list-style:none; padding:0; margin:0; line-height:2.2; font-size:13px;">
-          <li><a href="<?= APP_URL ?>/patient/login.php" style="color:#64748B; text-decoration:none;">Patient Portal</a></li>
-          <li><a href="<?= APP_URL ?>/doctor/select-hospital.php" style="color:#64748B; text-decoration:none;">Doctor Chamber</a></li>
-          <li><a href="<?= APP_URL ?>/hospital/login.php" style="color:#64748B; text-decoration:none;">Hospital Desk</a></li>
-          <li><a href="<?= APP_URL ?>/lab/login.php" style="color:#64748B; text-decoration:none;">Diagnostic Lab</a></li>
+        <h4 class="mc-footer-heading">Portals</h4>
+        <ul class="mc-footer-list">
+          <li><a href="<?= APP_URL ?>/patient/login.php">Patient Portal</a></li>
+          <li><a href="<?= APP_URL ?>/doctor/select-hospital.php">Doctor Chamber</a></li>
+          <li><a href="<?= APP_URL ?>/hospital/login.php">Hospital Desk</a></li>
+          <li><a href="<?= APP_URL ?>/lab/login.php">Diagnostic Lab</a></li>
         </ul>
       </div>
 
-      <!-- Online Booking -->
+      <!-- Services -->
       <div>
-        <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 14px; text-transform:uppercase; letter-spacing:0.5px;">Services</h4>
-        <ul style="list-style:none; padding:0; margin:0; line-height:2.2; font-size:13px;">
-          <li><a href="<?= APP_URL ?>/book-doctor.php" style="color:#0284C7; font-weight:700; text-decoration:none;">ডাক্তার সিরিয়াল বুকিং</a></li>
-          <li><a href="<?= APP_URL ?>/emergency.php" style="color:#DC2626; font-weight:700; text-decoration:none;">Emergency ICE Profile</a></li>
-          <li><a href="<?= APP_URL ?>/security.php" style="color:#64748B; text-decoration:none;">Security & Consent</a></li>
-          <li><a href="<?= APP_URL ?>/for-patients.php" style="color:#64748B; text-decoration:none;">For Patients</a></li>
+        <h4 class="mc-footer-heading">Services</h4>
+        <ul class="mc-footer-list">
+          <li><a href="<?= APP_URL ?>/book-doctor.php" style="color:#0284C7; font-weight:700;">ডাক্তার সিরিয়াল বুকিং</a></li>
+          <li><a href="<?= APP_URL ?>/emergency.php" style="color:#DC2626; font-weight:700;">Emergency ICE Profile</a></li>
+          <li><a href="<?= APP_URL ?>/security.php">Security & Consent</a></li>
+          <li><a href="<?= APP_URL ?>/for-patients.php">For Patients</a></li>
         </ul>
       </div>
 
-      <!-- Security & Trust -->
+      <!-- Compliance -->
       <div>
-        <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 14px; text-transform:uppercase; letter-spacing:0.5px;">Compliance</h4>
-        <div style="font-size:13px; color:#64748B; line-height:1.8;">
+        <h4 class="mc-footer-heading">Compliance</h4>
+        <div style="font-size:13px; color:#64748B; line-height:1.9;">
           <div><i class="bi bi-shield-check text-primary"></i> DGDA Standards Aligned</div>
           <div><i class="bi bi-lock-fill text-primary"></i> AES-256 Encrypted Records</div>
           <div><i class="bi bi-clock-history text-primary"></i> 30-Min Temporary Consent</div>
-          <div><i class="bi bi-check-circle-fill text-success"></i> BMDC Licensure Validation</div>
+          <div><i class="bi bi-check-circle-fill text-success"></i> BMDC Licensure Validated</div>
         </div>
       </div>
 
     </div>
 
     <!-- Bottom Copyright -->
-    <div style="border-top:1px solid #F1F5F9; padding-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:12px; color:#94A3B8;">
+    <div class="mc-footer-bottom">
       <div>&copy; <?= date('Y') ?> MedCore Healthcare Network. All rights reserved.</div>
       <div style="display:flex; gap:16px;">
         <a href="<?= APP_URL ?>/security.php" style="color:#94A3B8; text-decoration:none;">Privacy Policy</a>
@@ -569,27 +1282,12 @@ if (isset($_SESSION['role'])) {
 
 <!-- Scripts -->
 <script>
-// Mobile Hamburger Toggle
-document.getElementById('hamburger-btn')?.addEventListener('click', function() {
-  const menu = document.getElementById('nav-menu');
-  if (menu) {
-    if (menu.style.display === 'flex') {
-      menu.style.display = 'none';
-      this.setAttribute('aria-expanded', 'false');
-    } else {
-      menu.style.display = 'flex';
-      menu.style.flexDirection = 'column';
-      menu.style.position = 'absolute';
-      menu.style.top = '72px';
-      menu.style.left = '0';
-      menu.style.width = '100%';
-      menu.style.background = '#FFFFFF';
-      menu.style.padding = '16px 24px';
-      menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
-      menu.style.borderBottom = '1px solid #E2E8F0';
-      menu.style.zIndex = '999';
-      this.setAttribute('aria-expanded', 'true');
-    }
+// Mobile Drawer Toggle
+document.getElementById('mc-mobile-btn')?.addEventListener('click', function() {
+  const drawer = document.getElementById('mc-mobile-drawer');
+  if (drawer) {
+    const isExpanded = drawer.classList.toggle('active');
+    this.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
   }
 });
 </script>

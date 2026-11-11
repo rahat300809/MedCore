@@ -214,8 +214,8 @@ body.landing-page .btn-primary:hover {
   66%  { transform: translate(-20px,18px) scale(0.95); }
 }
 
-/* Dot grid */
-.hero-grid {
+/* Dot grid background pattern */
+.hero-dot-pattern {
   position: absolute;
   inset: 0;
   background-image: radial-gradient(rgba(37,99,235,0.1) 1.2px, transparent 1.2px);
