@@ -1399,3 +1399,107 @@ body.landing-page .section-subtitle {
   .hero-login-grid { grid-template-columns: 1fr; }
   .hero-float-1, .hero-float-2, .hero-float-3 { display: none; }
 }
+
+/* ============================================================
+   MEDCORE CLEAN WHITE THEME OVERRIDES (HOMEPAGE & NAVBAR)
+   ============================================================ */
+body.landing-page {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif !important;
+}
+
+body.landing-page .navbar {
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+  height: 72px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+}
+
+body.landing-page .navbar-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  max-width: 1320px !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+  gap: 16px !important;
+}
+
+body.landing-page .navbar-logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #0F172A !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+body.landing-page .navbar-logo .logo-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, #0284C7, #2563EB) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
+}
+
+body.landing-page .navbar-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  list-style: none !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+}
+
+body.landing-page .navbar-nav li {
+  white-space: nowrap !important;
+}
+
+body.landing-page .navbar-nav a {
+  color: #475569 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+
+body.landing-page .navbar-nav a:hover {
+  color: #0284C7 !important;
+  background: #F0F9FF !important;
+}
+
+body.landing-page .navbar-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 1100px) {
+  body.landing-page .navbar-nav {
+    display: none !important;
+  }
+  body.landing-page .hamburger {
+    display: flex !important;
+  }
+}
+

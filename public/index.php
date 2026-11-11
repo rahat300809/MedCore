@@ -23,838 +23,576 @@ if (isset($_SESSION['role'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="MedCore — One Record. Every Care. Bangladesh's secure digital medical record ecosystem connecting patients, doctors, and hospitals through consent-based health data management.">
-  <meta name="keywords" content="MedCore, digital health, medical records, Bangladesh, EHR, patient portal, doctor portal, ECG, MRI">
-  <meta property="og:title" content="MedCore — One Record. Every Care.">
-  <meta property="og:description" content="Secure digital healthcare ecosystem connecting patients, doctors and hospitals.">
-  <meta name="theme-color" content="#050D1A">
+  <meta name="description" content="MedCore — Centralized Digital Healthcare Network. Seamless doctor booking, lifetime medical records, and diagnostic lab sync across Bangladesh.">
   <title>MedCore — One Record. Every Care.</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/landing.css">
+  <style>
+    /* Clean White Theme Custom Styles */
+    body.landing-page {
+      background: #FFFFFF !important;
+      color: #0F172A !important;
+      font-family: 'Plus Jakarta Sans', var(--font-main);
+    }
+    .hero-clean {
+      padding: 70px 0 60px;
+      background: radial-gradient(circle at 85% 15%, rgba(2, 132, 199, 0.07) 0%, #FFFFFF 65%, #F8FAFC 100%);
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .role-quick-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 16px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+      transition: all 0.2s ease;
+    }
+    .role-quick-card:hover {
+      border-color: #0284C7;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.12);
+    }
+    .feature-card-clean {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 18px;
+      padding: 28px 24px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+      transition: all 0.25s ease;
+    }
+    .feature-card-clean:hover {
+      border-color: #93C5FD;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
+      transform: translateY(-4px);
+    }
+    .portal-box-clean {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 18px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+      transition: all 0.25s ease;
+    }
+    .portal-box-clean:hover {
+      border-color: #38BDF8;
+      box-shadow: 0 12px 30px rgba(2, 132, 199, 0.12);
+      transform: translateY(-4px);
+    }
+    @media (max-width: 980px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+      .hero-visual-col {
+        order: -1;
+      }
+    }
+  </style>
 </head>
 <body class="landing-page">
 
 <!-- =====================================================
-     NAVBAR
+     NAVBAR (CLEAN, SPACIOUS & PROPERLY ARRANGED)
      ===================================================== -->
 <nav class="navbar" id="main-navbar" role="navigation" aria-label="Main navigation">
   <div class="navbar-inner">
+    
+    <!-- Logo -->
     <a href="<?= APP_URL ?>/" class="navbar-logo" aria-label="MedCore Home">
       <div class="logo-icon" aria-hidden="true">
-        <i class="bi bi-heart-pulse-fill" style="font-size:15px;"></i>
+        <i class="bi bi-heart-pulse-fill"></i>
       </div>
       <span>MedCore</span>
     </a>
 
+    <!-- Clean Navigation Links (No wrapping, no duplicate Book Doctor) -->
     <ul class="navbar-nav" id="nav-menu" role="menubar">
-      <li role="none"><a href="<?= APP_URL ?>/book-doctor.php" role="menuitem" style="color:var(--primary);font-weight:700;"><i class="bi bi-calendar-check" style="margin-right:4px;"></i>Book Doctor</a></li>
-      <li role="none"><a href="#how-it-works" role="menuitem">How It Works</a></li>
+      <li role="none"><a href="#services" role="menuitem">সেবাসমূহ (Services)</a></li>
+      <li role="none"><a href="#portals" role="menuitem">পোর্টালসমূহ (Portals)</a></li>
       <li role="none"><a href="<?= APP_URL ?>/for-patients.php" role="menuitem">For Patients</a></li>
       <li role="none"><a href="<?= APP_URL ?>/for-doctors.php" role="menuitem">For Doctors</a></li>
       <li role="none"><a href="<?= APP_URL ?>/for-hospitals.php" role="menuitem">For Hospitals</a></li>
       <li role="none"><a href="<?= APP_URL ?>/security.php" role="menuitem">Security</a></li>
     </ul>
 
+    <!-- Action Buttons (Neatly Arranged & Aligned) -->
     <div class="navbar-actions">
       <a href="<?= APP_URL ?>/book-doctor.php" class="btn btn-sm" id="btn-book-nav" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
         <i class="bi bi-calendar2-check-fill text-primary"></i> ডাক্তার সিরিয়াল
       </a>
-      <a href="<?= APP_URL ?>/emergency.php" class="btn btn-sm" id="btn-emergency-nav" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; font-weight: 600;" title="Emergency Profile">
+      <a href="<?= APP_URL ?>/emergency.php" class="btn btn-sm" id="btn-emergency-nav" style="background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; font-weight:700;" title="Emergency Profile">
         <i class="bi bi-shield-exclamation text-danger"></i> ICE
       </a>
-      <a href="<?= APP_URL ?>/role-selection.php" class="btn btn-secondary btn-sm" id="btn-login">
+      <a href="<?= APP_URL ?>/role-selection.php" class="btn btn-secondary btn-sm" id="btn-login" style="font-weight:600; border-color:#CBD5E1;">
         <i class="bi bi-box-arrow-in-right"></i> Log In
       </a>
-      <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-primary btn-sm" id="btn-get-started">
+      <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-primary btn-sm" id="btn-get-started" style="font-weight:700; background:linear-gradient(135deg, #0284c7, #2563eb);">
         <i class="bi bi-person-plus-fill"></i> Get Started
       </a>
     </div>
 
+    <!-- Mobile Hamburger Toggle -->
     <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation" aria-expanded="false">
-      <i class="bi bi-list" aria-hidden="true"></i>
+      <i class="bi bi-list" aria-hidden="true" style="font-size:22px;"></i>
     </button>
   </div>
 </nav>
 
 <!-- =====================================================
-     HERO SECTION
+     HERO SECTION (WHITE THEME — CLEAN & HIGH IMPACT)
      ===================================================== -->
-<section class="hero" id="hero" aria-labelledby="hero-headline">
-  <div class="hero-bg" aria-hidden="true">
-    <div class="hero-blob hero-blob-1"></div>
-    <div class="hero-blob hero-blob-2"></div>
-    <div class="hero-blob hero-blob-3"></div>
-    <div class="hero-grid"></div>
-    <div class="hero-ecg-bar"></div>
-  </div>
-
-  <!-- Full-width ECG line along the bottom of hero -->
-  <div class="ecg-line-wrapper" aria-hidden="true">
-    <svg class="ecg-svg" viewBox="0 0 1400 80" preserveAspectRatio="none">
-      <!-- ECG glow layer -->
-      <path class="ecg-path ecg-path-glow ecg-animate"
-        d="M0,40 L80,40 L100,40 L110,10 L120,70 L130,5 L145,75 L160,40 L200,40
-           L280,40 L300,40 L310,10 L320,70 L330,5 L345,75 L360,40 L400,40
-           L480,40 L500,40 L510,10 L520,70 L530,5 L545,75 L560,40 L600,40
-           L680,40 L700,40 L710,10 L720,70 L730,5 L745,75 L760,40 L800,40
-           L880,40 L900,40 L910,10 L920,70 L930,5 L945,75 L960,40 L1000,40
-           L1080,40 L1100,40 L1110,10 L1120,70 L1130,5 L1145,75 L1160,40 L1200,40
-           L1280,40 L1300,40 L1310,10 L1320,70 L1330,5 L1345,75 L1360,40 L1400,40"/>
-      <!-- ECG sharp line -->
-      <path class="ecg-path ecg-animate" style="animation-delay: 0.2s;"
-        d="M0,40 L80,40 L100,40 L110,10 L120,70 L130,5 L145,75 L160,40 L200,40
-           L280,40 L300,40 L310,10 L320,70 L330,5 L345,75 L360,40 L400,40
-           L480,40 L500,40 L510,10 L520,70 L530,5 L545,75 L560,40 L600,40
-           L680,40 L700,40 L710,10 L720,70 L730,5 L745,75 L760,40 L800,40
-           L880,40 L900,40 L910,10 L920,70 L930,5 L945,75 L960,40 L1000,40
-           L1080,40 L1100,40 L1110,10 L1120,70 L1130,5 L1145,75 L1160,40 L1200,40
-           L1280,40 L1300,40 L1310,10 L1320,70 L1330,5 L1345,75 L1360,40 L1400,40"/>
-    </svg>
-  </div>
-
-  <div class="container">
-    <div class="hero-grid-layout">
-      <div class="hero-content">
-    <!-- Trust bar -->
-        <div class="hero-trust-bar">
-          <span class="security-badge"><i class="bi bi-shield-fill-check"></i> HL7 FHIR R4 Compliant</span>
-          <span class="security-badge"><i class="bi bi-lock-fill"></i> AES-256 Encrypted</span>
+<section class="hero-clean" id="hero">
+  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
+    <div class="hero-grid">
+      
+      <!-- Left Column: Copy & Actions -->
+      <div>
+        <div style="display:inline-flex; align-items:center; gap:8px; background:#EFF6FF; border:1px solid #DBEAFE; padding:5px 14px; border-radius:999px; font-size:12px; font-weight:700; color:#1D4ED8; margin-bottom:16px;">
+          <i class="bi bi-shield-fill-check text-primary"></i> DGDA Aligned · AES-256 Encrypted · 100% Patient Consent
         </div>
 
-        <h1 id="hero-headline" class="hero-title">
-          Your Complete<br>
-          Medical Universe.<br>
-          <span class="hero-title-accent">One Secure Record.</span>
+        <h1 style="font-size:clamp(32px, 4.2vw, 52px); font-weight:900; line-height:1.15; color:#0F172A; margin:0 0 16px; letter-spacing:-0.03em;">
+          Your Complete Medical History.<br>
+          <span style="color:#0284C7;">One Unified Digital Record.</span>
         </h1>
 
-        <p class="hero-subtitle">
-          MedCore unifies patient histories, ECG reports, MRI scans, prescriptions, and lab diagnostics into one cryptographic ecosystem — accessible only through patient consent.
+        <p style="font-size:16px; color:#475569; line-height:1.6; max-width:580px; margin:0 0 28px;">
+          রোগী, বিশেষজ্ঞ ডাক্তার, হাসপাতাল এবং ডায়াগনস্টিক ল্যাব—সবাই একই সেন্ট্রালাইজড প্ল্যাটফর্মে সংযুক্ত। সহজে ডাক্তার সিরিয়াল বুক করুন এবং আজীবন স্বাস্থ্য ইতিহাস নিরাপদে সংরক্ষণ করুন।
         </p>
 
-        <div class="hero-cta">
-          <a href="<?= APP_URL ?>/book-doctor.php" class="btn btn-primary btn-lg" id="hero-book-btn" style="background:linear-gradient(135deg, #0284c7 0%, #1e40af 100%);box-shadow:0 8px 24px rgba(37,99,235,0.35);font-weight:800;">
-            <i class="bi bi-calendar2-check-fill" aria-hidden="true"></i>
-            অনলাইন ডাক্তার সিরিয়াল
+        <!-- Main Hero CTAs -->
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:36px;">
+          <a href="<?= APP_URL ?>/book-doctor.php" class="btn btn-lg" style="background:linear-gradient(135deg, #0284c7 0%, #1e40af 100%); color:#fff; font-weight:800; border-radius:12px; padding:14px 26px; box-shadow:0 8px 24px rgba(37,99,235,0.3); display:inline-flex; align-items:center; gap:8px;">
+            <i class="bi bi-calendar2-check-fill"></i>
+            অনলাইন ডাক্তার সিরিয়াল বুক করুন
           </a>
-          <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-secondary btn-lg" id="hero-get-started-btn">
-            <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
-            Create Free Account
-          </a>
-          <a href="#portals" class="btn btn-secondary btn-lg" id="hero-explore-btn">
-            <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
-            Explore Portals
+          <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-secondary btn-lg" style="background:#fff; color:#0F172A; font-weight:700; border:1px solid #CBD5E1; border-radius:12px; padding:14px 22px;">
+            <i class="bi bi-person-plus-fill"></i> ফ্রি অ্যাকাউন্ট খুলুন
           </a>
         </div>
 
-        <!-- Quick Login Access -->
-        <div class="hero-login-panel">
-          <div class="hero-login-label">
-            <i class="bi bi-lightning-fill" style="color:#FBBF24;margin-right:6px;"></i>
-            Quick Portal Access
-          </div>
-          <div class="hero-login-grid">
-            <a href="<?= APP_URL ?>/patient/login.php" class="hero-login-btn patient-btn" id="quick-patient-login">
-              <div class="btn-icon"><i class="bi bi-person-heart"></i></div>
-              <span>Patient Login</span>
-            </a>
-            <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="hero-login-btn doctor-btn" id="quick-doctor-login">
-              <div class="btn-icon"><i class="bi bi-stethoscope"></i></div>
-              <span>Doctor Login</span>
-            </a>
-            <a href="<?= APP_URL ?>/hospital/login.php" class="hero-login-btn hospital-btn" id="quick-hospital-login">
-              <div class="btn-icon"><i class="bi bi-building-fill-cross"></i></div>
-              <span>Hospital Login</span>
-            </a>
-            <a href="<?= APP_URL ?>/lab/login.php" class="hero-login-btn lab-btn" id="quick-lab-login">
-              <div class="btn-icon"><i class="bi bi-flask-fill"></i></div>
-              <span>Lab Portal</span>
-            </a>
-          </div>
+        <!-- Quick 4 Portal Access Cards -->
+        <div style="font-size:12px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
+          Quick Portal Access / সরাসরি লগইন করুন
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+          <a href="<?= APP_URL ?>/patient/login.php" class="role-quick-card">
+            <div style="width:36px; height:36px; border-radius:10px; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; font-size:18px;">
+              <i class="bi bi-person-heart"></i>
+            </div>
+            <div>
+              <div style="font-size:13px; font-weight:800; color:#0F172A;">Patient Portal</div>
+              <div style="font-size:11px; color:#64748B;">আমার স্বাস্থ্য রেকর্ড</div>
+            </div>
+          </a>
+
+          <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="role-quick-card">
+            <div style="width:36px; height:36px; border-radius:10px; background:#ECFDF5; color:#059669; display:flex; align-items:center; justify-content:center; font-size:18px;">
+              <i class="bi bi-stethoscope"></i>
+            </div>
+            <div>
+              <div style="font-size:13px; font-weight:800; color:#0F172A;">Doctor Chamber</div>
+              <div style="font-size:11px; color:#64748B;">চেম্বার ও সিরিয়াল কিউ</div>
+            </div>
+          </a>
+
+          <a href="<?= APP_URL ?>/hospital/login.php" class="role-quick-card">
+            <div style="width:36px; height:36px; border-radius:10px; background:#F5F3FF; color:#7C3AED; display:flex; align-items:center; justify-content:center; font-size:18px;">
+              <i class="bi bi-building-fill-cross"></i>
+            </div>
+            <div>
+              <div style="font-size:13px; font-weight:800; color:#0F172A;">Hospital Desk</div>
+              <div style="font-size:11px; color:#64748B;">ওপিডি রিসেপশন ডেস্ক</div>
+            </div>
+          </a>
+
+          <a href="<?= APP_URL ?>/lab/login.php" class="role-quick-card">
+            <div style="width:36px; height:36px; border-radius:10px; background:#FFFBEB; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:18px;">
+              <i class="bi bi-flask-fill"></i>
+            </div>
+            <div>
+              <div style="font-size:13px; font-weight:800; color:#0F172A;">Diagnostic Lab</div>
+              <div style="font-size:11px; color:#64748B;">টোকেন সার্চ ও রেজাল্ট</div>
+            </div>
+          </a>
         </div>
 
-        <!-- Trust signals -->
-        <div class="hero-trust-row" style="margin-top:24px;">
-          <div class="trust-item">
-            <i class="bi bi-patch-check-fill"></i>
-            <span>DGDA Aligned</span>
+      </div>
+
+      <!-- Right Column: Visual Live Interactive Preview Card -->
+      <div class="hero-visual-col">
+        <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:22px; padding:28px; box-shadow:0 20px 48px rgba(15,23,42,0.08); position:relative;">
+          
+          <!-- Card Header -->
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #F1F5F9; padding-bottom:16px; margin-bottom:18px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800;">
+                R
+              </div>
+              <div>
+                <h3 style="margin:0; font-size:16px; font-weight:800; color:#0F172A;">Rahat Mahamud</h3>
+                <div style="font-size:12px; color:#64748B;">PT-000001 · Age: 28 · <strong style="color:#059669;">O+ Positive</strong></div>
+              </div>
+            </div>
+            <span style="background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px;">
+              ● ACTIVE EHR
+            </span>
           </div>
-          <div class="trust-item">
-            <i class="bi bi-heart-pulse-fill heartbeat-icon"></i>
-            <span>Real-Time EHR Sync</span>
+
+          <!-- Allergy Warning Box -->
+          <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:12px; padding:12px; display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <span style="font-size:20px;">⚠️</span>
+            <div style="font-size:12px;">
+              <strong style="color:#DC2626; display:block;">Severe Penicillin Allergy</strong>
+              <span style="color:#64748B;">Cross-reactive: Amoxicillin (Flagged in all doctor views)</span>
+            </div>
           </div>
-          <div class="trust-item">
-            <i class="bi bi-clipboard2-pulse-fill"></i>
-            <span>Zero Data Leaks</span>
+
+          <!-- Today's Live Serial Card -->
+          <div style="background:linear-gradient(135deg, #0284c7 0%, #1e40af 100%); border-radius:16px; padding:18px; color:#fff; margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; opacity:0.9; margin-bottom:8px;">
+              <span>TODAY'S APPOINTMENT SERIAL</span>
+              <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px;">CONFIRMED</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <div style="background:#fff; color:#1e40af; font-family:'JetBrains Mono', monospace; font-size:32px; font-weight:900; padding:6px 14px; border-radius:10px; line-height:1;">
+                #02
+              </div>
+              <div>
+                <h4 style="margin:0 0 2px; font-size:15px; font-weight:800;">Dr. Farhana Rahman</h4>
+                <div style="font-size:12px; opacity:0.9;">Cardiology · ABC General Hospital</div>
+                <div style="font-size:11px; color:#BFDBFE; margin-top:3px;">Slot: 05:30 PM · Serial Token Ready</div>
+              </div>
+            </div>
           </div>
+
+          <!-- Active Lab Token Widget -->
+          <div style="background:#FAF5FF; border:1px solid #E9D5FF; border-radius:14px; padding:14px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:11px; font-weight:800; color:#7C3AED; text-transform:uppercase;">Short Lab Token</div>
+              <div style="font-family:'JetBrains Mono', monospace; font-size:18px; font-weight:800; color:#5B21B6; margin-top:2px;">LT-99B2A</div>
+              <div style="font-size:11px; color:#6B7280;">Test: Complete Blood Count (CBC)</div>
+            </div>
+            <span style="background:#EDE9FE; color:#6D28D9; font-size:11px; font-weight:700; padding:4px 10px; border-radius:6px;">
+              Show at Lab Desk
+            </span>
+          </div>
+
         </div>
       </div>
 
-      <div class="hero-visual" aria-hidden="true">
-        <div class="hero-visual-inner">
-          <!-- Glassmorphism Dashboard Card -->
-          <div class="dashboard-preview">
-            <div class="preview-topbar">
-              <div class="preview-logo">
-                <div class="logo-icon" style="width:20px;height:20px;font-size:9px;background:linear-gradient(135deg,#2563EB,#06B6D4);">
-                  <i class="bi bi-heart-pulse-fill" style="font-size:9px;"></i>
-                </div>
-                <span style="font-size:12px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">MedCore</span>
-              </div>
-              <span class="badge badge-success" style="font-size:10px;">
-                <span class="pulse-dot"></span>Live
-              </span>
-            </div>
-
-            <div class="preview-ecg">
-              <svg class="preview-ecg-svg" viewBox="0 0 300 36" preserveAspectRatio="none">
-                <path class="preview-ecg-path preview-ecg-animate"
-                  d="M0,18 L30,18 L40,18 L45,4 L50,32 L54,2 L60,34 L66,18 L90,18
-                     L120,18 L130,18 L135,4 L140,32 L144,2 L150,34 L156,18 L180,18
-                     L210,18 L220,18 L225,4 L230,32 L234,2 L240,34 L246,18 L270,18 L300,18"/>
-              </svg>
-              <div style="position:absolute;top:4px;right:8px;font-size:9px;color:#2563EB;font-weight:700;font-family:'JetBrains Mono','Roboto Mono',monospace;">ECG ♥ 72bpm</div>
-            </div>
-
-            <!-- Patient card -->
-            <div class="preview-portal-card">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-                <div class="sidebar-avatar" style="width:40px;height:40px;font-size:15px;background:linear-gradient(135deg,#2563EB,#06B6D4);">R</div>
-                <div>
-                  <div style="font-size:13px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">Rahat Mahamud</div>
-                  <div style="font-size:10px;color:#94A3B8;">Patient Portal · PT-000001</div>
-                </div>
-                <span class="badge badge-success" style="margin-left:auto;font-size:9px;">Active</span>
-              </div>
-
-              <div class="preview-stats">
-                <div class="preview-stat">
-                  <span class="preview-stat-val">3</span>
-                  <span class="preview-stat-label">Active Rx</span>
-                </div>
-                <div class="preview-stat">
-                  <span class="preview-stat-val">2</span>
-                  <span class="preview-stat-label">Conditions</span>
-                </div>
-                <div class="preview-stat">
-                  <span class="preview-stat-val">8</span>
-                  <span class="preview-stat-label">Lab Reports</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Access request -->
-            <div class="preview-event preview-event-blue">
-              <i class="bi bi-shield-lock-fill" style="color:#2563EB;"></i>
-              <div>
-                <div style="font-size:10.5px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">Consent Request</div>
-                <div style="font-size:9.5px;color:#94A3B8;">Dr. Rahman · ABC Hospital · 26:11 left</div>
-              </div>
-              <div style="margin-left:auto;display:flex;gap:5px;">
-                <span class="badge badge-success" style="font-size:9px;padding:3px 8px;">Approve</span>
-                <span style="background:#F1F5F9;color:#64748B;font-size:9px;padding:3px 8px;border-radius:999px;cursor:pointer;">Deny</span>
-              </div>
-            </div>
-
-            <!-- MRI report -->
-            <div class="preview-event">
-              <i class="bi bi-clipboard2-pulse" style="color:#2563EB;"></i>
-              <div>
-                <div style="font-size:10.5px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">MRI Brain — Report Ready</div>
-                <div style="font-size:9.5px;color:#94A3B8;">Dhaka Medical Imaging · Today</div>
-              </div>
-              <span class="badge badge-info" style="font-size:9px;margin-left:auto;">New</span>
-            </div>
-
-            <!-- Allergy alert -->
-            <div class="preview-event preview-event-red">
-              <i class="bi bi-exclamation-triangle-fill" style="color:#F43F5E;"></i>
-              <div>
-                <div style="font-size:10.5px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">Alert: Penicillin Allergy</div>
-                <div style="font-size:9.5px;color:#94A3B8;">All clinician views flagged</div>
-              </div>
-              <span class="badge badge-error" style="font-size:9px;margin-left:auto;">Critical</span>
-            </div>
-
-            <div class="preview-footer">
-              <i class="bi bi-lock-fill" style="color:#2563EB;"></i>
-              <span>180ms sync · AES-256 · 0 unauthorized accesses</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Floating badge: Hospital verified -->
-        <div class="hero-floating-card hero-float-1">
-          <i class="bi bi-building-fill-check" style="color:#2563EB;"></i>
-          <div>
-            <div style="font-size:11px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">ABC General Hospital</div>
-            <div style="font-size:9.5px;color:#64748B;">Verified · 12 affiliated doctors</div>
-          </div>
-        </div>
-
-        <!-- Floating badge: Doctor BMDC -->
-        <div class="hero-floating-card hero-float-2">
-          <i class="bi bi-patch-check-fill" style="color:#0891B2;"></i>
-          <div>
-            <div style="font-size:11px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">Dr. Farhana Rahman</div>
-            <div style="font-size:9.5px;color:#64748B;">BMDC Verified · Cardiology</div>
-          </div>
-        </div>
-
-        <!-- Floating badge: MRI Scan -->
-        <div class="hero-floating-card hero-float-3">
-          <i class="bi bi-activity" style="color:#7C3AED;font-size:20px;"></i>
-          <div>
-            <div style="font-size:11px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;">MRI Scan Uploaded</div>
-            <div style="font-size:9.5px;color:#64748B;">Brain · T2 Weighted</div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
-<div class="medical-divider"></div>
-
 <!-- =====================================================
-     STATS BAR
+     CORE SERVICES (CLEAN, NO UNWANTED TEXT WALLS)
      ===================================================== -->
-<div class="stats-bar" role="region" aria-label="Platform statistics">
-  <div class="container">
-    <div class="stats-inner">
-      <div class="stat-bar-item">
-        <div class="stat-bar-val" data-target="250000">0</div>
-        <div class="stat-bar-label">Verified Patient Records</div>
-      </div>
-      <div class="stat-bar-divider" aria-hidden="true"></div>
-      <div class="stat-bar-item">
-        <div class="stat-bar-val" data-target="14000">0</div>
-        <div class="stat-bar-label">BMDC Certified Doctors</div>
-      </div>
-      <div class="stat-bar-divider" aria-hidden="true"></div>
-      <div class="stat-bar-item">
-        <div class="stat-bar-val" data-target="420">0</div>
-        <div class="stat-bar-label">Accredited Hospitals</div>
-      </div>
-      <div class="stat-bar-divider" aria-hidden="true"></div>
-      <div class="stat-bar-item">
-        <div class="stat-bar-val">100%</div>
-        <div class="stat-bar-label">Patient Consent Driven</div>
-      </div>
+<section id="services" style="padding:70px 0; background:#FFFFFF;">
+  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
+    
+    <div style="text-align:center; max-width:640px; margin:0 auto 48px;">
+      <span style="font-size:12px; font-weight:800; color:#0284C7; text-transform:uppercase; letter-spacing:0.8px;">Core Capabilities</span>
+      <h2 style="font-size:32px; font-weight:800; color:#0F172A; margin:8px 0 10px;">প্রধান সেবাসমূহ</h2>
+      <p style="font-size:15px; color:#64748B; margin:0;">সহজে ডাক্তার সিরিয়াল বুকিং থেকে শুরু করে টেস্ট রিপোর্ট ও আজীবন স্বাস্থ্য রেকর্ড—সব এক প্ল্যাটফর্মে।</p>
     </div>
-  </div>
-</div>
 
-<div class="medical-divider"></div>
-
-<!-- =====================================================
-     HOW IT WORKS / PILLARS
-     ===================================================== -->
-<section class="section" id="how-it-works" aria-labelledby="how-title">
-  <div class="container text-center">
-    <p class="eyebrow">Zero-Trust Clinical Architecture</p>
-    <h2 id="how-title" class="section-title" style="color:#F8FAFC;">Pillars of Unified Healthcare</h2>
-    <p class="section-subtitle">Built according to HL7 FHIR R4 and GDTS 13058 standards — ECG, MRI, pathology, prescriptions, and consent all in one cryptographic platform.</p>
-
-    <div class="pillars-grid">
-      <div class="pillar-card" id="pillar-doctors">
-        <div class="pillar-icon pillar-icon-blue">
-          <i class="bi bi-person-badge-fill" aria-hidden="true"></i>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:24px;">
+      
+      <!-- Feature 1 -->
+      <div class="feature-card-clean">
+        <div style="width:48px; height:48px; border-radius:12px; background:#EFF6FF; color:#0284C7; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:18px;">
+          <i class="bi bi-calendar2-check-fill"></i>
         </div>
-        <h3>Verified Doctors</h3>
-        <p>Direct integration with the National Medical Registry validates BMDC identity, active licence status, specialisation, and hospital affiliations in real time.</p>
-        <div class="pillar-footer">
-          <span class="security-badge"><i class="bi bi-shield-check"></i> Automated Registry API</span>
-        </div>
-      </div>
-
-      <div class="pillar-card" id="pillar-records">
-        <div class="pillar-icon pillar-icon-teal">
-          <i class="bi bi-activity" aria-hidden="true"></i>
-        </div>
-        <h3>ECG & Diagnostics</h3>
-        <p>Upload and access ECG traces, MRI scans, X-rays, ultrasound reports, and full lab panels — all cryptographically sealed and indexed by encounter date.</p>
-        <div class="pillar-footer">
-          <span class="security-badge"><i class="bi bi-clipboard2-pulse"></i> DICOM Compatible</span>
-        </div>
-      </div>
-
-      <div class="pillar-card" id="pillar-consent">
-        <div class="pillar-icon pillar-icon-green">
-          <i class="bi bi-hand-thumbs-up-fill" aria-hidden="true"></i>
-        </div>
-        <h3>Patient Consent</h3>
-        <p>Time-bound access requests with push notifications. Patients approve or revoke doctor access from their phone — no more paperwork, no more privacy leaks.</p>
-        <div class="pillar-footer">
-          <span class="security-badge"><i class="bi bi-clock"></i> 30-Min Time-Bound Grants</span>
-        </div>
-      </div>
-
-      <div class="pillar-card" id="pillar-rx">
-        <div class="pillar-icon pillar-icon-amber">
-          <i class="bi bi-capsule-pill" aria-hidden="true"></i>
-        </div>
-        <h3>Digital Prescriptions</h3>
-        <p>Tamper-proof e-prescriptions with automated drug interaction checks, allergy flags, and dispensing authority for certified hospital and community pharmacies.</p>
-        <div class="pillar-footer">
-          <span class="security-badge"><i class="bi bi-building"></i> WHO Formulary Verified</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="medical-divider"></div>
-
-<!-- =====================================================
-     SEAMLESS CONTINUITY
-     ===================================================== -->
-<section class="section-alt" id="continuity" aria-labelledby="continuity-title">
-  <div class="container">
-    <div class="continuity-layout">
-      <div class="continuity-content">
-        <p class="eyebrow">Active Encounter Example</p>
-        <h2 id="continuity-title" style="color:#F8FAFC;">Seamless Clinical Continuity in Action</h2>
-        <p>
-          When patient Rahat visits Dr. Rahman at ABC Hospital, the clinical workstation issues a cryptographic consent challenge. Once approved on Rahat's phone, the complete clinical history — including ECG traces, MRI scans, and vitals — populates in 180 milliseconds.
+        <h3 style="font-size:18px; font-weight:800; color:#0F172A; margin:0 0 8px;">ডাক্তার সিরিয়াল ও লাইভ কিউ</h3>
+        <p style="font-size:14px; color:#64748B; line-height:1.6; margin:0 0 16px;">
+          বিভাগ ও হাসপাতাল অনুযায়ী বিশেষজ্ঞ ডাক্তার বাছাই করুন, রেটিং ও ফি দেখুন এবং রিয়েল-টাইম চেম্বার সিরিয়াল টোকেন নিন।
         </p>
-
-        <div class="perf-metrics">
-          <div class="perf-metric">
-            <div class="perf-metric-val">180ms</div>
-            <div class="perf-metric-label">Average EHR sync speed</div>
-          </div>
-          <div class="perf-metric">
-            <div class="perf-metric-val" style="color:#34D399;text-shadow:0 0 15px rgba(52,211,153,0.5);">0 Leaks</div>
-            <div class="perf-metric-label">Zero unauthorized data exposures</div>
-          </div>
-        </div>
-
-        <div class="audit-feed">
-          <div class="audit-item">
-            <div class="audit-icon audit-icon-blue"><i class="bi bi-shield-check"></i></div>
-            <div class="audit-text">
-              <span class="audit-action">Access Grant</span>
-              <span class="audit-detail">Rahat Mahamud → Dr. Rahman (Cardiology Follow-up · Rx Dispensed)</span>
-            </div>
-            <span class="audit-time">35s ago</span>
-          </div>
-          <div class="audit-item">
-            <div class="audit-icon audit-icon-green"><i class="bi bi-activity"></i></div>
-            <div class="audit-text">
-              <span class="audit-action">ECG Report Synced</span>
-              <span class="audit-detail">12-Lead ECG · Rate 72 bpm · Normal Sinus Rhythm</span>
-            </div>
-            <span class="audit-time">1m ago</span>
-          </div>
-          <div class="audit-item">
-            <div class="audit-icon audit-icon-teal"><i class="bi bi-file-earmark-medical"></i></div>
-            <div class="audit-text">
-              <span class="audit-action">Rx Issued</span>
-              <span class="audit-detail">RX-20260916-0001 · Metformin 500mg · Consultation #CONS-0916</span>
-            </div>
-            <span class="audit-time">2m ago</span>
-          </div>
-          <div class="audit-item">
-            <div class="audit-icon" style="background:rgba(167,139,250,0.12);color:#A78BFA;"><i class="bi bi-token"></i></div>
-            <div class="audit-text">
-              <span class="audit-action">Session Expired</span>
-              <span class="audit-detail">30-min access token auto-revoked. Clinical data secured.</span>
-            </div>
-            <span class="audit-time">32m ago</span>
-          </div>
-        </div>
+        <a href="<?= APP_URL ?>/book-doctor.php" style="font-size:13px; font-weight:700; color:#0284C7; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+          সিরিয়াল বুক করুন &rarr;
+        </a>
       </div>
 
-      <div class="continuity-visual" aria-hidden="true">
-        <div class="continuity-card">
-          <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
-            <div class="sidebar-avatar" style="width:50px;height:50px;font-size:18px;background:linear-gradient(135deg,#38BDF8,#2DD4BF);">
-              <i class="bi bi-heart-pulse-fill" style="font-size:18px;"></i>
-            </div>
-            <div>
-              <div style="font-weight:800;color:#F1F5F9;font-size:15px;">Active Medical Record</div>
-              <div style="font-size:11.5px;color:rgba(226,232,240,0.45);">Session: Time-bound access</div>
-            </div>
-            <div class="access-timer" style="margin-left:auto;">
-              <i class="bi bi-clock-fill"></i>
-              <span class="timer-display" id="demo-timer">26:11</span>
-            </div>
-          </div>
-
-          <!-- Patient summary -->
-          <div class="record-patient-info">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div class="sidebar-avatar" style="width:38px;height:38px;background:linear-gradient(135deg,#38BDF8,#2DD4BF);">R</div>
-              <div>
-                <div style="font-weight:700;color:#F1F5F9;">Rahat Mahamud</div>
-                <div style="font-size:11px;color:rgba(226,232,240,0.45);">PT-000001 · Age 31 · Male · O+ · 15 Jun 1995</div>
-              </div>
-            </div>
-            <div class="allergy-alert">
-              <i class="bi bi-exclamation-triangle-fill"></i>
-              <strong>Penicillin Allergy</strong> — Severe/Anaphylaxis · Cross-reactive: Amoxicillin
-            </div>
-          </div>
-
-          <!-- Vitals -->
-          <div class="vitals-row">
-            <div class="vital-box">
-              <div class="vital-val">125/82</div>
-              <div class="vital-label">Blood Pressure</div>
-            </div>
-            <div class="vital-box">
-              <div class="vital-val">72 <i class="bi bi-heart-fill heartbeat-icon" style="font-size:9px;"></i></div>
-              <div class="vital-label">Heart Rate</div>
-            </div>
-            <div class="vital-box">
-              <div class="vital-val">118</div>
-              <div class="vital-label">FBS mg/dL</div>
-            </div>
-            <div class="vital-box">
-              <div class="vital-val">36.8°</div>
-              <div class="vital-label">Temperature</div>
-            </div>
-          </div>
-
-          <!-- Medications -->
-          <div class="mini-table-header">Active Medications</div>
-          <div class="mini-med-row">
-            <i class="bi bi-capsule" style="color:#38BDF8;"></i>
-            <div>
-              <div style="font-weight:600;color:#E2E8F0;">Metformin 500mg</div>
-              <div style="font-size:11px;color:rgba(226,232,240,0.4);">Twice daily · Ongoing</div>
-            </div>
-            <span class="badge badge-success" style="margin-left:auto;">Active</span>
-          </div>
-          <div class="mini-med-row">
-            <i class="bi bi-capsule" style="color:#2DD4BF;"></i>
-            <div>
-              <div style="font-weight:600;color:#E2E8F0;">Omeprazole 20mg</div>
-              <div style="font-size:11px;color:rgba(226,232,240,0.4);">Before meals · 4 weeks</div>
-            </div>
-            <span class="badge badge-success" style="margin-left:auto;">Active</span>
-          </div>
+      <!-- Feature 2 -->
+      <div class="feature-card-clean">
+        <div style="width:48px; height:48px; border-radius:12px; background:#ECFDF5; color:#059669; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:18px;">
+          <i class="bi bi-clipboard2-pulse-fill"></i>
         </div>
+        <h3 style="font-size:18px; font-weight:800; color:#0F172A; margin:0 0 8px;">আজীবন মেডিক্যাল রেকর্ড</h3>
+        <p style="font-size:14px; color:#64748B; line-height:1.6; margin:0 0 16px;">
+          কাগজের প্রেসক্রিপশন হারানোর ভয় নেই। অতীতের প্রেসক্রিপশন, ডায়াগনস্টিক রিপোর্ট ও ওষুধ হিস্ট্রি একটি মাত্র নিরাপদ প্রোফাইলে সংরক্ষিত।
+        </p>
+        <a href="<?= APP_URL ?>/for-patients.php" style="font-size:13px; font-weight:700; color:#059669; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+          বিস্তারিত জানুন &rarr;
+        </a>
       </div>
+
+      <!-- Feature 3 -->
+      <div class="feature-card-clean">
+        <div style="width:48px; height:48px; border-radius:12px; background:#F5F3FF; color:#7C3AED; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:18px;">
+          <i class="bi bi-qr-code-scan"></i>
+        </div>
+        <h3 style="font-size:18px; font-weight:800; color:#0F172A; margin:0 0 8px;">শর্ট ডায়াগনস্টিক টোকেন</h3>
+        <p style="font-size:14px; color:#64748B; line-height:1.6; margin:0 0 16px;">
+          প্রেসক্রিপশনের সাথে তৈরি হওয়া ইউনিক শর্ট টোকেন (LT-XXXXX) যেকোনো অনুমোদিত ল্যাবে দেখালেই অটো-সিঙ্ক হয়ে যাবে রিপোর্ট।
+        </p>
+        <a href="<?= APP_URL ?>/for-hospitals.php" style="font-size:13px; font-weight:700; color:#7C3AED; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+          ল্যাব নেটওয়ার্ক &rarr;
+        </a>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature-card-clean">
+        <div style="width:48px; height:48px; border-radius:12px; background:#FEF2F2; color:#DC2626; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:18px;">
+          <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <h3 style="font-size:18px; font-weight:800; color:#0F172A; margin:0 0 8px;">রোগী-নিয়ন্ত্রিত নিরাপত্তা</h3>
+        <p style="font-size:14px; color:#64748B; line-height:1.6; margin:0 0 16px;">
+          রোগীর ওটিপি (OTP) বা অনুমতি ছাড়া কোনো ডাক্তার রেকর্ড দেখতে পারেন না। প্রতিটি সেশন ৩০ মিনিট পর স্বয়ংক্রিয়ভাবে লক হয়ে যায়।
+        </p>
+        <a href="<?= APP_URL ?>/security.php" style="font-size:13px; font-weight:700; color:#DC2626; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+          নিরাপত্তা স্ট্যান্ডার্ড &rarr;
+        </a>
+      </div>
+
     </div>
   </div>
 </section>
 
-<div class="medical-divider"></div>
-
 <!-- =====================================================
-     PORTAL SELECTOR
+     PORTALS SECTION (CLEAN WHITE CARDS FOR EVERY ROLE)
      ===================================================== -->
-<section class="section" id="portals" aria-labelledby="portal-title">
-  <div class="container text-center">
-    <p class="eyebrow">Tailored Role Environments</p>
-    <h2 id="portal-title" class="section-title" style="color:#F8FAFC;">Choose Your Portal</h2>
-    <p class="section-subtitle">MedCore organizes clinical permissions by strict role segregation. Access the exact toolset designed for your clinical position.</p>
+<section id="portals" style="padding:70px 0; background:#F8FAFC; border-top:1px solid #E2E8F0; border-bottom:1px solid #E2E8F0;">
+  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
+    
+    <div style="text-align:center; max-width:640px; margin:0 auto 48px;">
+      <span style="font-size:12px; font-weight:800; color:#0284C7; text-transform:uppercase; letter-spacing:0.8px;">Tailored Access</span>
+      <h2 style="font-size:32px; font-weight:800; color:#0F172A; margin:8px 0 10px;">আপনার পোর্টাল নির্বাচন করুন</h2>
+      <p style="font-size:15px; color:#64748B; margin:0;">প্রতিটি ভূমিকার জন্য আলাদা ডেডিকেটেড ওয়ার্কস্পেস ও ক্লিনিক্যাল টুলস।</p>
+    </div>
 
-    <div class="portals-grid">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(270px, 1fr)); gap:24px;">
+      
       <!-- Patient Portal -->
-      <div class="portal-feature-card" id="patient-portal-card">
-        <div class="portal-icon patient-portal-icon">
-          <i class="bi bi-person-heart" aria-hidden="true"></i>
+      <div class="portal-box-clean">
+        <div>
+          <div style="width:48px; height:48px; border-radius:14px; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:18px;">
+            <i class="bi bi-person-heart"></i>
+          </div>
+          <h3 style="font-size:20px; font-weight:800; color:#0F172A; margin:0 0 6px;">Patient Portal</h3>
+          <p style="font-size:13px; color:#64748B; margin:0 0 18px;">আমার স্বাস্থ্য রেকর্ড, আমার নিয়ন্ত্রণে।</p>
+          <ul style="padding-left:18px; font-size:13px; color:#475569; line-height:1.8; margin-bottom:24px;">
+            <li>আজীবন প্রেসক্রিপশন ও রিপোর্ট হিস্ট্রি</li>
+            <li>লাইভ ডাক্তার সিরিয়াল ট্র্যাকিং</li>
+            <li>ডাক্তারের অ্যাক্সেস অনুমোদন বা বাতিল</li>
+            <li>ল্যাব টোকেন ও ওষুধ গ্রহণের রিমাইন্ডার</li>
+          </ul>
         </div>
-        <h3 class="portal-card-title">Patient Portal</h3>
-        <p class="portal-card-desc">"My complete health record, in my hands."</p>
-        <ul class="portal-features">
-          <li><i class="bi bi-check-circle-fill" style="color:#34D399;"></i>Lifelong ECG, MRI & lab history</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#34D399;"></i>Approve / revoke doctor access</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#34D399;"></i>Download laboratory diagnostics</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#34D399;"></i>View & manage prescriptions</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#34D399;"></i>One-tap consent approval</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#34D399;"></i>Medication reminders & schedule</li>
-        </ul>
-        <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-primary w-100" id="open-patient-portal">
-          <i class="bi bi-person-heart"></i> Open Patient Portal
+        <a href="<?= APP_URL ?>/patient/login.php" class="btn btn-primary w-100" style="padding:12px; border-radius:10px; font-weight:700; background:#2563EB;">
+          <i class="bi bi-box-arrow-in-right"></i> Patient Login
         </a>
-        <div style="margin-top:10px;text-align:center;font-size:12px;color:rgba(226,232,240,0.35);">
-          Already registered? <a href="<?= APP_URL ?>/patient/login.php" style="color:#38BDF8;">Log in here</a>
-        </div>
       </div>
 
-      <!-- Doctor Portal (featured) -->
-      <div class="portal-feature-card portal-featured" id="doctor-portal-card">
-        <div class="portal-featured-badge">Clinical Workspace</div>
-        <div class="portal-icon doctor-portal-icon">
-          <i class="bi bi-stethoscope" aria-hidden="true"></i>
+      <!-- Doctor Portal -->
+      <div class="portal-box-clean" style="border-top:3px solid #059669;">
+        <div>
+          <div style="width:48px; height:48px; border-radius:14px; background:#ECFDF5; color:#059669; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:18px;">
+            <i class="bi bi-stethoscope"></i>
+          </div>
+          <h3 style="font-size:20px; font-weight:800; color:#0F172A; margin:0 0 6px;">Doctor Chamber</h3>
+          <p style="font-size:13px; color:#64748B; margin:0 0 18px;">দ্রুত ক্লিনিক্যাল কনসালটেশন ও প্রেসক্রিপশন।</p>
+          <ul style="padding-left:18px; font-size:13px; color:#475569; line-height:1.8; margin-bottom:24px;">
+            <li>মাল্টি-হাসপাতাল চেম্বার ম্যানেজমেন্ট</li>
+            <li>লাইভ পেশেন্ট কিউ ও ইমার্জেন্সি অগ্রাধিকার</li>
+            <li>এক্সিকিউটিভ ক্লিনিক্যাল হিস্ট্রি সারসংক্ষেপ</li>
+            <li>বাংলা ডোজ প্রিসেট সহ ডিজিটাল প্রেসক্রিপশন</li>
+          </ul>
         </div>
-        <h3 class="portal-card-title">Doctor Portal</h3>
-        <p class="portal-card-desc">"I access only what I am authorized to see."</p>
-        <ul class="portal-features">
-          <li><i class="bi bi-check-circle-fill" style="color:#2DD4BF;"></i>Search patients by NID or MedCore ID</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#2DD4BF;"></i>Issue scoped access requests</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#2DD4BF;"></i>Review ECG, MRI & vitals history</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#2DD4BF;"></i>Write & sign digital prescriptions</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#2DD4BF;"></i>Multi-hospital affiliation support</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#2DD4BF;"></i>Full consultation audit trail</li>
-        </ul>
-        <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="btn btn-primary w-100" id="open-doctor-portal">
-          <i class="bi bi-stethoscope"></i> Open Doctor Portal
+        <a href="<?= APP_URL ?>/doctor/select-hospital.php" class="btn w-100" style="padding:12px; border-radius:10px; font-weight:700; background:#059669; color:#fff;">
+          <i class="bi bi-box-arrow-in-right"></i> Doctor Login
         </a>
-        <div style="margin-top:10px;text-align:center;font-size:12px;color:rgba(226,232,240,0.35);">
-          New doctor? <a href="<?= APP_URL ?>/doctor/register.php" style="color:#2DD4BF;">Register & verify BMDC</a>
-        </div>
       </div>
 
       <!-- Hospital Portal -->
-      <div class="portal-feature-card" id="hospital-portal-card">
-        <div class="portal-icon hospital-portal-icon">
-          <i class="bi bi-building-fill-cross" aria-hidden="true"></i>
+      <div class="portal-box-clean">
+        <div>
+          <div style="width:48px; height:48px; border-radius:14px; background:#F5F3FF; color:#7C3AED; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:18px;">
+            <i class="bi bi-building-fill-cross"></i>
+          </div>
+          <h3 style="font-size:20px; font-weight:800; color:#0F172A; margin:0 0 6px;">Hospital Portal</h3>
+          <p style="font-size:13px; color:#64748B; margin:0 0 18px;">সম্পূর্ণ প্রাতিষ্ঠানিক ও ওপিডি প্রশাসন।</p>
+          <ul style="padding-left:18px; font-size:13px; color:#475569; line-height:1.8; margin-bottom:24px;">
+            <li>ওপিডি অভ্যর্থনা ও লবি চেক-ইন ডেস্ক</li>
+            <li>অ্যাফিলিয়েটেড ডাক্তার ও ডিপার্টমেন্ট রস্টার</li>
+            <li>ডায়াগনস্টিক ল্যাবরেটরি নেটওয়ার্ক</li>
+            <li>দৈনিক ওপিডি রোগী রেজিস্টার ও অডিট</li>
+          </ul>
         </div>
-        <h3 class="portal-card-title">Hospital Portal</h3>
-        <p class="portal-card-desc">"Full institutional visibility and compliance control."</p>
-        <ul class="portal-features">
-          <li><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i>Manage affiliated doctor rosters</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i>Approve affiliation requests</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i>Administer clinical departments</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i>Diagnostics & lab management</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i>Hospital-wide audit logging</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i>Doctor profile verification</li>
-        </ul>
-        <a href="<?= APP_URL ?>/hospital/login.php" class="btn btn-secondary w-100" id="open-hospital-portal">
-          <i class="bi bi-building-fill-cross"></i> Open Hospital Portal
+        <a href="<?= APP_URL ?>/hospital/login.php" class="btn btn-secondary w-100" style="padding:12px; border-radius:10px; font-weight:700; border-color:#CBD5E1;">
+          <i class="bi bi-box-arrow-in-right"></i> Hospital Login
         </a>
-        <div style="margin-top:10px;text-align:center;font-size:12px;color:rgba(226,232,240,0.35);">
-          New hospital? <a href="<?= APP_URL ?>/hospital/register.php" style="color:#A78BFA;">Register institution</a>
-        </div>
       </div>
 
       <!-- Diagnostic Lab Portal -->
-      <div class="portal-feature-card" id="lab-portal-card">
-        <div class="portal-icon" style="background:rgba(99,102,241,0.12); color:#818CF8;">
-          <i class="bi bi-flask-fill" aria-hidden="true"></i>
-        </div>
-        <h3 class="portal-card-title">Diagnostic Lab Portal</h3>
-        <p class="portal-card-desc">"Search test tokens and upload diagnostic results instantly."</p>
-        <ul class="portal-features">
-          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Unique Lab Token search (e.g. LT-XXXXX)</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Prescription investigation verification</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Direct test findings &amp; value entry</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Attach PDF and digital image reports</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Auto-sync to Patient Health Record</li>
-          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Real-time doctor &amp; patient sync</li>
-        </ul>
-        <a href="<?= APP_URL ?>/lab/login.php" class="btn w-100" style="background:linear-gradient(135deg,#6366F1,#4F46E5); color:#fff;" id="open-lab-portal">
-          <i class="bi bi-flask-fill"></i> Open Lab Portal
-        </a>
-        <div style="margin-top:10px;text-align:center;font-size:12px;color:rgba(226,232,240,0.35);">
-          New diagnostic lab? <a href="<?= APP_URL ?>/lab/register.php" style="color:#818CF8;">Register laboratory</a>
-        </div>
-      </div>
-    </div>
-
-    <p style="margin-top:40px;font-size:13px;color:rgba(226,232,240,0.3);">
-      System Administration &amp; Compliance →
-      <a href="<?= APP_URL ?>/admin/login.php" style="font-size:13px;color:rgba(226,232,240,0.5);">Admin Console</a>
-    </p>
-  </div>
-</section>
-
-<div class="medical-divider"></div>
-
-<!-- =====================================================
-     SECURITY / STANDARDS SECTION
-     ===================================================== -->
-<section class="section-alt" id="security" aria-labelledby="security-title">
-  <div class="container text-center">
-    <p class="eyebrow">Institutional-Grade Interoperability</p>
-    <h2 id="security-title" class="section-title" style="color:#F8FAFC;">Global Healthcare IT Standards</h2>
-    <p class="section-subtitle">Every element of MedCore's architecture conforms to international healthcare data standards for cross-institutional trust and patient safety.</p>
-
-    <div class="standards-grid">
-      <div class="standard-card">
-        <div class="standard-icon"><i class="bi bi-patch-check-fill"></i></div>
-        <div class="standard-name">HL7 FHIR R4</div>
-        <div class="standard-desc">Fast Healthcare Interoperability Resources</div>
-      </div>
-      <div class="standard-card">
-        <div class="standard-icon"><i class="bi bi-shield-fill-check"></i></div>
-        <div class="standard-name">HIPAA Ready</div>
-        <div class="standard-desc">Privacy Rule compliant architecture</div>
-      </div>
-      <div class="standard-card">
-        <div class="standard-icon"><i class="bi bi-file-earmark-lock2-fill"></i></div>
-        <div class="standard-name">ISO 27001</div>
-        <div class="standard-desc">Information Security Management</div>
-      </div>
-      <div class="standard-card">
-        <div class="standard-icon"><i class="bi bi-cpu-fill"></i></div>
-        <div class="standard-name">SOC 2 Type II</div>
-        <div class="standard-desc">Trust Services Criteria</div>
-      </div>
-      <div class="standard-card">
-        <div class="standard-icon"><i class="bi bi-globe2"></i></div>
-        <div class="standard-name">SNOMED CT</div>
-        <div class="standard-desc">Clinical terminology standard</div>
-      </div>
-      <div class="standard-card">
-        <div class="standard-icon"><i class="bi bi-diagram-3-fill"></i></div>
-        <div class="standard-name">ICD-11</div>
-        <div class="standard-desc">WHO Diagnostic Classification</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="medical-divider"></div>
-
-<!-- =====================================================
-     CTA SECTION
-     ===================================================== -->
-<section class="cta-section" aria-labelledby="cta-title">
-  <div class="container">
-    <div class="cta-inner">
-      <h2 id="cta-title">Ready to Unify Your Healthcare?</h2>
-      <p>Join 250,000+ patients who trust MedCore with their lifelong medical record.<br>Free for patients, always.</p>
-      <div class="hero-cta" style="justify-content:center;">
-        <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-primary btn-lg" id="cta-register-btn">
-          <i class="bi bi-person-plus-fill"></i>
-          Create Free Account
-        </a>
-        <a href="<?= APP_URL ?>/hospital/register.php" class="btn btn-secondary btn-lg" style="border-color:rgba(56,189,248,0.3);color:rgba(226,232,240,0.8);" id="cta-hospital-btn">
-          <i class="bi bi-building-fill"></i>
-          Register Hospital
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- =====================================================
-     FOOTER
-     ===================================================== -->
-<footer class="site-footer" role="contentinfo">
-  <div class="container">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <a href="<?= APP_URL ?>/" class="navbar-logo" style="margin-bottom:16px;display:inline-flex;">
-          <div class="logo-icon" style="background:linear-gradient(135deg,#38BDF8,#2DD4BF);">
-            <i class="bi bi-heart-pulse-fill" style="font-size:14px;"></i>
+      <div class="portal-box-clean">
+        <div>
+          <div style="width:48px; height:48px; border-radius:14px; background:#FFFBEB; color:#D97706; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:18px;">
+            <i class="bi bi-flask-fill"></i>
           </div>
-          <span>MedCore</span>
+          <h3 style="font-size:20px; font-weight:800; color:#0F172A; margin:0 0 6px;">Diagnostic Lab</h3>
+          <p style="font-size:13px; color:#64748B; margin:0 0 18px;">দ্রুত টোকেন সার্চ ও সরাসরি রেজাল্ট আপলোড।</p>
+          <ul style="padding-left:18px; font-size:13px; color:#475569; line-height:1.8; margin-bottom:24px;">
+            <li>৮ ডিজিটের শর্ট ল্যাব টোকেন ওমনিবার সার্চ</li>
+            <li>ডাক্তারের নির্দেশিত টেস্ট ও প্রায়োরিটি ভেরিফাই</li>
+            <li>টেস্ট ফাইন্ডিংস এন্ট্রি ও পিডিএফ আপলোড</li>
+            <li>রোগীর মোবাইল রেকর্ডে তাৎক্ষণিক সিঙ্ক</li>
+          </ul>
+        </div>
+        <a href="<?= APP_URL ?>/lab/login.php" class="btn w-100" style="padding:12px; border-radius:10px; font-weight:700; background:#D97706; color:#fff;">
+          <i class="bi bi-box-arrow-in-right"></i> Lab Login
         </a>
-        <p style="color:rgba(226,232,240,0.35);font-size:13.5px;max-width:260px;line-height:1.65;margin-top:10px;">
-          One Record. Every Care. Bangladesh's premier digital healthcare ecosystem connecting patients, doctors, and hospitals.
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     EMERGENCY ICE BANNER (CRISP & PURPOSEFUL)
+     ===================================================== -->
+<section style="padding:60px 0; background:#FFFFFF;">
+  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
+    <div style="background:linear-gradient(135deg, #FEF2F2 0%, #FFF5F5 100%); border:1px solid #FECACA; border-radius:20px; padding:36px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:24px;">
+      <div style="max-width:680px;">
+        <span style="background:#DC2626; color:#fff; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:0.5px;">First Responder ICE</span>
+        <h3 style="font-size:24px; font-weight:800; color:#991B1B; margin:10px 0 6px;">রোড এক্সিডেন্ট ও জরুরি পরিস্থিতি?</h3>
+        <p style="font-size:14px; color:#7F1D1D; line-height:1.6; margin:0;">
+          লগইন ছাড়াই ফার্স্ট-রেসপন্ডার ও প্যারামেডিকদের জন্য ১-ক্লিকে রক্তের গ্রুপ দেখা, মারাত্মক ওষুধের অ্যালার্জি জানা এবং স্বজনকে তাৎক্ষণিক কল করার পাবলিক প্রোফাইল।
         </p>
-        <div class="footer-badges">
-          <span class="security-badge"><i class="bi bi-shield-fill-check"></i> HIPAA Ready</span>
-          <span class="security-badge"><i class="bi bi-patch-check-fill"></i> HL7 FHIR</span>
+      </div>
+      <a href="<?= APP_URL ?>/emergency.php?uid=PT-000001" target="_blank" class="btn btn-lg" style="background:#DC2626; color:#fff; font-weight:800; border-radius:12px; padding:14px 26px; box-shadow:0 6px 18px rgba(220,38,38,0.25); text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+        <i class="bi bi-heart-pulse-fill"></i> ওপেন ইমার্জেন্সি ICE কার্ড
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     FOOTER (CLEAN WHITE THEME)
+     ===================================================== -->
+<footer style="background:#FFFFFF; border-top:1px solid #E2E8F0; padding:60px 0 30px; font-size:14px; color:#64748B;">
+  <div class="container" style="max-width:1320px; margin:0 auto; padding:0 24px;">
+    
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:36px; margin-bottom:48px;">
+      
+      <!-- Brand Col -->
+      <div>
+        <div style="display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px; color:#0F172A; margin-bottom:12px;">
+          <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px;">M</div>
+          MedCore
+        </div>
+        <p style="font-size:13px; line-height:1.6; color:#64748B; margin:0 0 14px;">
+          One Record. Every Care.<br>
+          A unified, consent-driven digital healthcare network for Bangladesh.
+        </p>
+        <div style="font-size:12px; color:#94A3B8;">
+          Universal Demo OTP: <code style="background:#F1F5F9; padding:2px 6px; border-radius:4px; font-weight:700; color:#0F172A;">1234</code>
         </div>
       </div>
 
-      <div class="footer-col">
-        <h4>Platform</h4>
-        <ul>
-          <li><a href="<?= APP_URL ?>/#how-it-works">How It Works</a></li>
-          <li><a href="<?= APP_URL ?>/security.php">Security</a></li>
-          <li><a href="<?= APP_URL ?>/for-patients.php">For Patients</a></li>
-          <li><a href="<?= APP_URL ?>/for-doctors.php">For Doctors</a></li>
-          <li><a href="<?= APP_URL ?>/for-hospitals.php">For Hospitals</a></li>
+      <!-- Quick Portals -->
+      <div>
+        <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 14px; text-transform:uppercase; letter-spacing:0.5px;">Portals</h4>
+        <ul style="list-style:none; padding:0; margin:0; line-height:2.2; font-size:13px;">
+          <li><a href="<?= APP_URL ?>/patient/login.php" style="color:#64748B; text-decoration:none;">Patient Portal</a></li>
+          <li><a href="<?= APP_URL ?>/doctor/select-hospital.php" style="color:#64748B; text-decoration:none;">Doctor Chamber</a></li>
+          <li><a href="<?= APP_URL ?>/hospital/login.php" style="color:#64748B; text-decoration:none;">Hospital Desk</a></li>
+          <li><a href="<?= APP_URL ?>/lab/login.php" style="color:#64748B; text-decoration:none;">Diagnostic Lab</a></li>
         </ul>
       </div>
 
-      <div class="footer-col">
-        <h4>Account</h4>
-        <ul>
-          <li><a href="<?= APP_URL ?>/patient/register.php">Patient Registration</a></li>
-          <li><a href="<?= APP_URL ?>/patient/login.php">Patient Login</a></li>
-          <li><a href="<?= APP_URL ?>/doctor/select-hospital.php">Doctor Login</a></li>
-          <li><a href="<?= APP_URL ?>/hospital/login.php">Hospital Login</a></li>
-          <li><a href="<?= APP_URL ?>/lab/login.php">Diagnostic Lab Login</a></li>
-          <li><a href="<?= APP_URL ?>/doctor/register.php">Doctor Registration</a></li>
+      <!-- Online Booking -->
+      <div>
+        <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 14px; text-transform:uppercase; letter-spacing:0.5px;">Services</h4>
+        <ul style="list-style:none; padding:0; margin:0; line-height:2.2; font-size:13px;">
+          <li><a href="<?= APP_URL ?>/book-doctor.php" style="color:#0284C7; font-weight:700; text-decoration:none;">ডাক্তার সিরিয়াল বুকিং</a></li>
+          <li><a href="<?= APP_URL ?>/emergency.php" style="color:#DC2626; font-weight:700; text-decoration:none;">Emergency ICE Profile</a></li>
+          <li><a href="<?= APP_URL ?>/security.php" style="color:#64748B; text-decoration:none;">Security & Consent</a></li>
+          <li><a href="<?= APP_URL ?>/for-patients.php" style="color:#64748B; text-decoration:none;">For Patients</a></li>
         </ul>
       </div>
 
-      <div class="footer-col">
-        <h4>Legal &amp; Support</h4>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">HIPAA Notice</a></li>
-          <li><a href="<?= APP_URL ?>/admin/login.php">Admin Console</a></li>
-        </ul>
+      <!-- Security & Trust -->
+      <div>
+        <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 14px; text-transform:uppercase; letter-spacing:0.5px;">Compliance</h4>
+        <div style="font-size:13px; color:#64748B; line-height:1.8;">
+          <div><i class="bi bi-shield-check text-primary"></i> DGDA Standards Aligned</div>
+          <div><i class="bi bi-lock-fill text-primary"></i> AES-256 Encrypted Records</div>
+          <div><i class="bi bi-clock-history text-primary"></i> 30-Min Temporary Consent</div>
+          <div><i class="bi bi-check-circle-fill text-success"></i> BMDC Licensure Validation</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Copyright -->
+    <div style="border-top:1px solid #F1F5F9; padding-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:12px; color:#94A3B8;">
+      <div>&copy; <?= date('Y') ?> MedCore Healthcare Network. All rights reserved.</div>
+      <div style="display:flex; gap:16px;">
+        <a href="<?= APP_URL ?>/security.php" style="color:#94A3B8; text-decoration:none;">Privacy Policy</a>
+        <a href="<?= APP_URL ?>/security.php" style="color:#94A3B8; text-decoration:none;">Terms of Service</a>
+        <a href="<?= APP_URL ?>/security.php" style="color:#94A3B8; text-decoration:none;">Security Whitepaper</a>
       </div>
     </div>
 
-    <div class="footer-bottom">
-      <p>© <?= date('Y') ?> MedCore Health Technologies Ltd. All rights reserved.</p>
-      <p>Built with <i class="bi bi-heart-fill heartbeat-icon" style="font-size:11px;"></i> in Bangladesh · BMDC Registered Platform</p>
-    </div>
   </div>
 </footer>
 
-<script src="<?= APP_URL ?>/assets/js/medcore.js"></script>
+<!-- Scripts -->
 <script>
-// Demo timer countdown (visual only)
-(function() {
-  let secs = 26 * 60 + 11;
-  const el = document.getElementById('demo-timer');
-  if (!el) return;
-  setInterval(() => {
-    if (secs > 0) secs--;
-    const m = Math.floor(secs / 60).toString().padStart(2,'0');
-    const s = (secs % 60).toString().padStart(2,'0');
-    el.textContent = m + ':' + s;
-    if (secs < 300) el.parentElement.classList.add('critical');
-  }, 1000);
-})();
-
-// Stats counter animation
-(function() {
-  const formatNum = (n) => n >= 1000 ? (n/1000).toFixed(0)+'K+' : n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      const el = entry.target;
-      const target = parseInt(el.dataset.target);
-      if (!target) return;
-      let current = 0;
-      const step = target / 80;
-      const interval = setInterval(() => {
-        current = Math.min(current + step, target);
-        el.textContent = formatNum(Math.floor(current));
-        if (current >= target) {
-          el.textContent = formatNum(target) + '+';
-          clearInterval(interval);
-        }
-      }, 18);
-      observer.unobserve(el);
-    });
-  }, { threshold: 0.4 });
-  document.querySelectorAll('[data-target]').forEach(el => observer.observe(el));
-})();
-
-// Mobile menu
+// Mobile Hamburger Toggle
 document.getElementById('hamburger-btn')?.addEventListener('click', function() {
   const menu = document.getElementById('nav-menu');
-  const expanded = this.getAttribute('aria-expanded') === 'true';
-  this.setAttribute('aria-expanded', !expanded);
-  menu.classList.toggle('mobile-open');
+  if (menu) {
+    if (menu.style.display === 'flex') {
+      menu.style.display = 'none';
+      this.setAttribute('aria-expanded', 'false');
+    } else {
+      menu.style.display = 'flex';
+      menu.style.flexDirection = 'column';
+      menu.style.position = 'absolute';
+      menu.style.top = '72px';
+      menu.style.left = '0';
+      menu.style.width = '100%';
+      menu.style.background = '#FFFFFF';
+      menu.style.padding = '16px 24px';
+      menu.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+      menu.style.borderBottom = '1px solid #E2E8F0';
+      menu.style.zIndex = '999';
+      this.setAttribute('aria-expanded', 'true');
+    }
+  }
 });
-
-// Subtle parallax on hero visual
-(function() {
-  const visual = document.querySelector('.hero-visual-inner');
-  if (!visual) return;
-  document.addEventListener('mousemove', (e) => {
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    const rx = ((e.clientY - cy) / cy) * 4;
-    const ry = -((e.clientX - cx) / cx) * 6;
-    visual.style.transform = `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-  });
-  document.addEventListener('mouseleave', () => {
-    visual.style.transform = 'perspective(1200px) rotateY(-8deg) rotateX(3deg)';
-  });
-})();
 </script>
+
 </body>
 </html>
