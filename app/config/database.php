@@ -64,23 +64,13 @@ function getDB(): PDO {
 
     // 2. Embedded SQLite Fallback (Bundled DB for 1-click Vercel / demo deployments)
     $candidatePaths = [
-        __DIR__ . '/medcore.sqlite',
-        dirname(__DIR__, 2) . '/app/config/medcore.sqlite',
-        dirname(__DIR__, 2) . '/api/medcore.sqlite',
         dirname(__DIR__, 2) . '/database/medcore.sqlite',
-        dirname(__DIR__, 2) . '/public/medcore.sqlite',
-        dirname(__DIR__) . '/config/medcore.sqlite',
-        dirname(__DIR__) . '/database/medcore.sqlite',
-        dirname(__DIR__) . '/api/medcore.sqlite',
-        dirname(__DIR__) . '/medcore.sqlite',
-        '/var/task/app/config/medcore.sqlite',
-        '/var/task/user/app/config/medcore.sqlite',
-        '/var/task/api/medcore.sqlite',
-        '/var/task/user/api/medcore.sqlite',
-        '/var/task/database/medcore.sqlite',
+        dirname(__DIR__) . '/../database/medcore.sqlite',
         '/var/task/user/database/medcore.sqlite',
-        '/var/task/medcore.sqlite',
-        '/var/task/user/medcore.sqlite',
+        '/var/task/database/medcore.sqlite',
+        dirname(__DIR__, 2) . '/api/medcore.sqlite',
+        dirname(__DIR__, 2) . '/app/config/medcore.sqlite',
+        __DIR__ . '/medcore.sqlite',
         sys_get_temp_dir() . '/medcore.sqlite',
     ];
 
@@ -95,16 +85,20 @@ function getDB(): PDO {
     // In serverless environments like Vercel Lambda, the deployment directory is read-only.
     // We ensure /tmp/medcore.sqlite exists and is populated with zero external dependencies.
     $tmpDb = sys_get_temp_dir() . '/medcore.sqlite';
-    if ($isVercel || !file_exists($tmpDb) || filesize($tmpDb) < 50000) {
-        if (!file_exists($tmpDb) || filesize($tmpDb) < 50000 || ($bundleDb && @filemtime($bundleDb) > @filemtime($tmpDb))) {
-            if ($bundleDb && file_exists($bundleDb) && filesize($bundleDb) >= 50000) {
-                @copy($bundleDb, $tmpDb);
-            }
-            if ((!file_exists($tmpDb) || filesize($tmpDb) < 50000) && function_exists('getEmbeddedDbBinary')) {
-                $bin = getEmbeddedDbBinary();
-                if ($bin && strlen($bin) >= 50000) {
-                    @file_put_contents($tmpDb, $bin);
-                }
+    $needRefresh = !file_exists($tmpDb) || filesize($tmpDb) < 250000;
+    if ($bundleDb && file_exists($bundleDb) && file_exists($tmpDb)) {
+        if (filesize($bundleDb) !== filesize($tmpDb) || @filemtime($bundleDb) > @filemtime($tmpDb)) {
+            $needRefresh = true;
+        }
+    }
+    if ($needRefresh) {
+        if ($bundleDb && file_exists($bundleDb) && filesize($bundleDb) >= 50000) {
+            @copy($bundleDb, $tmpDb);
+        }
+        if ((!file_exists($tmpDb) || filesize($tmpDb) < 250000) && function_exists('getEmbeddedDbBinary')) {
+            $bin = getEmbeddedDbBinary();
+            if ($bin && strlen($bin) >= 50000) {
+                @file_put_contents($tmpDb, $bin);
             }
         }
     }
