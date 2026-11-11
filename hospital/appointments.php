@@ -434,3 +434,4 @@ foreach ($appointments as $apt) {
 
 </body>
 </html>
+
