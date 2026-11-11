@@ -8,7 +8,7 @@ class ChatbotService {
     /**
      * Get live dynamic context from MedCore database
      */
-    public static function getLiveContext(): array {
+    public static function getLiveContext(?array $userOverride = null): array {
         $groupedDoctors = [];
         $specialties = ['Internal Medicine', 'Cardiology', 'Gastroenterology', 'Pediatrics', 'Neurology'];
 
@@ -98,13 +98,22 @@ class ChatbotService {
         }
 
         // 3. User Session Context
-        $isLoggedIn = isset($_SESSION['role']) && $_SESSION['role'] === 'PATIENT';
-        $patientContext = [
-            'is_logged_in' => $isLoggedIn,
-            'name'         => $_SESSION['name'] ?? null,
-            'patient_uid'  => $_SESSION['patient_uid'] ?? null,
-            'patient_id'   => $_SESSION['patient_id'] ?? null
-        ];
+        if ($userOverride !== null && is_array($userOverride)) {
+            $patientContext = [
+                'is_logged_in' => !empty($userOverride['is_logged_in']),
+                'name'         => $userOverride['name'] ?? null,
+                'patient_uid'  => $userOverride['patient_uid'] ?? null,
+                'patient_id'   => $userOverride['patient_id'] ?? null
+            ];
+        } else {
+            $isLoggedIn = isset($_SESSION['role']) && $_SESSION['role'] === 'PATIENT';
+            $patientContext = [
+                'is_logged_in' => $isLoggedIn,
+                'name'         => $_SESSION['name'] ?? null,
+                'patient_uid'  => $_SESSION['patient_uid'] ?? null,
+                'patient_id'   => $_SESSION['patient_id'] ?? null
+            ];
+        }
 
         return [
             'doctors'     => array_values($groupedDoctors),
@@ -116,13 +125,36 @@ class ChatbotService {
     /**
      * Builds the complete prompt with live database knowledge
      */
-    public static function buildFullSystemPrompt(): string {
+    public static function buildFullSystemPrompt(?array $userContext = null): string {
         $basePrompt = getChatbotActiveSystemPrompt();
-        $context = self::getLiveContext();
+        $context = self::getLiveContext($userContext);
 
-        $patientInfo = $context['patient']['is_logged_in'] 
-            ? "Patient is LOGGED IN as \"{$context['patient']['name']}\" (ID: {$context['patient']['patient_uid']}). They can confirm appointments directly."
-            : "Patient is NOT LOGGED IN (Guest user). You must instruct them to login to confirm booking, and provide login/register guidance.";
+        $isLoggedIn  = !empty($context['patient']['is_logged_in']);
+        $patientName = $context['patient']['name'] ?: 'নাগরিক';
+        $patientUid  = $context['patient']['patient_uid'] ?: '';
+
+        if ($isLoggedIn) {
+            $patientInfo = <<<AUTH
+*** CRITICAL USER AUTHENTICATION STATUS: CURRENTLY LOGGED IN ***
+- Active User Name: "{$patientName}"
+- Citizen Health UID: "{$patientUid}"
+- Current Status: FULLY AUTHENTICATED CITIZEN SESSION ACTIVE.
+- ABSOLUTE PROHIBITION: DO NOT TELL THIS USER TO LOG IN! NEVER SAY "লগইন করুন" OR "পেশেন্ট পোর্টালে লগইন করতে হবে", because this user IS ALREADY LOGGED IN.
+- When they choose or confirm a doctor serial, address them warmly as "জনাব {$patientName}", confirm their appointment request, and directly output the actionable tag:
+  [BOOK_DOCTOR: doctor_id, hospital_id, doctor_name]
+  This allows them to pick their date/slot immediately.
+AUTH;
+        } else {
+            $patientInfo = <<<GUEST
+*** USER AUTHENTICATION STATUS: GUEST VISITOR (NOT LOGGED IN) ***
+- Current Status: Guest / Unauthenticated visitor.
+- CONVERSATION FLOW RULES:
+  1. DO NOT ask the user to log in during normal chats! Talk freely, kindly, and naturally. Listen to their symptoms, suggest medical departments, recommend doctors with their fees, ratings, hospitals, and consultation schedules without asking for login.
+  2. ONLY when the user explicitly confirms that they want to book a serial with a doctor (e.g. "বুকিং দিন", "সিরিয়াল বুক করে দিন", "কনফার্ম করতে চাই"), ONLY AT THAT SPECIFIC MOMENT explain politely:
+     "আপনার সিরিয়ালটি চূড়ান্তভাবে নিশ্চিত করতে এবং সেন্ট্রাল ডিজিটাল হেলথ রেকর্ডে সংরক্ষণ করতে অনুগ্রহ করে একবার নাগরিক পোর্টালে লগইন করুন।"
+     And output the tag: [BOOK_DOCTOR: doctor_id, hospital_id, doctor_name]
+GUEST;
+        }
 
         $doctorsList = "";
         foreach ($context['doctors'] as $d) {
@@ -152,7 +184,7 @@ class ChatbotService {
 - Emergency ICE Profile: "/emergency.php"
 - Security & Consent: "/security.php"
 
-When suggesting a doctor, provide their name, hospital, fee, and rating. If the user wants to book, tell them what to do based on their login status, and you may output an actionable tag in your message like:
+When suggesting a doctor, provide their name, hospital, fee, and rating. If the user wants to book, follow the user status instructions above, and you may output an actionable tag in your message like:
 [BOOK_DOCTOR: doctor_id, hospital_id, doctor_name]
 This tag will be automatically converted into a clickable interactive booking card for the user!
 ==================================================
@@ -164,7 +196,7 @@ CONTEXT;
     /**
      * Call Groq API with user messages
      */
-    public static function chat(array $messages): array {
+    public static function chat(array $messages, ?array $userContext = null): array {
         $apiKey = GROQ_API_KEY;
         if (empty($apiKey)) {
             return [
@@ -173,7 +205,7 @@ CONTEXT;
             ];
         }
 
-        $systemPrompt = self::buildFullSystemPrompt();
+        $systemPrompt = self::buildFullSystemPrompt($userContext);
 
         // Build messages array
         $apiMessages = [
@@ -246,7 +278,7 @@ CONTEXT;
         if (!$responseBody || $httpCode < 200 || $httpCode >= 300) {
             // Attempt fallback to smaller model if 120b was rate-limited or failed
             if ($httpCode === 404 || $httpCode === 429) {
-                return self::chatFallback($apiMessages, $apiKey);
+                return self::chatFallback($apiMessages, $apiKey, $userContext);
             }
             return [
                 'success' => false,
@@ -267,14 +299,14 @@ CONTEXT;
         return [
             'success'   => true,
             'reply'     => $replyText,
-            'patient'   => self::getLiveContext()['patient']
+            'patient'   => self::getLiveContext($userContext)['patient']
         ];
     }
 
     /**
      * Fallback to gpt-oss-20b if gpt-oss-120b has issues
      */
-    private static function chatFallback(array $apiMessages, string $apiKey): array {
+    private static function chatFallback(array $apiMessages, string $apiKey, ?array $userContext = null): array {
         $payload = [
             'model'       => 'openai/gpt-oss-20b',
             'messages'    => $apiMessages,
@@ -304,7 +336,7 @@ CONTEXT;
             return [
                 'success' => true,
                 'reply'   => $replyText,
-                'patient' => self::getLiveContext()['patient']
+                'patient' => self::getLiveContext($userContext)['patient']
             ];
         }
 

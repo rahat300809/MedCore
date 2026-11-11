@@ -7,9 +7,19 @@ require_once __DIR__ . '/../app/services/AuditService.php';
 
 initSession();
 
+// Capture redirect target if provided (safe relative redirect only)
+$redirect = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
+if (!empty($redirect) && (!str_starts_with($redirect, '/') || str_starts_with($redirect, '//'))) {
+    $redirect = '';
+}
+
 // Already logged in
 if (isLoggedIn('PATIENT')) {
-    header('Location: ' . APP_URL . '/patient/dashboard.php');
+    if (!empty($redirect)) {
+        header('Location: ' . APP_URL . $redirect);
+    } else {
+        header('Location: ' . APP_URL . '/patient/dashboard.php');
+    }
     exit;
 }
 
@@ -61,7 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'metadata'   => ['method' => 'password']
                 ]);
 
-                header('Location: ' . APP_URL . '/patient/dashboard.php');
+                if (!empty($redirect)) {
+                    header('Location: ' . APP_URL . $redirect);
+                } else {
+                    header('Location: ' . APP_URL . '/patient/dashboard.php');
+                }
                 exit;
             }
         } else {
@@ -118,6 +132,9 @@ $csrf = generateCsrfToken();
 
     <form method="POST" id="login-form" novalidate>
       <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+      <?php if (!empty($redirect)): ?>
+        <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect) ?>">
+      <?php endif; ?>
 
       <div class="form-group">
         <label class="form-label" for="email">Email Address</label>
