@@ -734,31 +734,31 @@ if (isset($_SESSION['role'])) {
       display: block !important;
       clear: both !important;
       width: 100% !important;
-      background: #FEF2F2 !important;
-      padding: 44px 0 !important;
+      background: linear-gradient(180deg, #FEF2F2 0%, #FFF5F5 100%) !important;
+      padding: 56px 0 !important;
       border-bottom: 1px solid #FECACA;
     }
     .mc-ice-banner {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
       align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
+      gap: 36px;
     }
     .mc-ice-content h3 {
-      font-size: 22px;
-      font-weight: 800;
+      font-size: 26px;
+      font-weight: 900;
       color: #991B1B;
-      margin: 6px 0 6px;
+      margin: 8px 0 10px;
+      letter-spacing: -0.02em;
     }
     .mc-ice-content p {
-      font-size: 14px;
+      font-size: 14.5px;
       color: #7F1D1D;
-      line-height: 1.6;
-      margin: 0;
+      line-height: 1.65;
+      margin: 0 0 20px;
     }
     .mc-ice-btn {
-      background: #DC2626;
+      background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
       color: #FFFFFF !important;
       font-weight: 800;
       font-size: 14px;
@@ -768,13 +768,36 @@ if (isset($_SESSION['role'])) {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+      box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
       white-space: nowrap;
       transition: all 0.2s ease;
     }
     .mc-ice-btn:hover {
-      background: #B91C1C;
+      background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%);
       transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(220, 38, 38, 0.4);
+    }
+    .mc-ice-mini-card {
+      background: #FFFFFF;
+      border: 2px solid #FECACA;
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 14px 34px rgba(220, 38, 38, 0.12);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: all 0.25s ease;
+    }
+    .mc-ice-mini-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 45px rgba(220, 38, 38, 0.18);
+      border-color: #F87171;
+    }
+    @media (max-width: 900px) {
+      .mc-ice-banner {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
     }
 
     /* --- FOOTER --- */
@@ -1192,19 +1215,66 @@ if (isset($_SESSION['role'])) {
 </section>
 
 <!-- =====================================================
-     EMERGENCY ICE BANNER (CRISP & CLEAN)
+     EMERGENCY ICE BANNER (CRISP & BEAUTIFUL SHOWCASE)
      ===================================================== -->
 <section class="mc-ice-section">
   <div class="mc-hero-container">
     <div class="mc-ice-banner">
+      
+      <!-- Left Content -->
       <div class="mc-ice-content">
-        <span style="background:#DC2626; color:#fff; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:0.5px;">First Responder ICE</span>
-        <h3>রোড এক্সিডেন্ট বা জরুরি অবস্থা?</h3>
-        <p>লগইন ছাড়াই ফার্স্ট-রেসপন্ডার ও চিকিৎসকদের জন্য রক্তের গ্রুপ, প্রাণঘাতী অ্যালার্জি এবং স্বজনের জরুরি যোগাযোগের উন্মুক্ত কার্ড।</p>
+        <span style="background:#DC2626; color:#fff; font-size:11px; font-weight:800; padding:4px 12px; border-radius:999px; text-transform:uppercase; letter-spacing:0.6px; display:inline-flex; align-items:center; gap:5px;">
+          <i class="bi bi-shield-exclamation"></i> First Responder ICE Profile
+        </span>
+        <h3>রোড এক্সিডেন্ট বা জরুরি পরিস্থিতিতে ১-ক্লিকে পরিচয়</h3>
+        <p>
+          লগইন বা পাসওয়ার্ড ছাড়াই দুর্ঘটনা স্থানে উপস্থিত উদ্ধারকারী প্যারামেডিক ও চিকিৎসকরা রোগীর রক্তের গ্রুপ, জীবনঘাতী ওষুধের অ্যালার্জি এবং স্বজনের জরুরি মোবাইল নম্বর দেখতে পারবেন।
+        </p>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+          <a href="<?= APP_URL ?>/emergency.php?uid=PT-000001" target="_blank" class="mc-ice-btn">
+            <i class="bi bi-heart-pulse-fill"></i> ওপেন লাইভ ICE কার্ড ডেমো
+          </a>
+          <a href="<?= APP_URL ?>/emergency.php" class="btn btn-secondary" style="border-radius:10px; font-weight:700; background:#FFFFFF; color:#991B1B; border:1px solid #FECACA; padding:12px 20px;">
+            <i class="bi bi-search"></i> আইডি দিয়ে কার্ড খুঁজুন
+          </a>
+        </div>
       </div>
-      <a href="<?= APP_URL ?>/emergency.php?uid=PT-000001" target="_blank" class="mc-ice-btn">
-        <i class="bi bi-heart-pulse-fill"></i> ওপেন ইমার্জেন্সি ICE কার্ড
-      </a>
+
+      <!-- Right: Realistic Mini ICE Card Preview -->
+      <div>
+        <a href="<?= APP_URL ?>/emergency.php?uid=PT-000001" target="_blank" class="mc-ice-mini-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #FEE2E2; padding-bottom:10px; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:900; color:#DC2626; text-transform:uppercase; letter-spacing:0.5px;">
+              <i class="bi bi-heart-pulse-fill"></i> IN CASE OF EMERGENCY (ICE)
+            </div>
+            <span style="background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; font-size:10px; font-weight:800; padding:2px 8px; border-radius:999px;">
+              VERIFIED EHR
+            </span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+            <div>
+              <div style="font-size:17px; font-weight:900; color:#0F172A;">Rahat Mahamud</div>
+              <div style="font-size:12px; color:#64748B;">PT-000001 · 31 Yrs · Male</div>
+            </div>
+            <div style="background:linear-gradient(135deg, #DC2626, #B91C1C); color:#fff; border-radius:12px; padding:6px 14px; text-align:center; box-shadow:0 4px 12px rgba(220,38,38,0.3);">
+              <div style="font-size:20px; font-weight:900; line-height:1;">O+</div>
+              <div style="font-size:9px; font-weight:800; text-transform:uppercase; color:#FEE2E2;">রক্তের গ্রুপ</div>
+            </div>
+          </div>
+
+          <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:10px; padding:8px 12px; font-size:11.5px; color:#991B1B; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+            <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+            <div><strong>Penicillin Allergy:</strong> Anaphylaxis risk (No beta-lactams)</div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:8px 12px; font-size:12px;">
+            <span style="color:#166534; font-weight:700;"><i class="bi bi-telephone-fill"></i> Rahim Mahamud (Kin)</span>
+            <span style="color:#15803D; font-weight:800; font-family:'JetBrains Mono', monospace;">01888888889</span>
+          </div>
+        </a>
+      </div>
+
     </div>
   </div>
 </section>
