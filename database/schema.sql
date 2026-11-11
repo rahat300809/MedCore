@@ -73,6 +73,12 @@ CREATE TABLE `doctors` (
   `qualification` TEXT DEFAULT NULL,
   `designation` VARCHAR(255) DEFAULT NULL,
   `experience_years` TINYINT UNSIGNED DEFAULT 0,
+  `rating_score` DECIMAL(2,1) DEFAULT 4.8,
+  `rating_count` INT UNSIGNED DEFAULT 50,
+  `consultation_fee` DECIMAL(10,2) DEFAULT 800.00,
+  `available_days` VARCHAR(100) DEFAULT 'Sat, Sun, Mon, Tue, Wed, Thu',
+  `available_time` VARCHAR(100) DEFAULT '05:00 PM - 09:00 PM',
+  `is_top_rated` TINYINT(1) DEFAULT 1,
   `profile_image` VARCHAR(500) DEFAULT NULL,
   `verification_status` ENUM('PENDING','VERIFIED','REJECTED','SUSPENDED') NOT NULL DEFAULT 'PENDING',
   `verified_by` INT UNSIGNED DEFAULT NULL COMMENT 'admin user_id',
@@ -683,3 +689,32 @@ CREATE TABLE IF NOT EXISTS `lab_result_files` (
   PRIMARY KEY (`id`),
   INDEX `idx_lrf_result` (`lab_test_result_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE 31: appointments
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `appointments` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `appointment_uid` VARCHAR(30) NOT NULL,
+  `serial_number` INT NOT NULL DEFAULT 1,
+  `patient_id` INT UNSIGNED NOT NULL,
+  `doctor_id` INT UNSIGNED NOT NULL,
+  `hospital_id` INT UNSIGNED NOT NULL,
+  `department_id` INT UNSIGNED DEFAULT NULL,
+  `appointment_date` DATE NOT NULL,
+  `time_slot` VARCHAR(50) NOT NULL DEFAULT '05:00 PM - 09:00 PM',
+  `priority` ENUM('ROUTINE','URGENT','EMERGENCY') NOT NULL DEFAULT 'ROUTINE',
+  `problem_description` TEXT DEFAULT NULL,
+  `consultation_fee` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `payment_status` ENUM('UNPAID','PAID') NOT NULL DEFAULT 'UNPAID',
+  `status` ENUM('CONFIRMED','WAITING','IN_CONSULTATION','COMPLETED','CANCELLED','NO_SHOW') NOT NULL DEFAULT 'CONFIRMED',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_appointment_uid` (`appointment_uid`),
+  INDEX `idx_apt_patient` (`patient_id`),
+  INDEX `idx_apt_doc_date` (`doctor_id`, `appointment_date`),
+  INDEX `idx_apt_hosp_date` (`hospital_id`, `appointment_date`),
+  INDEX `idx_apt_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

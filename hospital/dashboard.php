@@ -22,9 +22,10 @@ $stmt = $db->prepare("
         (SELECT COUNT(*) FROM consultations WHERE hospital_id = :h4 AND DATE(consultation_date) = CURDATE()) AS today_consultations,
         (SELECT COUNT(*) FROM consultations WHERE hospital_id = :h5) AS total_consultations,
         (SELECT COUNT(*) FROM access_sessions WHERE hospital_id = :h6 AND status = 'ACTIVE' AND expires_at > NOW()) AS active_sessions,
-        (SELECT COUNT(*) FROM hospital_laboratories WHERE hospital_id = :h7 AND status = 'APPROVED') AS affiliated_labs
+        (SELECT COUNT(*) FROM hospital_laboratories WHERE hospital_id = :h7 AND status = 'APPROVED') AS affiliated_labs,
+        (SELECT COUNT(*) FROM appointments WHERE hospital_id = :h8 AND appointment_date = CURDATE() AND status != 'CANCELLED') AS today_appointments
 ");
-$stmt->execute([':h1'=>$hospitalId,':h2'=>$hospitalId,':h3'=>$hospitalId,':h4'=>$hospitalId,':h5'=>$hospitalId,':h6'=>$hospitalId,':h7'=>$hospitalId]);
+$stmt->execute([':h1'=>$hospitalId,':h2'=>$hospitalId,':h3'=>$hospitalId,':h4'=>$hospitalId,':h5'=>$hospitalId,':h6'=>$hospitalId,':h7'=>$hospitalId,':h8'=>$hospitalId]);
 $stats = $stmt->fetch();
 
 // Affiliated doctors
@@ -127,6 +128,14 @@ $csrf = generateCsrfToken();
         <i class="bi bi-grid-1x2-fill"></i> Dashboard
       </a>
 
+      <div class="sidebar-section-title">Appointments &amp; Queue</div>
+      <a href="<?= APP_URL ?>/hospital/appointments.php">
+        <i class="bi bi-calendar-check-fill"></i> Appointments &amp; Queue
+        <?php if (($stats['today_appointments'] ?? 0) > 0): ?>
+        <span class="nav-badge" style="background:#2563EB;color:#fff;"><?= $stats['today_appointments'] ?></span>
+        <?php endif; ?>
+      </a>
+
       <div class="sidebar-section-title">Management</div>
       <a href="<?= APP_URL ?>/hospital/doctors.php">
         <i class="bi bi-person-badge-fill"></i> Affiliated Doctors
@@ -202,6 +211,20 @@ $csrf = generateCsrfToken();
     </header>
 
     <div class="portal-content">
+
+      <!-- Quick Queue & Appointments Banner -->
+      <div style="background:linear-gradient(135deg, #0284c7 0%, #1e3a8a 100%);color:#fff;border-radius:var(--radius-xl);padding:20px 24px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;box-shadow:0 8px 24px rgba(37,99,235,0.2);">
+        <div>
+          <span style="background:rgba(255,255,255,0.2);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;">Reception Desk</span>
+          <h3 style="margin:6px 0 2px;font-size:18px;font-weight:800;color:#fff;">OPD Appointments &amp; Live Serial Queue</h3>
+          <p style="margin:0;font-size:13px;opacity:0.9;">Manage incoming patient bookings, check patients in at the lobby, and monitor real-time queue flow.</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <a href="<?= APP_URL ?>/hospital/appointments.php" class="btn" style="background:#fff;color:#1e3a8a;font-weight:700;border:none;">
+            <i class="bi bi-calendar-check-fill" style="margin-right:6px;"></i> Open Appointments &amp; Queue (<?= $stats['today_appointments'] ?? 0 ?>)
+          </a>
+        </div>
+      </div>
 
       <!-- Stats -->
       <div class="grid-4 mb-8">

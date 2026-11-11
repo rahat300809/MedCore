@@ -52,6 +52,7 @@ if (isset($_SESSION['role'])) {
     </a>
 
     <ul class="navbar-nav" id="nav-menu" role="menubar">
+      <li role="none"><a href="<?= APP_URL ?>/book-doctor.php" role="menuitem" style="color:var(--primary);font-weight:700;"><i class="bi bi-calendar-check" style="margin-right:4px;"></i>Book Doctor</a></li>
       <li role="none"><a href="#how-it-works" role="menuitem">How It Works</a></li>
       <li role="none"><a href="<?= APP_URL ?>/for-patients.php" role="menuitem">For Patients</a></li>
       <li role="none"><a href="<?= APP_URL ?>/for-doctors.php" role="menuitem">For Doctors</a></li>
@@ -60,6 +61,9 @@ if (isset($_SESSION['role'])) {
     </ul>
 
     <div class="navbar-actions">
+      <a href="<?= APP_URL ?>/book-doctor.php" class="btn btn-sm" id="btn-book-nav" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+        <i class="bi bi-calendar2-check-fill text-primary"></i> ডাক্তার সিরিয়াল
+      </a>
       <a href="<?= APP_URL ?>/emergency.php" class="btn btn-sm" id="btn-emergency-nav" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; font-weight: 600;" title="Emergency Profile">
         <i class="bi bi-shield-exclamation text-danger"></i> ICE
       </a>
@@ -133,7 +137,11 @@ if (isset($_SESSION['role'])) {
         </p>
 
         <div class="hero-cta">
-          <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-primary btn-lg" id="hero-get-started-btn">
+          <a href="<?= APP_URL ?>/book-doctor.php" class="btn btn-primary btn-lg" id="hero-book-btn" style="background:linear-gradient(135deg, #0284c7 0%, #1e40af 100%);box-shadow:0 8px 24px rgba(37,99,235,0.35);font-weight:800;">
+            <i class="bi bi-calendar2-check-fill" aria-hidden="true"></i>
+            অনলাইন ডাক্তার সিরিয়াল
+          </a>
+          <a href="<?= APP_URL ?>/patient/register.php" class="btn btn-secondary btn-lg" id="hero-get-started-btn">
             <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
             Create Free Account
           </a>

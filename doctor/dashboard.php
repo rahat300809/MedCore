@@ -139,6 +139,28 @@ $stmt = $db->prepare("
 $stmt->execute([$doctorId, $hospitalId]);
 $recentPrescriptions = $stmt->fetchAll();
 
+// Today's Patient Queue for this doctor and hospital
+$todayDateStr = date('Y-m-d');
+$stmtTodayQueue = $db->prepare("
+    SELECT a.*, p.full_name AS patient_name, p.patient_uid, p.gender, p.date_of_birth
+    FROM appointments a
+    JOIN patients p ON a.patient_id = p.id
+    WHERE a.doctor_id = ? AND a.hospital_id = ? AND a.appointment_date = ?
+    ORDER BY 
+        CASE WHEN a.priority = 'EMERGENCY' THEN 1 WHEN a.priority = 'URGENT' THEN 2 ELSE 3 END ASC,
+        a.serial_number ASC
+    LIMIT 6
+");
+$stmtTodayQueue->execute([$doctorId, $hospitalId, $todayDateStr]);
+$todayQueue = $stmtTodayQueue->fetchAll();
+
+$stmtCountQueue = $db->prepare("
+    SELECT COUNT(*) FROM appointments 
+    WHERE doctor_id = ? AND hospital_id = ? AND appointment_date = ? AND status IN ('CONFIRMED','WAITING','IN_CONSULTATION')
+");
+$stmtCountQueue->execute([$doctorId, $hospitalId, $todayDateStr]);
+$waitingQueueCount = (int)$stmtCountQueue->fetchColumn();
+
 // Log dashboard access
 AuditService::log('DASHBOARD_VIEW', [
     'user_id'    => $_SESSION['user_id'],
@@ -231,8 +253,14 @@ $csrf = generateCsrfToken();
       </a>
 
       <div class="sidebar-section-title">Patient Care</div>
+      <a href="<?= APP_URL ?>/doctor/queue.php">
+        <i class="bi bi-people-fill"></i> Live Patient Queue
+        <?php if (!empty($waitingQueueCount)): ?>
+          <span class="nav-badge" style="background:#0F766E; color:#fff;"><?= $waitingQueueCount ?></span>
+        <?php endif; ?>
+      </a>
       <a href="<?= APP_URL ?>/doctor/patient-search.php">
-        <i class="bi bi-search-heart-fill"></i> Patient Search
+        <i class="bi bi-search-heart-fill"></i> Patient Search (ICE / NID)
       </a>
       <a href="<?= APP_URL ?>/doctor/consultations.php">
         <i class="bi bi-stethoscope"></i> My Consultations
@@ -345,14 +373,91 @@ $csrf = generateCsrfToken();
                 Search patient by UID (e.g. PT-000001), phone number, or NID to instantly unlock medical records &amp; summary.
               </div>
             </div>
-            <div>
-              <a href="<?= APP_URL ?>/doctor/patient-search.php" class="btn" style="background:#fff; color:#1E40AF; font-weight:700; padding:10px 20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                <i class="bi bi-search-heart-fill"></i> Find Patient to Start
+            <div class="d-flex gap-2">
+              <a href="<?= APP_URL ?>/doctor/queue.php" class="btn" style="background:#0F766E; color:#fff; font-weight:700; padding:10px 18px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                <i class="bi bi-people-fill"></i> View Live Queue (<?= $waitingQueueCount ?>)
+              </a>
+              <a href="<?= APP_URL ?>/doctor/patient-search.php" class="btn" style="background:#fff; color:#1E40AF; font-weight:700; padding:10px 18px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                <i class="bi bi-search-heart-fill"></i> Find Patient
               </a>
             </div>
           </div>
         </div>
       <?php endif; ?>
+
+      <!-- TODAY'S PATIENT QUEUE SNAPSHOT CARD -->
+      <div class="card mb-4" style="border: 1px solid #CBD5E1;">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:#F8FAFC;">
+          <div>
+            <h3 class="card-title" style="font-size:1rem; margin:0; color:#0F172A;">
+              <i class="bi bi-list-ol text-primary"></i> Today's Consultation Queue (আজকের রোগী সিরিয়াল)
+            </h3>
+            <span style="font-size:11.5px; color:#64748B;">Live queue for Dr. <?= htmlspecialchars($doctor['full_name']) ?> &bull; <?= count($todayQueue) ?> patient(s)</span>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <span class="badge" style="background:#0F766E; color:#fff;"><?= $waitingQueueCount ?> Waiting</span>
+            <a href="<?= APP_URL ?>/doctor/queue.php" class="btn btn-outline btn-sm">
+              Open Full Queue &amp; Emergency &rarr;
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <?php if (empty($todayQueue)): ?>
+            <div class="text-center py-4 text-muted">
+              <p class="mb-1" style="font-size:13px;">No patients queued for today yet.</p>
+              <a href="<?= APP_URL ?>/doctor/queue.php" class="btn btn-outline btn-sm" style="font-size:11px;">Add Walk-In / Emergency Patient</a>
+            </div>
+          <?php else: ?>
+            <div class="table-responsive">
+              <table class="data-table mb-0">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">Serial</th>
+                    <th>Patient Name</th>
+                    <th>MedCore ID</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($todayQueue as $q): ?>
+                    <tr style="<?= $q['priority'] === 'EMERGENCY' ? 'background:#FEF2F2;' : '' ?>">
+                      <td>
+                        <strong style="font-size:1.1rem; color:<?= $q['priority'] === 'EMERGENCY' ? '#DC2626' : '#0F766E' ?>;">
+                          #<?= str_pad($q['serial_number'], 2, '0', STR_PAD_LEFT) ?>
+                        </strong>
+                      </td>
+                      <td>
+                        <strong><?= htmlspecialchars($q['patient_name']) ?></strong>
+                        <?php if ($q['priority'] === 'EMERGENCY'): ?>
+                          <span class="badge" style="background:#FEE2E2; color:#991B1B; font-size:9px; margin-left:4px;">🚨 STAT</span>
+                        <?php endif; ?>
+                      </td>
+                      <td><code><?= htmlspecialchars($q['patient_uid']) ?></code></td>
+                      <td>
+                        <span class="badge" style="font-size:10px; <?= $q['priority'] === 'EMERGENCY' ? 'background:#FEE2E2;color:#991B1B;' : ($q['priority'] === 'URGENT' ? 'background:#FEF3C7;color:#92400E;' : 'background:#F1F5F9;color:#334155;') ?>">
+                          <?= htmlspecialchars($q['priority']) ?>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge" style="font-size:10px; <?= $q['status'] === 'COMPLETED' ? 'background:#DCFCE7;color:#166534;' : ($q['status'] === 'IN_CONSULTATION' ? 'background:#E0F2FE;color:#0369A1;' : 'background:#FEF3C7;color:#92400E;') ?>">
+                          <?= htmlspecialchars($q['status']) ?>
+                        </span>
+                      </td>
+                      <td style="text-align:right;">
+                        <a href="<?= APP_URL ?>/doctor/queue.php" class="btn btn-sm btn-primary" style="background:#0F766E; border-color:#0F766E; font-size:11px; padding:3px 10px;">
+                          <i class="bi bi-stethoscope"></i> Call Patient
+                        </a>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php endif; ?>
+        </div>
+      </div>
 
       <!-- ACTIVE ACCESS SESSIONS BANNER -->
       <?php if (!empty($activeSessions)): ?>

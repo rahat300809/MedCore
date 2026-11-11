@@ -271,6 +271,10 @@ $csrf = generateCsrfToken();
         <i class="bi bi-grid-1x2-fill"></i>
         <span>Dashboard</span>
       </a>
+      <a href="<?= APP_URL ?>/hospital/appointments.php" class="nav-item">
+        <i class="bi bi-calendar-check-fill"></i>
+        <span>Appointments &amp; Queue</span>
+      </a>
       <a href="<?= APP_URL ?>/hospital/doctors.php" class="nav-item active">
         <i class="bi bi-person-badge-fill"></i>
         <span>Affiliated Doctors</span>

@@ -257,6 +257,19 @@ $stmtActiveTokens = $db->prepare("
 $stmtActiveTokens->execute([$patientId]);
 $activeLabTokens = $stmtActiveTokens->fetchAll();
 
+// Upcoming doctor appointments
+$stmtUpcomingApt = $db->prepare("
+    SELECT a.*, d.full_name AS doctor_name, d.specialization, h.name AS hospital_name
+    FROM appointments a
+    JOIN doctors d ON a.doctor_id = d.id
+    JOIN hospitals h ON a.hospital_id = h.id
+    WHERE a.patient_id = ? AND a.status IN ('CONFIRMED', 'WAITING', 'IN_CONSULTATION') AND a.appointment_date >= CURDATE()
+    ORDER BY a.appointment_date ASC, a.serial_number ASC
+    LIMIT 2
+");
+$stmtUpcomingApt->execute([$patientId]);
+$upcomingAppointments = $stmtUpcomingApt->fetchAll();
+
 // Welcome flag
 $isNewUser = isset($_GET['welcome']);
 ?>
@@ -306,7 +319,16 @@ $isNewUser = isset($_GET['welcome']);
         <i class="bi bi-file-earmark-bar-graph-fill" aria-hidden="true"></i> Lab Reports
       </a>
 
-      <div class="sidebar-section-title">Consultations</div>
+      <div class="sidebar-section-title">Appointments &amp; Consultations</div>
+      <a href="<?= APP_URL ?>/patient/appointments.php">
+        <i class="bi bi-calendar-check-fill" aria-hidden="true"></i> My Appointments
+        <?php if (!empty($upcomingAppointments)): ?>
+          <span class="nav-badge"><?= count($upcomingAppointments) ?></span>
+        <?php endif; ?>
+      </a>
+      <a href="<?= APP_URL ?>/book-doctor.php" target="_blank" style="color:var(--primary);font-weight:600;">
+        <i class="bi bi-plus-circle-fill" aria-hidden="true"></i> Book Doctor Serial
+      </a>
       <a href="<?= APP_URL ?>/patient/prescriptions.php">
         <i class="bi bi-file-earmark-medical-fill" aria-hidden="true"></i> Prescriptions
       </a>
@@ -553,6 +575,50 @@ $isNewUser = isset($_GET['welcome']);
             <span><strong>Your Privacy Protected:</strong> Granting access provides time-bounded (30 minutes) clinical permission for this doctor. You can revoke it anytime.</span>
           </div>
 
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <!-- UPCOMING DOCTOR APPOINTMENTS -->
+      <?php if (!empty($upcomingAppointments)): ?>
+      <div class="card mb-6" style="border-left:4px solid #2563EB; background:linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 100%);">
+        <div class="d-flex align-center justify-between gap-3 mb-3 flex-wrap">
+          <div class="d-flex align-center gap-2">
+            <i class="bi bi-calendar-check-fill" style="color:#2563EB; font-size:1.3rem;"></i>
+            <div>
+              <h3 style="font-size:1rem; font-weight:800; color:#1E40AF; margin:0;">Upcoming Doctor Appointments &amp; Serials (লাইভ সিরিয়াল)</h3>
+              <div style="font-size:12px; color:var(--mc-text-muted);">Your confirmed appointments and queue tokens</div>
+            </div>
+          </div>
+          <div class="d-flex align-center gap-2">
+            <a href="<?= APP_URL ?>/book-doctor.php" target="_blank" class="btn btn-sm btn-primary">
+              <i class="bi bi-plus-lg"></i> Book New Serial
+            </a>
+            <a href="<?= APP_URL ?>/patient/appointments.php" class="btn btn-outline-primary btn-sm">
+              View All <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:16px;">
+          <?php foreach ($upcomingAppointments as $uApt): ?>
+          <div style="background:white; border:1px solid #BFDBFE; border-radius:var(--radius-md); padding:16px; box-shadow:0 2px 8px rgba(37,99,235,0.08); display:flex; gap:14px; align-items:center;">
+            <div style="background:<?= $uApt['priority'] === 'EMERGENCY' ? '#DC2626' : 'linear-gradient(135deg,#0284c7,#2563eb)' ?>; color:#fff; border-radius:var(--radius-md); padding:10px 14px; text-align:center; min-width:72px;">
+              <div style="font-family:var(--font-mono); font-size:22px; font-weight:800; line-height:1;">#<?= str_pad((string)$uApt['serial_number'], 2, '0', STR_PAD_LEFT) ?></div>
+              <div style="font-size:10px; font-weight:700; text-transform:uppercase; margin-top:2px;"><?= $uApt['priority'] === 'EMERGENCY' ? 'STAT' : 'SERIAL' ?></div>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                <span style="font-weight:700; font-size:14px; color:var(--mc-navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Dr. <?= htmlspecialchars($uApt['doctor_name']) ?></span>
+                <span class="badge" style="font-size:10px; font-weight:700; background:<?= $uApt['status'] === 'WAITING' ? '#FEF3C7;color:#92400E' : ($uApt['status'] === 'IN_CONSULTATION' ? '#DBEAFE;color:#1E40AF' : '#ECFDF5;color:#047857') ?>;"><?= $uApt['status'] ?></span>
+              </div>
+              <div style="font-size:12px; color:var(--primary); font-weight:600;"><?= htmlspecialchars($uApt['specialization']) ?></div>
+              <div style="font-size:11px; color:var(--mc-text-muted); margin-top:4px;">
+                <i class="bi bi-geo-alt"></i> <?= htmlspecialchars($uApt['hospital_name']) ?> · <strong><?= date('d M', strtotime($uApt['appointment_date'])) ?></strong> (<?= htmlspecialchars($uApt['time_slot']) ?>)
+              </div>
+            </div>
+          </div>
+          <?php endforeach; ?>
         </div>
       </div>
       <?php endif; ?>
