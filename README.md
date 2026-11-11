@@ -46,9 +46,12 @@ All OTP verification prompts accept the universal demo code: **`1234`**.
 
 | Role | Portal URL | Email Address | Password | Demo OTP | Description |
 |---|---|---|---|---|---|
+| **Online Doctor Booking** | [`/book-doctor.php`](https://medcore1-tan.vercel.app/book-doctor.php) | *Public / Patient* | `Demo123!` | — | Specialty & hospital directory, doctor ratings, fees & instant serial token |
 | **Patient** | [`/patient/login.php`](https://medcore1-tan.vercel.app/patient/login.php) | `rahat@example.com` | `Demo123!` | `1234` | Rahat Mahamud (`PT-000001`), O+ Blood, Allergies & Active Prescriptions |
 | **Doctor** | [`/doctor/select-hospital.php`](https://medcore1-tan.vercel.app/doctor/select-hospital.php) | `dr.rahman@medcore.local` | `Demo123!` | `1234` | Dr. Farhana Rahman (`DR-000001`), BMDC `BMDC-A-12345`, ABC General Hospital |
+| **Doctor Live Queue** | [`/doctor/queue.php`](https://medcore1-tan.vercel.app/doctor/queue.php) | `dr.rahman@medcore.local` | `Demo123!` | `1234` | Live chamber queue, priority triage & emergency walk-in omnibar |
 | **Hospital Admin** | [`/hospital/login.php`](https://medcore1-tan.vercel.app/hospital/login.php) | `admin@abc-hospital.com` | `Demo123!` | `1234` | ABC General Hospital Admin (`HOSP-000001`), Dhanmondi, Dhaka |
+| **Hospital Reception Desk**| [`/hospital/appointments.php`](https://medcore1-tan.vercel.app/hospital/appointments.php)| `admin@abc-hospital.com` | `Demo123!` | `1234` | OPD appointment booking desk, lobby check-in & queue monitor |
 | **Diagnostic Lab** | [`/lab/login.php`](https://medcore1-tan.vercel.app/lab/login.php) | `lab@apexdiagnostics.com` | `Demo123!` | `1234` | Apex Diagnostics Ltd. (`LAB-000001`), Token search & upload manager |
 | **System Admin** | [`/admin/login.php`](https://medcore1-tan.vercel.app/admin/login.php) | `admin@medcore.local` | `Demo123!` | `1234` | Platform Root Administrator, audit compliance & hospital licensing |
 | **Emergency ICE** | [`/emergency.php?uid=PT-000001`](https://medcore1-tan.vercel.app/emergency.php?uid=PT-000001) | *No Login Required* | — | — | Public Emergency First-Responder Profile with 1-Click Call & Blood Group |
@@ -113,7 +116,14 @@ All OTP verification prompts accept the universal demo code: **`1234`**.
 - 1-click Bengali dosage presets for doctors (`১+০+১ (খাবার পর)`, `১+১+১ (খাবার আগে)`, `জ্বর আসলে (SOS)`).
 - Allergy cross-checking against known patient allergies before prescription submission.
 
-### 5. ☁️ Dual-Engine Database Architecture
+### 5. 🏥 Online Doctor Booking & Real-Time OPD Queue System
+- **Public Directory (`/book-doctor.php`)**: Browse specialist doctors by medical department and hospital, compare ratings (★) and consultation fees, and reserve serial queue tokens.
+- **Queue Serial Tokens**: Auto-generates serial numbers (`#01`, `#02`, `#03`...) and unique appointment IDs (`APT-XXXXXX`) with printable verification slips.
+- **Live Doctor Consultation Queue (`/doctor/queue.php`)**: Doctors view real-time patient queue for their active hospital, prioritized by **STAT Emergency** first, then chronological serial. 1-click "Call Patient (রোগী দেখুন)" opens consultation session and medical history.
+- **Emergency Walk-In Omnibar**: Doctors can search any unscheduled emergency patient by UID, NID, or Phone and immediately triage them into the live queue.
+- **Hospital Reception Desk (`/hospital/appointments.php`)**: OPD receptionists manage daily bookings, mark arriving patients (`WAITING` in lobby), track consultation fees, and monitor wait times.
+
+### 6. ☁️ Dual-Engine Database Architecture
 - **Production Cloud:** Connects seamlessly to remote MySQL instances (Aiven, TiDB Cloud, Railway, AWS RDS) via environment variables.
 - **Embedded Zero-Config Fallback:** Self-contained portable SQLite engine that auto-initializes in `/tmp/medcore.sqlite` on serverless platforms (Vercel, Render, AWS Lambda) without requiring any external database provisioning.
 
@@ -153,7 +163,7 @@ All OTP verification prompts accept the universal demo code: **`1234`**.
 
 ---
 
-## 🗄️ Database Architecture (29 Tables)
+## 🗄️ Database Architecture (31 Tables)
 
 The database schema supports both **MySQL 8.x (InnoDB utf8mb4)** and **SQLite 3** via a custom PDO compatibility translator:
 
@@ -161,6 +171,7 @@ The database schema supports both **MySQL 8.x (InnoDB utf8mb4)** and **SQLite 3*
 |---|---|
 | **Identity & Access** | `users`, `otp_verifications`, `access_requests`, `access_sessions` |
 | **Core Entities** | `patients`, `doctors`, `hospitals`, `departments`, `doctor_hospitals` |
+| **Appointments & Queue** | `appointments` |
 | **Laboratory Module** | `laboratories`, `hospital_laboratories`, `prescription_lab_orders`, `lab_order_tests`, `lab_test_results`, `lab_result_files` |
 | **Clinical Records** | `consultations`, `diagnoses`, `prescriptions`, `prescription_medicines`, `patient_diagnostics`, `medical_histories` |
 | **Medications & Allergies** | `medications`, `patient_medications`, `allergies`, `patient_allergies`, `lab_reports` |
