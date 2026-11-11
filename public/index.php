@@ -32,6 +32,7 @@ if (isset($_SESSION['role'])) {
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/landing.css">
+  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/chatbot.css">
 
   <style>
     /* ============================================================
@@ -1361,6 +1362,9 @@ document.getElementById('mc-mobile-btn')?.addEventListener('click', function() {
   }
 });
 </script>
+
+<!-- MedCore AI Chatbot Agent -->
+<script src="<?= APP_URL ?>/assets/js/chatbot.js" defer></script>
 
 </body>
 </html>

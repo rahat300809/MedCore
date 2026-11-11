@@ -43,7 +43,7 @@ npm-debug.log
 scratch/
 
 # Root assets junction (mirrored from public/assets)
-assets/
+/assets/
 
 # Keep storage directories structure
 !storage/uploads/.gitkeep

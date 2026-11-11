@@ -283,6 +283,7 @@ $isNewUser = isset($_GET['welcome']);
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
+  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/chatbot.css">
 </head>
 <body>
 
@@ -840,5 +841,8 @@ startAccessTimer('dash-timer-<?= $s['id'] ?>', <?= max(0, (int)$s['seconds_remai
 <?php endforeach; ?>
 <?php endif; ?>
 </script>
+
+<!-- MedCore AI Chatbot Agent -->
+<script src="<?= APP_URL ?>/assets/js/chatbot.js" defer></script>
 </body>
 </html>
