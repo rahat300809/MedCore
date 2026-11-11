@@ -58,6 +58,33 @@ if ($targetRx) {
         $stmtMeds = $db->prepare("SELECT * FROM prescription_medicines WHERE prescription_id = ? ORDER BY id ASC");
         $stmtMeds->execute([$viewRx['id']]);
         $viewMeds = $stmtMeds->fetchAll();
+
+        // Fetch Lab Order and Tests
+        $stmtLabOrd = $db->prepare("
+            SELECT plo.*, l.name AS assigned_lab_name, l.lab_uid AS assigned_lab_uid
+            FROM prescription_lab_orders plo
+            LEFT JOIN laboratories l ON plo.laboratory_id = l.id
+            WHERE plo.prescription_id = ?
+            LIMIT 1
+        ");
+        $stmtLabOrd->execute([$viewRx['id']]);
+        $viewLabOrder = $stmtLabOrd->fetch();
+
+        $viewLabTests = [];
+        if ($viewLabOrder) {
+            $stmtLT = $db->prepare("
+                SELECT lot.*, ltr.result_status, ltr.result_summary, ltr.result_value, ltr.reference_range,
+                       ltr.technician_name, ltr.uploaded_at AS result_uploaded_at,
+                       rl.name AS result_lab_name
+                FROM lab_order_tests lot
+                LEFT JOIN lab_test_results ltr ON ltr.lab_order_test_id = lot.id
+                LEFT JOIN laboratories rl ON ltr.laboratory_id = rl.id
+                WHERE lot.lab_order_id = ?
+                ORDER BY lot.id ASC
+            ");
+            $stmtLT->execute([$viewLabOrder['id']]);
+            $viewLabTests = $stmtLT->fetchAll();
+        }
     }
 }
 ?>
@@ -262,6 +289,102 @@ if ($targetRx) {
                 <?php endif; ?>
               </div>
             </div>
+
+            <?php if ($viewLabOrder && !empty($viewLabTests)): ?>
+              <!-- Diagnostic Lab Order & Unique Token for Patient -->
+              <div style="margin-top: 28px; border: 2px solid #6366F1; border-radius: 12px; overflow: hidden; background: #FAF5FF;">
+                <div style="background: linear-gradient(135deg, #4F46E5, #6366F1); color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 22px;">🔬</span>
+                    <div>
+                      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; font-weight: 700;">Prescribed Lab Investigations</div>
+                      <div style="font-size: 14px; font-weight: 800;">Official Lab Order Token (ল্যাব টোকেন)</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="font-size: 11px; opacity: 0.85; text-transform: uppercase;">Unique Token:</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 900; background: rgba(255,255,255,0.22); padding: 4px 12px; border-radius: 6px; letter-spacing: 1.5px;">
+                      <?= htmlspecialchars($viewLabOrder['lab_token']) ?>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light no-print" onclick="navigator.clipboard.writeText('<?= htmlspecialchars($viewLabOrder['lab_token']) ?>'); alert('Lab Token copied: <?= htmlspecialchars($viewLabOrder['lab_token']) ?>');" title="Copy Token" style="padding: 4px 8px; font-size: 12px;">
+                      <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                  </div>
+                </div>
+
+                <div style="padding: 16px 20px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; font-size: 12px; color: #4B5563;">
+                    <div>
+                      Order Status:
+                      <span class="badge" style="background: <?= $viewLabOrder['status'] === 'COMPLETED' ? '#DCFCE7; color: #166534;' : ($viewLabOrder['status'] === 'IN_PROGRESS' ? '#E0F2FE; color: #0369A1;' : '#EEF2FF; color: #4338CA;') ?> font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+                        <?= htmlspecialchars($viewLabOrder['status']) ?>
+                      </span>
+                      &nbsp;·&nbsp; Valid 30 days (Expires <?= date('d M Y', strtotime($viewLabOrder['expires_at'])) ?>)
+                    </div>
+                    <div>
+                      <a href="<?= APP_URL ?>/patient/lab-reports.php?tab=orders" class="btn btn-sm btn-outline-primary no-print" style="font-size: 11px; text-decoration: none;">
+                        <i class="bi bi-file-earmark-ruled"></i> View in Diagnostics &amp; Imaging Portal &rarr;
+                      </a>
+                    </div>
+                  </div>
+
+                  <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 12px; color: #1E40AF;">
+                    <i class="bi bi-info-circle-fill"></i> <strong>How it works:</strong> Show this <strong>Lab Token (<?= htmlspecialchars($viewLabOrder['lab_token']) ?>)</strong> to the reception of any diagnostic center (e.g. Apex Diagnostics, Popular, Ibn Sina, or hospital lab). Once your tests are completed, the lab uploads results and they will automatically appear in your MedCore account!
+                  </div>
+
+                  <table style="width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB;">
+                    <thead>
+                      <tr style="background: #F3F4F6; text-align: left; color: #374151;">
+                        <th style="padding: 8px 12px; width: 35px;">#</th>
+                        <th style="padding: 8px 12px;">Test Name</th>
+                        <th style="padding: 8px 12px;">Category</th>
+                        <th style="padding: 8px 12px;">Urgency</th>
+                        <th style="padding: 8px 12px;">Instructions</th>
+                        <th style="padding: 8px 12px;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php foreach ($viewLabTests as $tidx => $lt): ?>
+                      <tr style="border-top: 1px solid #E5E7EB;">
+                        <td style="padding: 8px 12px; color: #9CA3AF;"><?= $tidx + 1 ?></td>
+                        <td style="padding: 8px 12px; font-weight: 700; color: #1F2937;">
+                          <?= htmlspecialchars($lt['test_name']) ?>
+                          <?php if (!empty($lt['result_summary'])): ?>
+                            <div style="margin-top: 4px; font-size: 11px; color: #047857; font-weight: 500;">
+                              <i class="bi bi-clipboard2-check"></i> Findings: <?= htmlspecialchars($lt['result_summary']) ?>
+                              <?php if ($lt['result_value']): ?> (Value: <?= htmlspecialchars($lt['result_value']) ?>)<?php endif; ?>
+                            </div>
+                          <?php endif; ?>
+                        </td>
+                        <td style="padding: 8px 12px; color: #6B7280;"><?= htmlspecialchars($lt['test_category'] ?: 'General') ?></td>
+                        <td style="padding: 8px 12px;">
+                          <span style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; <?= $lt['urgency'] === 'STAT' ? 'background: #FEE2E2; color: #991B1B;' : ($lt['urgency'] === 'URGENT' ? 'background: #FEF3C7; color: #92400E;' : 'background: #F3F4F6; color: #374151;') ?>">
+                            <?= htmlspecialchars($lt['urgency']) ?>
+                          </span>
+                        </td>
+                        <td style="padding: 8px 12px; color: #64748B; font-size: 11px;"><?= htmlspecialchars($lt['instructions'] ?: '—') ?></td>
+                        <td style="padding: 8px 12px;">
+                          <?php if ($lt['status'] === 'COMPLETED'): ?>
+                            <span style="color: #16A34A; font-weight: 700;"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                          <?php elseif ($lt['status'] === 'IN_PROGRESS'): ?>
+                            <span style="color: #0284C7; font-weight: 600;"><i class="bi bi-gear-wide-connected"></i> In Progress</span>
+                          <?php else: ?>
+                            <span style="color: #6366F1; font-weight: 600;"><i class="bi bi-hourglass-split"></i> Awaiting Lab</span>
+                          <?php endif; ?>
+                        </td>
+                      </tr>
+                      <?php endforeach; ?>
+                    </tbody>
+                  </table>
+
+                  <?php if (!empty($viewLabOrder['test_notes'])): ?>
+                  <div style="margin-top: 10px; font-size: 11px; color: #4B5563; background: #fff; border: 1px dashed #D1D5DB; border-radius: 6px; padding: 8px 12px;">
+                    <strong>Doctor Instructions for Lab:</strong> <?= htmlspecialchars($viewLabOrder['test_notes']) ?>
+                  </div>
+                  <?php endif; ?>
+                </div>
+              </div>
+            <?php endif; ?>
 
             <div style="border-top: 1px solid #E2E8F0; padding-top: 24px; margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end;">
               <div>

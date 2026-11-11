@@ -12,18 +12,20 @@ $hospitalId = (int)$_SESSION['hospital_id'];
 $orderId    = (int)($_GET['order_id'] ?? 0);
 $testId     = (int)($_GET['test_id'] ?? 0);
 
-// Verify the order belongs to this hospital
+// Verify the order exists and is accessible to this laboratory
 $stmtOrder = $db->prepare("
     SELECT plo.*, p.full_name AS patient_name, p.patient_uid,
-           d.full_name AS doctor_name, h.name AS hospital_name
+           d.full_name AS doctor_name, h.name AS hospital_name,
+           rx.prescription_uid
     FROM prescription_lab_orders plo
     JOIN patients p ON plo.patient_id = p.id
     JOIN doctors d ON plo.doctor_id = d.id
     JOIN hospitals h ON plo.hospital_id = h.id
-    WHERE plo.id = ? AND plo.hospital_id = ?
+    LEFT JOIN prescriptions rx ON plo.prescription_id = rx.id
+    WHERE plo.id = ? AND (plo.laboratory_id = ? OR plo.hospital_id = ? OR plo.status IN ('PENDING','IN_PROGRESS'))
     LIMIT 1
 ");
-$stmtOrder->execute([$orderId, $hospitalId]);
+$stmtOrder->execute([$orderId, $labId, $hospitalId]);
 $order = $stmtOrder->fetch();
 
 if (!$order) {
@@ -155,6 +157,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_result'])) {
 
         $newOrderStatus = ($remaining == 0) ? 'COMPLETED' : 'PARTIAL';
         $db->prepare("UPDATE prescription_lab_orders SET status=?, laboratory_id=? WHERE id=?")->execute([$newOrderStatus, $labId, $orderId]);
+
+        // Get primary result file if any
+        $firstFilePath = null;
+        $stmtFirstFile = $db->prepare("SELECT file_path FROM lab_result_files WHERE lab_test_result_id = ? ORDER BY id ASC LIMIT 1");
+        $stmtFirstFile->execute([$resultId]);
+        $firstFilePath = $stmtFirstFile->fetchColumn() ?: null;
+
+        // Auto-sync into lab_reports table for immediate patient and doctor portal display
+        $labName = $_SESSION['lab_name'] ?? 'Apex Diagnostics Ltd.';
+        $fullSummary = $resultSummary;
+        if ($resultValue) {
+            $fullSummary = "Value: {$resultValue}" . ($referenceRange ? " (Ref: {$referenceRange})" : "") . ($resultSummary ? " | {$resultSummary}" : "");
+        }
+
+        $reportTitle = $test['test_name'] . " (Token: {$order['lab_token']})";
+        $currentDate = date('Y-m-d');
+
+        // Check if already synced in lab_reports
+        $stmtCheckLR = $db->prepare("SELECT id FROM lab_reports WHERE patient_id = ? AND report_name = ?");
+        $stmtCheckLR->execute([$order['patient_id'], $reportTitle]);
+        $existingLRId = $stmtCheckLR->fetchColumn();
+
+        if ($existingLRId) {
+            $db->prepare("
+                UPDATE lab_reports
+                SET result_summary = ?, file_path = COALESCE(?, file_path), laboratory_name = ?, verified = 1
+                WHERE id = ?
+            ")->execute([$fullSummary, $firstFilePath, $labName, $existingLRId]);
+        } else {
+            $db->prepare("
+                INSERT INTO lab_reports
+                    (patient_id, report_name, test_date, laboratory_name, result_summary, file_path, uploaded_by, verified)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            ")->execute([
+                $order['patient_id'],
+                $reportTitle,
+                $currentDate,
+                $labName,
+                $fullSummary,
+                $firstFilePath,
+                $_SESSION['user_id']
+            ]);
+        }
+
+        // Auto-sync into patient_diagnostics if it is Radiology, Cardiac, or Imaging
+        $testNameUpper = strtoupper($test['test_name']);
+        $catUpper = strtoupper($test['test_category'] ?? '');
+        $modality = null;
+        if (strpos($testNameUpper, 'MRI') !== false) {
+            $modality = 'MRI';
+        } elseif (strpos($testNameUpper, 'X-RAY') !== false || strpos($testNameUpper, 'XRAY') !== false) {
+            $modality = 'XRAY';
+        } elseif (strpos($testNameUpper, 'CT') !== false) {
+            $modality = 'CT_SCAN';
+        } elseif (strpos($testNameUpper, 'USG') !== false || strpos($testNameUpper, 'ULTRASOUND') !== false) {
+            $modality = 'ULTRASOUND';
+        } elseif (strpos($testNameUpper, 'ECG') !== false || strpos($testNameUpper, 'EKG') !== false) {
+            $modality = 'ECG';
+        } elseif ($catUpper === 'RADIOLOGY') {
+            $modality = 'XRAY';
+        } elseif ($catUpper === 'CARDIAC') {
+            $modality = 'ECG';
+        }
+
+        if ($modality) {
+            $bodyPart = 'Diagnostic Region';
+            if (strpos($testNameUpper, 'BRAIN') !== false) $bodyPart = 'Brain / Head';
+            elseif (strpos($testNameUpper, 'CHEST') !== false) $bodyPart = 'Chest / Thorax';
+            elseif (strpos($testNameUpper, 'ABDOMEN') !== false) $bodyPart = 'Abdomen & Pelvis';
+            elseif (strpos($testNameUpper, 'SPINE') !== false) $bodyPart = 'Spine';
+
+            $diagIndication = "Prescription #{$order['prescription_uid']} · Token: {$order['lab_token']}";
+            $diagTitle = $test['test_name'];
+
+            // Check if already in patient_diagnostics
+            $stmtCheckDiag = $db->prepare("SELECT id FROM patient_diagnostics WHERE patient_id = ? AND clinical_indication = ?");
+            $stmtCheckDiag->execute([$order['patient_id'], $diagIndication]);
+            $existingDiagId = $stmtCheckDiag->fetchColumn();
+
+            if ($existingDiagId) {
+                $db->prepare("
+                    UPDATE patient_diagnostics
+                    SET findings = ?, impression = ?, reporting_specialist = ?, file_path = COALESCE(?, file_path), updated_at = NOW()
+                    WHERE id = ?
+                ")->execute([
+                    $resultSummary ?: $fullSummary,
+                    $resultStatus . ($resultValue ? " ({$resultValue})" : ""),
+                    $technicianName ?: $labName . " Diagnostic Team",
+                    $firstFilePath,
+                    $existingDiagId
+                ]);
+            } else {
+                $diagUid = 'DIAG-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
+                $db->prepare("
+                    INSERT INTO patient_diagnostics
+                        (diagnostic_uid, patient_id, hospital_id, ordered_by_doctor_id, diagnostic_category,
+                         modality, title, body_part, clinical_indication, findings, impression,
+                         test_date, report_date, reporting_specialist, status, storage_type,
+                         file_path, verified_by, verified_at)
+                    VALUES (?, ?, ?, ?, 'RADIOLOGY', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'COMPLETED', 'LOCAL_FILE', ?, ?, NOW())
+                ")->execute([
+                    $diagUid,
+                    $order['patient_id'],
+                    $order['hospital_id'],
+                    $order['doctor_id'],
+                    $modality,
+                    $diagTitle,
+                    $bodyPart,
+                    $diagIndication,
+                    $resultSummary ?: $fullSummary,
+                    $resultStatus . ($resultValue ? " ({$resultValue})" : ""),
+                    $currentDate,
+                    $currentDate,
+                    $technicianName ?: $labName . " Diagnostic Team",
+                    $firstFilePath,
+                    $_SESSION['user_id']
+                ]);
+            }
+        }
 
         // Notify the patient if result is uploaded
         $db->prepare("

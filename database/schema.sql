@@ -527,3 +527,159 @@ CREATE TABLE `audit_logs` (
   INDEX `idx_audit_created` (`created_at`),
   INDEX `idx_audit_severity` (`severity`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE 24: patient_diagnostics
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `patient_diagnostics` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `diagnostic_uid` VARCHAR(30) NOT NULL,
+  `patient_id` INT UNSIGNED NOT NULL,
+  `hospital_id` INT UNSIGNED NOT NULL,
+  `ordered_by_doctor_id` INT UNSIGNED DEFAULT NULL,
+  `diagnostic_category` VARCHAR(50) NOT NULL DEFAULT 'RADIOLOGY',
+  `modality` VARCHAR(50) NOT NULL DEFAULT 'XRAY',
+  `title` VARCHAR(255) NOT NULL,
+  `body_part` VARCHAR(100) DEFAULT NULL,
+  `clinical_indication` TEXT DEFAULT NULL,
+  `findings` TEXT DEFAULT NULL,
+  `impression` TEXT DEFAULT NULL,
+  `test_date` DATE DEFAULT NULL,
+  `report_date` DATE DEFAULT NULL,
+  `reporting_specialist` VARCHAR(255) DEFAULT NULL,
+  `status` VARCHAR(50) NOT NULL DEFAULT 'COMPLETED',
+  `storage_type` VARCHAR(50) NOT NULL DEFAULT 'LOCAL_FILE',
+  `file_path` VARCHAR(500) DEFAULT NULL,
+  `file_name` VARCHAR(255) DEFAULT NULL,
+  `file_type` VARCHAR(50) DEFAULT NULL,
+  `file_size` INT DEFAULT NULL,
+  `drive_url` VARCHAR(1000) DEFAULT NULL,
+  `verified_by` INT UNSIGNED DEFAULT NULL,
+  `verified_at` DATETIME DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_diag_uid` (`diagnostic_uid`),
+  INDEX `idx_diag_patient` (`patient_id`),
+  INDEX `idx_diag_hospital` (`hospital_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE 25: laboratories
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `laboratories` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` INT UNSIGNED NOT NULL,
+  `lab_uid` VARCHAR(30) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `registration_number` VARCHAR(100) NOT NULL,
+  `contact_phone` VARCHAR(30) DEFAULT NULL,
+  `contact_email` VARCHAR(150) DEFAULT NULL,
+  `address` TEXT DEFAULT NULL,
+  `city` VARCHAR(100) DEFAULT NULL,
+  `services` TEXT DEFAULT NULL,
+  `logo_path` VARCHAR(255) DEFAULT NULL,
+  `verification_status` ENUM('PENDING','VERIFIED','REJECTED') NOT NULL DEFAULT 'PENDING',
+  `verified_by` INT UNSIGNED DEFAULT NULL,
+  `verified_at` DATETIME DEFAULT NULL,
+  `rejection_reason` TEXT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_lab_uid` (`lab_uid`),
+  UNIQUE KEY `uq_lab_reg` (`registration_number`),
+  INDEX `idx_lab_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE 26: hospital_laboratories
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `hospital_laboratories` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `laboratory_id` INT UNSIGNED NOT NULL,
+  `hospital_id` INT UNSIGNED NOT NULL,
+  `status` ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+  `approved_by` INT UNSIGNED DEFAULT NULL,
+  `approved_at` DATETIME DEFAULT NULL,
+  `rejection_reason` TEXT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_hosp_lab` (`laboratory_id`, `hospital_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE 27: prescription_lab_orders
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `prescription_lab_orders` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `lab_token` VARCHAR(30) NOT NULL,
+  `prescription_id` INT UNSIGNED DEFAULT NULL,
+  `patient_id` INT UNSIGNED NOT NULL,
+  `doctor_id` INT UNSIGNED NOT NULL,
+  `hospital_id` INT UNSIGNED NOT NULL,
+  `laboratory_id` INT UNSIGNED DEFAULT NULL,
+  `test_notes` TEXT DEFAULT NULL,
+  `status` ENUM('PENDING','IN_PROGRESS','PARTIAL','COMPLETED','CANCELLED','EXPIRED') NOT NULL DEFAULT 'PENDING',
+  `expires_at` DATETIME NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_lab_token` (`lab_token`),
+  INDEX `idx_plo_patient` (`patient_id`),
+  INDEX `idx_plo_prescription` (`prescription_id`),
+  INDEX `idx_plo_hospital` (`hospital_id`),
+  INDEX `idx_plo_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE 28: lab_order_tests
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `lab_order_tests` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `lab_order_id` INT UNSIGNED NOT NULL,
+  `test_name` VARCHAR(255) NOT NULL,
+  `test_category` VARCHAR(100) DEFAULT NULL,
+  `urgency` ENUM('ROUTINE','URGENT','STAT') NOT NULL DEFAULT 'ROUTINE',
+  `instructions` TEXT DEFAULT NULL,
+  `status` ENUM('PENDING','IN_PROGRESS','COMPLETED') NOT NULL DEFAULT 'PENDING',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_lot_order` (`lab_order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE 29: lab_test_results
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `lab_test_results` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `lab_order_test_id` INT UNSIGNED NOT NULL,
+  `laboratory_id` INT UNSIGNED NOT NULL,
+  `hospital_id` INT UNSIGNED NOT NULL,
+  `result_summary` TEXT DEFAULT NULL,
+  `result_value` VARCHAR(255) DEFAULT NULL,
+  `reference_range` VARCHAR(255) DEFAULT NULL,
+  `result_status` ENUM('NORMAL','ABNORMAL','CRITICAL','PENDING_REVIEW') NOT NULL DEFAULT 'PENDING_REVIEW',
+  `technician_name` VARCHAR(150) DEFAULT NULL,
+  `uploaded_by` INT UNSIGNED NOT NULL,
+  `uploaded_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_ltr_test` (`lab_order_test_id`),
+  INDEX `idx_ltr_lab` (`laboratory_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE 30: lab_result_files
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `lab_result_files` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `lab_test_result_id` INT UNSIGNED NOT NULL,
+  `file_path` VARCHAR(500) NOT NULL,
+  `original_name` VARCHAR(255) DEFAULT NULL,
+  `file_type` VARCHAR(50) NOT NULL DEFAULT 'OTHER',
+  `file_size` INT UNSIGNED DEFAULT NULL,
+  `uploaded_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_lrf_result` (`lab_test_result_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

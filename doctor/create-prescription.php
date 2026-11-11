@@ -560,11 +560,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
             </button>
           </div>
           <div class="card-body">
+            <!-- Quick Preset Chips -->
+            <div class="mb-3" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <span style="font-size: 0.8rem; font-weight: 700; color: #475569;"><i class="bi bi-stars text-primary"></i> Quick Presets:</span>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('MRI of Brain', 'Radiology', 'ROUTINE', 'Plain and contrast study')">🧠 Brain MRI</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Chest X-Ray P/A View', 'Radiology', 'ROUTINE', '')">🩻 Chest X-Ray</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Complete Blood Count (CBC)', 'Haematology', 'ROUTINE', '')">🩸 CBC</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Fasting Blood Sugar (FBS)', 'Biochemistry', 'ROUTINE', '10-12 hrs fasting')">🧪 FBS</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('HbA1c', 'Endocrinology', 'ROUTINE', '')">📊 HbA1c</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Lipid Profile', 'Biochemistry', 'ROUTINE', '12 hrs fasting')">🩺 Lipid Profile</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Serum Creatinine', 'Biochemistry', 'ROUTINE', '')">🧪 Creatinine</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('USG of Whole Abdomen', 'Radiology', 'ROUTINE', 'Full bladder')">🩻 USG Abdomen</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('12-Lead ECG', 'Cardiac', 'ROUTINE', '')">💓 ECG</button>
+            </div>
+
             <div id="lab-tests-container">
               <!-- empty by default; doctor adds rows -->
             </div>
             <div id="lab-tests-placeholder" style="text-align:center;padding:1.5rem;color:#475569;font-size:.875rem;">
-              Click <strong>Add Test</strong> to prescribe lab investigations. A short Lab Token will be generated automatically on the prescription.
+              Click <strong>Add Test</strong> or select a <strong>Quick Preset</strong> above to prescribe lab investigations. A unique <strong>Lab Token</strong> will be generated automatically on the prescription pad.
             </div>
             <div class="mt-3" id="lab-notes-wrap" style="display:none;">
               <label class="form-label">Special Notes for the Lab</label>
@@ -719,6 +733,22 @@ function removeLabTestRow(id) {
   if (document.querySelectorAll('.lab-test-row').length === 0) {
     document.getElementById('lab-tests-placeholder').style.display = 'block';
     document.getElementById('lab-notes-wrap').style.display = 'none';
+  }
+}
+
+function addPresetTest(name, category, urgency, instructions) {
+  addLabTestRow();
+  const rows = document.querySelectorAll('.lab-test-row');
+  const lastRow = rows[rows.length - 1];
+  if (lastRow) {
+    const nameInput = lastRow.querySelector('input[name="lab_test_name[]"]');
+    const catSelect = lastRow.querySelector('select[name="lab_test_category[]"]');
+    const urgSelect = lastRow.querySelector('select[name="lab_test_urgency[]"]');
+    const instInput = lastRow.querySelector('input[name="lab_test_instructions[]"]');
+    if (nameInput) nameInput.value = name;
+    if (catSelect) catSelect.value = category;
+    if (urgSelect) urgSelect.value = urgency || 'ROUTINE';
+    if (instInput) instInput.value = instructions || '';
   }
 }
 </script>

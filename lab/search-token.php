@@ -17,7 +17,7 @@ $error  = '';
 $searched = !empty($token);
 
 if ($searched) {
-    // Token search — must belong to the same hospital (security scoping)
+    // Token search — unique token across the diagnostic network
     $stmtOrder = $db->prepare("
         SELECT plo.*,
                p.full_name AS patient_name, p.patient_uid, p.gender, p.date_of_birth,
@@ -30,14 +30,14 @@ if ($searched) {
         JOIN doctors d ON plo.doctor_id = d.id
         JOIN hospitals h ON plo.hospital_id = h.id
         LEFT JOIN prescriptions rx ON plo.prescription_id = rx.id
-        WHERE plo.lab_token = ? AND plo.hospital_id = ?
+        WHERE plo.lab_token = ?
         LIMIT 1
     ");
-    $stmtOrder->execute([$token, $hospitalId]);
+    $stmtOrder->execute([$token]);
     $order = $stmtOrder->fetch();
 
     if (!$order) {
-        $error = "No order found for token <strong>" . htmlspecialchars($token) . "</strong> at your affiliated hospital. Verify the token or contact the prescribing doctor.";
+        $error = "No diagnostic order found for token <strong>" . htmlspecialchars($token) . "</strong>. Verify the token or contact the prescribing doctor.";
     } elseif ($order['status'] === 'EXPIRED' || strtotime($order['expires_at']) < time()) {
         $error = "This token has expired. The lab order is no longer valid.";
         $order = null;
@@ -62,9 +62,13 @@ if ($searched) {
         $stmtTests->execute([$order['id']]);
         $tests = $stmtTests->fetchAll();
 
-        // Mark order as in_progress if still pending
+        // Mark order as in_progress if still pending and assign to current lab
         if ($order['status'] === 'PENDING') {
             $db->prepare("UPDATE prescription_lab_orders SET status='IN_PROGRESS', laboratory_id=? WHERE id=?")->execute([$labId, $order['id']]);
+            $order['status'] = 'IN_PROGRESS';
+        } elseif (empty($order['laboratory_id'])) {
+            $db->prepare("UPDATE prescription_lab_orders SET laboratory_id=? WHERE id=?")->execute([$labId, $order['id']]);
+            $order['laboratory_id'] = $labId;
         }
 
         AuditService::log(AuditService::LAB_TOKEN_SEARCHED, [
@@ -280,11 +284,15 @@ body{background:#0f172a;font-family:'Inter',sans-serif;color:#f1f5f9;margin:0}
 
     <div class="test-footer">
       <?php if ($test['result_id']): ?>
-      <a href="<?= APP_URL ?>/lab/upload-results.php?order_id=<?= $order['id'] ?>&test_id=<?= $test['id'] ?>" class="btn-view-result">✏️ Update Result</a>
-      <?php endif; ?>
+      <a href="<?= APP_URL ?>/lab/upload-results.php?order_id=<?= $order['id'] ?>&test_id=<?= $test['id'] ?>" class="btn-view-result">✏️ Edit / Update Findings</a>
       <a href="<?= APP_URL ?>/lab/upload-results.php?order_id=<?= $order['id'] ?>&test_id=<?= $test['id'] ?>" class="btn-upload">
-        <?= $test['result_id'] ? '📤 Add More Files' : '📤 Upload Result' ?>
+        📎 Add More Files
       </a>
+      <?php else: ?>
+      <a href="<?= APP_URL ?>/lab/upload-results.php?order_id=<?= $order['id'] ?>&test_id=<?= $test['id'] ?>" class="btn-upload" style="background: linear-gradient(135deg, #10b981, #059669);">
+        ✍️ Enter Test Findings / রেজাল্ট এন্ট্রি করুন &rarr;
+      </a>
+      <?php endif; ?>
     </div>
   </div>
   <?php endforeach; ?>

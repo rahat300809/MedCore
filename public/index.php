@@ -162,6 +162,10 @@ if (isset($_SESSION['role'])) {
               <div class="btn-icon"><i class="bi bi-building-fill-cross"></i></div>
               <span>Hospital Login</span>
             </a>
+            <a href="<?= APP_URL ?>/lab/login.php" class="hero-login-btn lab-btn" id="quick-lab-login">
+              <div class="btn-icon"><i class="bi bi-flask-fill"></i></div>
+              <span>Lab Portal</span>
+            </a>
           </div>
         </div>
 
@@ -614,6 +618,29 @@ if (isset($_SESSION['role'])) {
           New hospital? <a href="<?= APP_URL ?>/hospital/register.php" style="color:#A78BFA;">Register institution</a>
         </div>
       </div>
+
+      <!-- Diagnostic Lab Portal -->
+      <div class="portal-feature-card" id="lab-portal-card">
+        <div class="portal-icon" style="background:rgba(99,102,241,0.12); color:#818CF8;">
+          <i class="bi bi-flask-fill" aria-hidden="true"></i>
+        </div>
+        <h3 class="portal-card-title">Diagnostic Lab Portal</h3>
+        <p class="portal-card-desc">"Search test tokens and upload diagnostic results instantly."</p>
+        <ul class="portal-features">
+          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Unique Lab Token search (e.g. LT-XXXXX)</li>
+          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Prescription investigation verification</li>
+          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Direct test findings &amp; value entry</li>
+          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Attach PDF and digital image reports</li>
+          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Auto-sync to Patient Health Record</li>
+          <li><i class="bi bi-check-circle-fill" style="color:#818CF8;"></i>Real-time doctor &amp; patient sync</li>
+        </ul>
+        <a href="<?= APP_URL ?>/lab/login.php" class="btn w-100" style="background:linear-gradient(135deg,#6366F1,#4F46E5); color:#fff;" id="open-lab-portal">
+          <i class="bi bi-flask-fill"></i> Open Lab Portal
+        </a>
+        <div style="margin-top:10px;text-align:center;font-size:12px;color:rgba(226,232,240,0.35);">
+          New diagnostic lab? <a href="<?= APP_URL ?>/lab/register.php" style="color:#818CF8;">Register laboratory</a>
+        </div>
+      </div>
     </div>
 
     <p style="margin-top:40px;font-size:13px;color:rgba(226,232,240,0.3);">
@@ -733,6 +760,7 @@ if (isset($_SESSION['role'])) {
           <li><a href="<?= APP_URL ?>/patient/login.php">Patient Login</a></li>
           <li><a href="<?= APP_URL ?>/doctor/select-hospital.php">Doctor Login</a></li>
           <li><a href="<?= APP_URL ?>/hospital/login.php">Hospital Login</a></li>
+          <li><a href="<?= APP_URL ?>/lab/login.php">Diagnostic Lab Login</a></li>
           <li><a href="<?= APP_URL ?>/doctor/register.php">Doctor Registration</a></li>
         </ul>
       </div>

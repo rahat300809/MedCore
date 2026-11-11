@@ -146,6 +146,21 @@ $stmtLabs = $db->prepare("
 $stmtLabs->execute([$patientId]);
 $labReports = $stmtLabs->fetchAll();
 
+// 7.1 Fetch Prescription Lab Orders & Tokens
+$stmtPatientLabOrders = $db->prepare("
+    SELECT plo.*, l.name AS lab_name, h.name AS hospital_name, d.full_name AS doctor_name,
+           (SELECT COUNT(*) FROM lab_order_tests lot WHERE lot.lab_order_id = plo.id) AS total_tests,
+           (SELECT COUNT(*) FROM lab_order_tests lot2 WHERE lot2.lab_order_id = plo.id AND lot2.status = 'COMPLETED') AS done_tests
+    FROM prescription_lab_orders plo
+    LEFT JOIN laboratories l ON plo.laboratory_id = l.id
+    LEFT JOIN hospitals h ON plo.hospital_id = h.id
+    LEFT JOIN doctors d ON plo.doctor_id = d.id
+    WHERE plo.patient_id = ?
+    ORDER BY plo.created_at DESC
+");
+$stmtPatientLabOrders->execute([$patientId]);
+$patientLabOrders = $stmtPatientLabOrders->fetchAll();
+
 // 8. Fetch Consultations History
 $stmtCons = $db->prepare("
     SELECT c.*, d.full_name AS doctor_name, d.specialization, h.name AS hospital_name,
@@ -678,9 +693,66 @@ foreach ($allergies as $alg) {
 
       <!-- TAB 5: LAB REPORTS -->
       <div id="tab-labs" class="tab-pane">
+        <?php if (!empty($patientLabOrders)): ?>
+          <div class="card mb-4" style="border: 1px solid #C7D2FE; background: #F8FAFC;">
+            <div class="card-header" style="background: #EEF2FF; border-bottom: 1px solid #E0E7FF;">
+              <h4 class="card-title" style="font-size: 0.95rem; color: #4338CA; margin: 0;">
+                <i class="bi bi-eyedropper"></i> Active &amp; Prescribed Lab Tokens (<?= count($patientLabOrders) ?>)
+              </h4>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table mb-0">
+                  <thead>
+                    <tr>
+                      <th>Token ID</th>
+                      <th>Prescribed Date</th>
+                      <th>Doctor / Hospital</th>
+                      <th>Tests Ordered</th>
+                      <th>Assigned Lab</th>
+                      <th>Order Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($patientLabOrders as $plo): ?>
+                      <tr>
+                        <td>
+                          <span style="font-family: monospace; font-weight: 800; color: #4F46E5; background: #EEF2FF; padding: 3px 8px; border-radius: 6px; font-size: 13px;">
+                            <?= htmlspecialchars($plo['lab_token']) ?>
+                          </span>
+                        </td>
+                        <td><?= date('d M Y', strtotime($plo['created_at'])) ?></td>
+                        <td>
+                          <strong style="color: #0F172A;">Dr. <?= htmlspecialchars($plo['doctor_name']) ?></strong><br>
+                          <small class="text-muted"><?= htmlspecialchars($plo['hospital_name']) ?></small>
+                        </td>
+                        <td>
+                          <span class="badge" style="background: #E0E7FF; color: #3730A3;">
+                            <?= (int)$plo['done_tests'] ?> / <?= (int)$plo['total_tests'] ?> Tests Done
+                          </span>
+                        </td>
+                        <td><?= htmlspecialchars($plo['lab_name'] ?: 'Any Accredited Lab') ?></td>
+                        <td>
+                          <?php if ($plo['status'] === 'COMPLETED'): ?>
+                            <span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                          <?php elseif ($plo['status'] === 'IN_PROGRESS'): ?>
+                            <span class="badge badge-info"><i class="bi bi-gear-fill"></i> In Progress</span>
+                          <?php else: ?>
+                            <span class="badge badge-warning"><i class="bi bi-hourglass-split"></i> Pending Lab Intake</span>
+                          <?php endif; ?>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        <?php endif; ?>
+
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title"><i class="bi bi-clipboard2-pulse"></i> Diagnostic Lab Reports</h3>
+            <h3 class="card-title"><i class="bi bi-clipboard2-pulse"></i> Diagnostic Lab Reports &amp; Verified Results</h3>
             <span class="badge badge-info"><?= count($labReports) ?> Reports</span>
           </div>
           <div class="card-body">

@@ -14,8 +14,8 @@ $perPage = 15;
 $offset  = ($page - 1) * $perPage;
 $status  = $_GET['status'] ?? 'all';
 
-$where = "plo.hospital_id = :h";
-$params = [':h' => $hospitalId];
+$where = "(plo.laboratory_id = :l OR plo.hospital_id = :h)";
+$params = [':l' => $labId, ':h' => $hospitalId];
 
 if ($status !== 'all') {
     $where .= " AND plo.status = :st";
@@ -59,7 +59,7 @@ $orders = $stmtOrders->fetchAll();
 <title>Lab Reports History — MedCore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= APP_URL ?>/public/assets/css/portal.css">
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
 <style>
 :root{--accent:#0ea5e9;--lab:#6366f1;--border:rgba(255,255,255,0.1)}
 *{box-sizing:border-box}

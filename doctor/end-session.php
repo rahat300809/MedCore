@@ -73,3 +73,4 @@ if ($sessionId > 0) {
 // Redirect back to patient search so doctor can select next patient
 header('Location: ' . APP_URL . '/doctor/patient-search.php');
 exit;
+
