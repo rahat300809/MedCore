@@ -424,3 +424,4 @@ flowchart TD
 | **Patient Appointments** | `patient/appointments.php` & `patient/dashboard.php`| [Patient Portal](https://medcore1-tan.vercel.app/patient/login.php) |
 | **Hospital Reception Desk**| `hospital/appointments.php` | [Hospital Desk](https://medcore1-tan.vercel.app/hospital/appointments.php) |
 | **Emergency ICE Card** | `emergency.php?uid=PT-000001` | [Emergency Profile](https://medcore1-tan.vercel.app/emergency.php?uid=PT-000001) |
+
