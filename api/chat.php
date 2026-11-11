@@ -95,3 +95,4 @@ echo json_encode([
     'patient_uid'  => $patientUid,
     'action_cards' => $actionCards
 ], JSON_UNESCAPED_UNICODE);
+
