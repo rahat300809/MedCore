@@ -122,164 +122,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+require_once __DIR__ . '/../app/views/media.php';
 $csrf = generateCsrfToken();
+$loginTitle = 'Doctor verify';
+$loginTitleBn = 'পরিচয় যাচাই';
+$loginImage = MC_IMG_DOCTOR;
+$demoEmail = 'BMDC-A-12345';
+$demoPass = 'dr.rahman@medcore.local';
+$demoNote = $hospitalName . ' · OTP 1234';
+$backUrl = APP_URL . '/doctor/select-hospital.php';
+$registerUrl = '';
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify Identity — Doctor Login — MedCore</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-</head>
-<body style="background:var(--mc-bg);">
-
-<div class="auth-flow-container" style="flex-direction:column;gap:var(--space-8);">
-  <div style="text-align:center;">
-    <a href="<?= APP_URL ?>/" class="navbar-logo" style="justify-content:center;">
-      <div class="logo-icon" style="width:36px;height:36px;font-size:18px;">M</div>
-      <span>MedCore</span>
-    </a>
-  </div>
-
-  <div class="doctor-verify-card">
-    <!-- Step indicator -->
-    <div class="step-indicator mb-8">
-      <div class="step-dot done" aria-label="Step 1 complete: Hospital selected">
-        <i class="bi bi-check-lg" style="font-size:12px;"></i>
-      </div>
-      <div class="step-line done"></div>
-      <div class="step-dot active" aria-label="Step 2: Verify Identity">2</div>
-      <div class="step-line"></div>
-      <div class="step-dot" aria-label="Step 3: OTP Verification">3</div>
-    </div>
-
-    <!-- Selected hospital display -->
-    <div class="alert alert-info mb-5">
-      <i class="bi bi-building-fill-check"></i>
-      <div>
-        <strong>Logging in via:</strong> <?= htmlspecialchars($hospitalName) ?>
-        <div style="font-size:12px;margin-top:2px;">
-          <a href="<?= APP_URL ?>/doctor/select-hospital.php" style="color:inherit;">Change hospital</a>
-        </div>
-      </div>
-    </div>
-
-    <h1 style="font-size:1.4rem;font-weight:800;margin-bottom:var(--space-2);">
-      <i class="bi bi-person-badge-fill text-blue"></i>
-      Professional Verification
-    </h1>
-    <p style="font-size:14px;color:var(--mc-text-secondary);margin-bottom:var(--space-6);">
-      Enter your Medical Registration ID and registered email. Your affiliation with <?= htmlspecialchars($hospitalName) ?> will be verified automatically.
-    </p>
-
-    <?php if ($error): ?>
-    <div class="alert alert-error mb-4" role="alert">
-      <i class="bi bi-exclamation-circle-fill"></i>
-      <?= htmlspecialchars($error) ?>
-    </div>
-    <?php endif; ?>
-
-    <form method="POST" id="verify-form" novalidate>
-      <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-
-      <div class="form-group">
-        <label class="form-label" for="medical_registration_id">
-          Medical Registration ID
-          <span style="font-size:11px;font-weight:400;color:var(--mc-text-muted);">(BMDC Number)</span>
-        </label>
-        <input
-          type="text"
-          id="medical_registration_id"
-          name="medical_registration_id"
-          class="form-control"
-          placeholder="e.g. BMDC-A-12345"
-          value="<?= htmlspecialchars($_POST['medical_registration_id'] ?? '') ?>"
-          required
-          autocomplete="username"
-          style="font-family:var(--font-mono);font-size:1rem;letter-spacing:1px;"
-        >
-        <div class="form-hint">As registered with BMDC National Medical Registry</div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="email">Registered Email Address</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          class="form-control"
-          placeholder="your.professional@email.com"
-          value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-          required
-          autocomplete="email"
-        >
-      </div>
-
-      <button type="submit" class="btn btn-primary w-100 btn-lg" id="verify-submit-btn">
-        <i class="bi bi-shield-fill-check"></i>
-        Verify &amp; Continue
-      </button>
-
-      <!-- Demo Credentials Card -->
-      <div style="background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:14px;padding:14px 16px;margin-top:20px;text-align:left;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="font-size:12px;font-weight:800;color:#15803D;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:5px;">
-            <i class="bi bi-key-fill"></i> পরীক্ষামূলক ডাক্তার ডেমো আইডি (Demo Credentials)
-          </span>
-          <span style="font-size:10px;font-weight:800;background:#DCFCE7;color:#166534;padding:2px 6px;border-radius:4px;">DEMO</span>
-        </div>
-        <div style="font-size:12px;color:#334155;line-height:1.6;margin-bottom:10px;">
-          <div>BMDC Reg ID: <strong style="color:#0A2540;font-family:monospace;">BMDC-A-12345</strong></div>
-          <div>ডাক্তারের ইমেইল: <strong style="color:#0A2540;font-family:monospace;">dr.rahman@medcore.local</strong></div>
-          <div style="font-size:11px;color:#64748B;">ডাক্তার: Dr. Farhana Rahman (ABC General Hospital) · ইউনিভার্সাল OTP: <strong>1234</strong></div>
-        </div>
-        <button type="button" onclick="fillDoctorDemo()" style="width:100%;background:#16A34A;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 6px rgba(22,163,74,0.25);">
-          <i class="bi bi-lightning-charge-fill"></i> ⚡ ১-ক্লিকে ডাক্তার তথ্য পূরণ করুন (Auto-Fill)
-        </button>
-      </div>
-    </form>
-
-    <div style="margin-top:var(--space-6);padding-top:var(--space-5);border-top:1px solid var(--mc-border);">
-      <div class="alert" style="background:var(--mc-bg-alt);border:none;font-size:12px;color:var(--mc-text-muted);">
-        <i class="bi bi-info-circle-fill" style="color:var(--mc-blue);"></i>
-        <span>All doctor login attempts are audit-logged with IP address, timestamp, and hospital context for compliance.</span>
-      </div>
-    </div>
-
-    <p style="text-align:center;margin-top:var(--space-4);font-size:13px;color:var(--mc-text-muted);">
-      <a href="<?= APP_URL ?>/doctor/select-hospital.php">← Select Different Hospital</a>
-    </p>
-  </div>
-</div>
-
-<?php if (APP_ENV === 'development'): ?>
-<div style="position:fixed;bottom:20px;right:20px;background:var(--mc-amber-light);border:1px solid var(--mc-amber);border-radius:var(--radius-md);padding:12px 16px;font-size:12px;max-width:300px;z-index:9999;">
-  <strong>🔧 Dev Credentials:</strong><br>
-  Reg ID: <code>BMDC-A-12345</code><br>
-  Email: <code>dr.rahman@medcore.local</code><br>
-  <small>Must be affiliated with selected hospital</small>
-</div>
-<?php endif; ?>
-
+<p style="margin:1rem 0 .55rem;font-size:.88rem;color:var(--muted)">Step 2 of 3 · <?= htmlspecialchars($hospitalName) ?></p>
+<form method="POST" id="verify-form">
+  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+  <label class="mc-field">
+    <span>BMDC registration ID</span>
+    <input id="medical_registration_id" name="medical_registration_id" type="text" required
+      value="<?= htmlspecialchars($_POST['medical_registration_id'] ?? '') ?>"
+      placeholder="BMDC-A-12345" autocomplete="username" class="mc-mono">
+  </label>
+  <label class="mc-field">
+    <span>Registered email</span>
+    <input id="email" name="email" type="email" required
+      value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+      placeholder="dr.rahman@medcore.local" autocomplete="email">
+  </label>
+  <button type="submit" class="mc-btn mc-btn-primary mc-btn-lg mc-btn-block" style="margin-top:1.1rem">Verify &amp; continue</button>
+  <button type="button" class="mc-btn mc-btn-secondary mc-btn-lg mc-btn-block" style="margin-top:.55rem" onclick="fillDoctorDemo()">Fill demo credentials</button>
+</form>
 <script>
-function fillDoctorDemo() {
-  const regInput = document.getElementById('medical_registration_id');
-  const emailInput = document.getElementById('email');
-  if (regInput && emailInput) {
-    regInput.value = 'BMDC-A-12345';
-    emailInput.value = 'dr.rahman@medcore.local';
-  }
+function fillDoctorDemo(){
+  const r=document.getElementById('medical_registration_id');
+  const e=document.getElementById('email');
+  if(r) r.value='BMDC-A-12345';
+  if(e) e.value='dr.rahman@medcore.local';
 }
-
-document.getElementById('verify-form')?.addEventListener('submit', function() {
-  const btn = document.getElementById('verify-submit-btn');
-  btn.innerHTML = '<span class="spinner-sm"></span> Verifying...';
-  btn.disabled = true;
-});
 </script>
-</body>
-</html>
+<?php
+$loginFormHtml = ob_get_clean();
+require __DIR__ . '/../app/views/auth/login_shell.php';

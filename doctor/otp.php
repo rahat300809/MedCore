@@ -84,109 +84,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+require_once __DIR__ . '/../app/views/media.php';
 $csrf = generateCsrfToken();
+$loginTitle = 'Doctor OTP';
+$loginTitleBn = 'OTP যাচাই';
+$loginImage = MC_IMG_DOCTOR;
+$demoEmail = $doctorEmail;
+$demoPass = 'OTP ' . $demoCode;
+$demoNote = ($_SESSION['selected_hospital_name'] ?? '') . ' · ' . $doctorName;
+$backUrl = APP_URL . '/doctor/verify.php';
+$registerUrl = '';
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OTP Verification — Doctor Login — MedCore</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-</head>
-<body style="background:var(--mc-bg);">
-<div class="auth-flow-container" style="flex-direction:column;gap:var(--space-8);">
-  <div style="text-align:center;">
-    <a href="<?= APP_URL ?>/" class="navbar-logo" style="justify-content:center;">
-      <div class="logo-icon" style="width:36px;height:36px;font-size:18px;">M</div>
-      <span>MedCore</span>
-    </a>
-  </div>
-
-  <div class="doctor-verify-card">
-    <div class="step-indicator mb-8">
-      <div class="step-dot done"><i class="bi bi-check-lg" style="font-size:12px;"></i></div>
-      <div class="step-line done"></div>
-      <div class="step-dot done"><i class="bi bi-check-lg" style="font-size:12px;"></i></div>
-      <div class="step-line done"></div>
-      <div class="step-dot active" aria-label="Step 3: OTP">3</div>
-    </div>
-
-    <div style="text-align:center;margin-bottom:var(--space-6);">
-      <div class="pillar-icon pillar-icon-blue" style="margin:0 auto var(--space-4);">
-        <i class="bi bi-shield-lock-fill"></i>
-      </div>
-      <h1 style="font-size:1.4rem;font-weight:800;margin-bottom:var(--space-2);">OTP Verification</h1>
-      <p style="font-size:14px;color:var(--mc-text-secondary);">
-        A 6-digit code was sent to<br><strong><?= htmlspecialchars($doctorEmail) ?></strong>
-      </p>
-      <p style="font-size:12px;color:var(--mc-text-muted);margin-top:var(--space-2);">
-        Logging into: <strong><?= htmlspecialchars($_SESSION['selected_hospital_name'] ?? '') ?></strong>
-      </p>
-    </div>
-
-    <?php if ($error): ?>
-    <div class="alert alert-error mb-4" role="alert">
-      <i class="bi bi-exclamation-circle-fill"></i> <?= htmlspecialchars($error) ?>
-    </div>
-    <?php endif; ?>
-
-    <form method="POST" id="otp-form">
-      <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-      <input type="hidden" name="otp" id="otp-combined">
-
-      <div class="otp-inputs mb-4" style="margin-bottom:var(--space-4);">
-        <?php for ($i = 1; $i <= $digitCount; $i++): ?>
+<p style="margin:1rem 0 .55rem;font-size:.88rem;color:var(--muted)">Step 3 of 3 · Code sent to <?= htmlspecialchars($doctorEmail) ?></p>
+<form method="POST" id="otp-form">
+  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+  <input type="hidden" name="otp" id="otp-combined">
+  <label class="mc-field">
+    <span>Enter OTP</span>
+    <div style="display:flex;gap:.45rem;margin-top:.35rem">
+      <?php for ($i = 1; $i <= $digitCount; $i++): ?>
         <input type="text" maxlength="1" class="otp-input" name="otp_digits[]"
-          inputmode="numeric" pattern="[0-9]" aria-label="OTP digit <?= $i ?>">
-        <?php endfor; ?>
-      </div>
-
-      <div style="text-align:center; margin-bottom:var(--space-5);">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="autofillDemoOtp('<?= htmlspecialchars($demoCode) ?>')" style="font-size:12px; font-weight:600;">
-          <i class="bi bi-magic"></i> Auto-Fill Demo Code (<?= htmlspecialchars($demoCode) ?>)
-        </button>
-      </div>
-
-      <button type="submit" class="btn btn-primary w-100 btn-lg" id="otp-submit-btn">
-        <i class="bi bi-shield-fill-check"></i> Verify &amp; Enter Portal
-      </button>
-    </form>
-
-    <?php if (APP_ENV === 'development'): ?>
-    <div class="alert alert-warning" style="margin-top:var(--space-4);font-size:13px;">
-      <i class="bi bi-info-circle-fill"></i>
-      <strong>Demo OTP Code:</strong> <code style="font-size:1.2rem;font-weight:800;letter-spacing:4px;"><?= htmlspecialchars($demoCode) ?></code>
+          inputmode="numeric" pattern="[0-9]" aria-label="OTP digit <?= $i ?>"
+          style="width:2.6rem;text-align:center;font:inherit;font-weight:800;padding:.7rem .2rem;border:1px solid var(--line);border-radius:10px;background:#f9fafb">
+      <?php endfor; ?>
     </div>
-    <?php endif; ?>
-
-    <p style="text-align:center;margin-top:var(--space-5);font-size:13px;color:var(--mc-text-muted);">
-      <a href="<?= APP_URL ?>/doctor/verify.php">← Re-enter credentials</a>
-    </p>
-  </div>
-</div>
-
-<script src="<?= APP_URL ?>/assets/js/medcore.js"></script>
+  </label>
+  <button type="submit" class="mc-btn mc-btn-primary mc-btn-lg mc-btn-block" style="margin-top:1.1rem">Verify &amp; enter portal</button>
+  <button type="button" class="mc-btn mc-btn-secondary mc-btn-lg mc-btn-block" style="margin-top:.55rem" onclick="autofillDemoOtp('<?= htmlspecialchars($demoCode, ENT_QUOTES) ?>')">Fill demo OTP (<?= htmlspecialchars($demoCode) ?>)</button>
+</form>
 <script>
-function autofillDemoOtp(code) {
-  const inputs = document.querySelectorAll('.otp-input');
-  [...code].forEach((char, idx) => {
-    if (inputs[idx]) inputs[idx].value = char;
-  });
-  const hidden = document.getElementById('otp-combined');
-  if (hidden) hidden.value = code;
+function autofillDemoOtp(code){
+  const inputs=[...document.querySelectorAll('.otp-input')];
+  [...code].forEach((ch,i)=>{ if(inputs[i]) inputs[i].value=ch; });
+  const h=document.getElementById('otp-combined'); if(h) h.value=code;
 }
-
-document.getElementById('otp-form')?.addEventListener('submit', function() {
-  const digits = [...document.querySelectorAll('.otp-input')].map(i => i.value).join('');
-  document.getElementById('otp-combined').value = digits;
-  const btn = document.getElementById('otp-submit-btn');
-  btn.innerHTML = '<span class="spinner-sm"></span> Verifying...';
-  btn.disabled = true;
+document.getElementById('otp-form')?.addEventListener('submit',function(){
+  document.getElementById('otp-combined').value=[...document.querySelectorAll('.otp-input')].map(i=>i.value).join('');
+});
+document.querySelectorAll('.otp-input').forEach((input,idx,arr)=>{
+  input.addEventListener('input',()=>{ if(input.value && arr[idx+1]) arr[idx+1].focus(); });
 });
 </script>
-</body>
-</html>
+<?php
+$loginFormHtml = ob_get_clean();
+// login_shell already prints $error when set
+require __DIR__ . '/../app/views/auth/login_shell.php';

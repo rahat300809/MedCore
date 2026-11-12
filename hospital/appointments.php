@@ -121,317 +121,152 @@ foreach ($appointments as $apt) {
     if ($apt['status'] === 'COMPLETED') $completedCount++;
     if ($apt['priority'] === 'EMERGENCY') $emergencyCount++;
 }
+require_once __DIR__ . '/../app/views/portal/navs.php';
+$portalRole = 'Hospital';
+$portalRoleBn = 'Hospital portal';
+$portalUser = $hospital['name'] ?? ($_SESSION['hospital_name'] ?? 'Hospital');
+$portalMeta = ($hospital['hospital_uid'] ?? '') . ' · Reception';
+$portalTitle = 'Reception desk';
+$portalSubtitle = 'সিরিয়াল চেক-ইন ও কিউ ম্যানেজমেন্ট';
+$portalNav = mc_hospital_nav('appointments');
+$portalTopAction = '<a class="mc-btn mc-btn-primary mc-btn-sm" href="' . APP_URL . '/book-doctor.php?hospital=' . $hospitalId . '" target="_blank">New booking</a>';
+$bodyClass = 'lab-desk';
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Doctor Appointments &amp; Queue — <?= htmlspecialchars($hospital['name'] ?? 'Hospital') ?></title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-  <style>
-    .status-badge-confirmed { background:#FEF3C7; color:#92400E; }
-    .status-badge-waiting   { background:#E0F2FE; color:#0369A1; font-weight:700; }
-    .status-badge-consult   { background:#DCFCE7; color:#166534; font-weight:700; }
-    .status-badge-completed { background:#F1F5F9; color:#475569; }
-    .status-badge-cancelled { background:#FEE2E2; color:#991B1B; }
-  </style>
-</head>
-<body>
 
-<div class="portal-layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-icon">M</div>
-      <div>
-        <div class="brand-name">MedCore</div>
-        <div class="brand-sub">Hospital Admin</div>
-      </div>
-    </div>
+<?php if ($message): ?><div class="mc-alert mc-alert-ok"><?= htmlspecialchars($message) ?></div><?php endif; ?>
+<?php if ($error): ?><div class="mc-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 
-    <nav class="sidebar-nav">
-      <div class="nav-section-title">Overview</div>
-      <a href="<?= APP_URL ?>/hospital/dashboard.php" class="nav-item">
-        <i class="bi bi-grid-1x2-fill"></i>
-        <span>Dashboard</span>
-      </a>
-
-      <div class="nav-section-title">Appointments &amp; Queue</div>
-      <a href="<?= APP_URL ?>/hospital/appointments.php" class="nav-item active">
-        <i class="bi bi-calendar2-check-fill"></i>
-        <span>Appointments &amp; Queue</span>
-      </a>
-      <a href="<?= APP_URL ?>/book-doctor.php?hospital=<?= $hospitalId ?>" target="_blank" class="nav-item" style="color:#0F766E;">
-        <i class="bi bi-box-arrow-up-right"></i>
-        <span>Public Booking Page</span>
-      </a>
-
-      <div class="nav-section-title">Staff &amp; Doctors</div>
-      <a href="<?= APP_URL ?>/hospital/doctors.php" class="nav-item">
-        <i class="bi bi-person-badge-fill"></i>
-        <span>Affiliated Doctors</span>
-      </a>
-      <a href="<?= APP_URL ?>/hospital/departments.php" class="nav-item">
-        <i class="bi bi-diagram-3-fill"></i>
-        <span>Departments</span>
-      </a>
-      <a href="<?= APP_URL ?>/hospital/laboratories.php" class="nav-item">
-        <i class="bi bi-flask-fill"></i>
-        <span>Laboratories</span>
-      </a>
-
-      <div class="nav-section-title">Account</div>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="nav-item text-danger">
-        <i class="bi bi-box-arrow-right"></i>
-        <span>Sign Out</span>
-      </a>
-    </nav>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="portal-main">
-    <header class="portal-header">
-      <div>
-        <span class="eyebrow" style="color:var(--mc-blue);font-size:11px;font-weight:700;">HOSPITAL CONSULTATION MANAGEMENT</span>
-        <h1 class="portal-title" style="font-size:1.35rem; margin:0;">
-          Doctor Appointments &amp; Patient Queue (সিরিয়াল ও অ্যাপয়েন্টমেন্ট)
-        </h1>
-      </div>
-
-      <div class="header-actions">
-        <a href="<?= APP_URL ?>/book-doctor.php?hospital=<?= $hospitalId ?>" target="_blank" class="btn btn-primary btn-sm" style="background:#0F766E; border-color:#0F766E;">
-          <i class="bi bi-plus-circle"></i> New Patient Booking
-        </a>
-      </div>
-    </header>
-
-    <div class="portal-body" style="padding:var(--space-6);">
-
-      <?php if ($message): ?>
-        <div class="alert alert-success mb-4"><i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($message) ?></div>
-      <?php endif; ?>
-      <?php if ($error): ?>
-        <div class="alert alert-danger mb-4"><i class="bi bi-exclamation-circle-fill"></i> <?= htmlspecialchars($error) ?></div>
-      <?php endif; ?>
-
-      <!-- STATS BAR -->
-      <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-          <div class="card p-3 text-center" style="border-left:4px solid #0F766E;">
-            <div style="font-size:11px; color:#64748B; font-weight:700; text-transform:uppercase;">Total Serials</div>
-            <div style="font-size:1.75rem; font-weight:900; color:#0F172A;"><?= $totalCount ?></div>
-            <div style="font-size:11px; color:#64748B;">Date: <?= $selectedDate === 'all' ? 'All Dates' : date('d M Y', strtotime($selectedDate)) ?></div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="card p-3 text-center" style="border-left:4px solid #F59E0B;">
-            <div style="font-size:11px; color:#64748B; font-weight:700; text-transform:uppercase;">Waiting in Lobby</div>
-            <div style="font-size:1.75rem; font-weight:900; color:#D97706;"><?= $waitingCount ?></div>
-            <div style="font-size:11px; color:#64748B;">Checked in by reception</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="card p-3 text-center" style="border-left:4px solid #0EA5E9;">
-            <div style="font-size:11px; color:#64748B; font-weight:700; text-transform:uppercase;">In Consultation</div>
-            <div style="font-size:1.75rem; font-weight:900; color:#0284C7;"><?= $inConsultCount ?></div>
-            <div style="font-size:11px; color:#64748B;">With doctor right now</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="card p-3 text-center" style="border-left:4px solid #EF4444;">
-            <div style="font-size:11px; color:#64748B; font-weight:700; text-transform:uppercase;">🚨 STAT / Emergency</div>
-            <div style="font-size:1.75rem; font-weight:900; color:#DC2626;"><?= $emergencyCount ?></div>
-            <div style="font-size:11px; color:#DC2626; font-weight:600;">Fast Track Priority</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- FILTER CONTROLS -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-3">
-              <label class="form-label" style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">Select Doctor</label>
-              <select name="doctor" class="form-control form-control-sm">
-                <option value="0">All Affiliated Doctors</option>
-                <?php foreach ($affiliatedDoctors as $ad): ?>
-                  <option value="<?= $ad['id'] ?>" <?= $selectedDoctor == $ad['id'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($ad['full_name']) ?> (<?= htmlspecialchars($ad['specialization']) ?>)
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-
-            <div class="col-md-2">
-              <label class="form-label" style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">Date</label>
-              <input type="date" name="date" class="form-control form-control-sm" value="<?= htmlspecialchars($selectedDate) ?>">
-            </div>
-
-            <div class="col-md-2">
-              <label class="form-label" style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">Status</label>
-              <select name="status" class="form-control form-control-sm">
-                <option value="all" <?= $selectedStatus === 'all' ? 'selected' : '' ?>>All Statuses</option>
-                <option value="CONFIRMED" <?= $selectedStatus === 'CONFIRMED' ? 'selected' : '' ?>>Confirmed</option>
-                <option value="WAITING" <?= $selectedStatus === 'WAITING' ? 'selected' : '' ?>>Waiting (Checked-In)</option>
-                <option value="IN_CONSULTATION" <?= $selectedStatus === 'IN_CONSULTATION' ? 'selected' : '' ?>>In Consultation</option>
-                <option value="COMPLETED" <?= $selectedStatus === 'COMPLETED' ? 'selected' : '' ?>>Completed</option>
-                <option value="CANCELLED" <?= $selectedStatus === 'CANCELLED' ? 'selected' : '' ?>>Cancelled</option>
-              </select>
-            </div>
-
-            <div class="col-md-3">
-              <label class="form-label" style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">Search Patient / Token</label>
-              <input type="text" name="search" class="form-control form-control-sm" placeholder="Patient Name, UID, APT-Token..." value="<?= htmlspecialchars($searchQuery) ?>">
-            </div>
-
-            <div class="col-md-2 d-flex gap-2">
-              <button type="submit" class="btn btn-secondary btn-sm flex-fill">
-                <i class="bi bi-filter"></i> Filter
-              </button>
-              <a href="<?= APP_URL ?>/hospital/appointments.php" class="btn btn-outline btn-sm">Reset</a>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- APPOINTMENTS TABLE -->
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h3 class="card-title"><i class="bi bi-ticket-detailed-fill text-primary"></i> Patient Appointments Roster (<?= count($appointments) ?>)</h3>
-        </div>
-        <div class="card-body p-0">
-          <?php if (empty($appointments)): ?>
-            <div class="text-center py-5 text-muted">
-              <i class="bi bi-calendar2-x" style="font-size:3rem; color:#CBD5E1;"></i>
-              <h4 style="font-size:1.1rem; color:#334155; margin-top:10px;">No appointments found</h4>
-              <p style="font-size:13px; color:#64748B;">No patient appointments match the selected filters.</p>
-            </div>
-          <?php else: ?>
-            <div class="table-responsive">
-              <table class="data-table mb-0">
-                <thead>
-                  <tr>
-                    <th style="width:50px;">Serial</th>
-                    <th>Token ID</th>
-                    <th>Patient Details</th>
-                    <th>Consulting Doctor</th>
-                    <th>Date &amp; Slot</th>
-                    <th>Priority</th>
-                    <th>Fee Status</th>
-                    <th>Status</th>
-                    <th style="text-align:right;">Reception Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php foreach ($appointments as $apt): ?>
-                    <tr style="<?= $apt['priority'] === 'EMERGENCY' ? 'background:#FEF2F2;' : '' ?>">
-                      <td>
-                        <strong style="font-size:1.2rem; color:<?= $apt['priority'] === 'EMERGENCY' ? '#DC2626' : '#0F766E' ?>;">
-                          #<?= str_pad($apt['serial_number'], 2, '0', STR_PAD_LEFT) ?>
-                        </strong>
-                      </td>
-                      <td>
-                        <code style="font-weight:700; color:#4F46E5;"><?= htmlspecialchars($apt['appointment_uid']) ?></code>
-                      </td>
-                      <td>
-                        <strong style="color:#0F172A;"><?= htmlspecialchars($apt['patient_name']) ?></strong>
-                        <div style="font-size:11px; color:#64748B;">
-                          ID: <code><?= htmlspecialchars($apt['patient_uid']) ?></code> &bull; Phone: <?= htmlspecialchars($apt['patient_phone'] ?? '—') ?>
-                        </div>
-                        <?php if ($apt['problem_description']): ?>
-                          <div style="font-size:11px; color:#334155; margin-top:2px;">
-                            <em><?= htmlspecialchars(substr($apt['problem_description'], 0, 50)) ?>...</em>
-                          </div>
-                        <?php endif; ?>
-                      </td>
-                      <td>
-                        <strong style="color:#0F172A;">Dr. <?= htmlspecialchars($apt['doctor_name']) ?></strong>
-                        <div style="font-size:11px; color:#0F766E;"><?= htmlspecialchars($apt['doctor_spec']) ?></div>
-                      </td>
-                      <td>
-                        <div style="font-size:12px; font-weight:700;"><?= date('d M Y', strtotime($apt['appointment_date'])) ?></div>
-                        <div style="font-size:11px; color:#64748B;"><?= htmlspecialchars($apt['time_slot']) ?></div>
-                      </td>
-                      <td>
-                        <span class="badge" style="font-size:10px; <?= $apt['priority'] === 'EMERGENCY' ? 'background:#FEE2E2; color:#991B1B;' : ($apt['priority'] === 'URGENT' ? 'background:#FEF3C7; color:#92400E;' : 'background:#F1F5F9; color:#334155;') ?>">
-                          <?= htmlspecialchars($apt['priority']) ?>
-                        </span>
-                      </td>
-                      <td>
-                        <?php if ($apt['payment_status'] === 'PAID'): ?>
-                          <span class="badge badge-success"><i class="bi bi-check-circle"></i> Paid ৳<?= number_format($apt['consultation_fee']) ?></span>
-                        <?php else: ?>
-                          <form method="POST" style="display:inline;">
-                            <?= csrfField() ?>
-                            <input type="hidden" name="action" value="mark_paid">
-                            <input type="hidden" name="appointment_id" value="<?= $apt['id'] ?>">
-                            <button type="submit" class="btn btn-outline btn-sm text-primary" style="font-size:10px; padding:2px 6px;">
-                              ৳<?= number_format($apt['consultation_fee']) ?> (Mark Paid)
-                            </button>
-                          </form>
-                        <?php endif; ?>
-                      </td>
-                      <td>
-                        <?php
-                          $st = $apt['status'];
-                          $badgeCls = $st === 'WAITING' ? 'status-badge-waiting' : ($st === 'IN_CONSULTATION' ? 'status-badge-consult' : ($st === 'COMPLETED' ? 'status-badge-completed' : ($st === 'CANCELLED' ? 'status-badge-cancelled' : 'status-badge-confirmed')));
-                        ?>
-                        <span class="badge <?= $badgeCls ?>" style="font-size:11px; padding:4px 8px;">
-                          <?= str_replace('_', ' ', $st) ?>
-                        </span>
-                      </td>
-                      <td style="text-align:right;">
-                        <div style="display:flex; gap:4px; justify-content:flex-end;">
-                          <?php if ($st === 'CONFIRMED'): ?>
-                            <form method="POST">
-                              <?= csrfField() ?>
-                              <input type="hidden" name="action" value="check_in">
-                              <input type="hidden" name="appointment_id" value="<?= $apt['id'] ?>">
-                              <button type="submit" class="btn btn-sm btn-primary" style="background:#0284C7; border-color:#0284C7; font-size:11px; padding:4px 8px;" title="Patient arrived at reception">
-                                <i class="bi bi-person-check-fill"></i> Check-In
-                              </button>
-                            </form>
-                          <?php endif; ?>
-
-                          <?php if ($st !== 'COMPLETED' && $st !== 'CANCELLED'): ?>
-                            <form method="POST">
-                              <?= csrfField() ?>
-                              <input type="hidden" name="action" value="mark_completed">
-                              <input type="hidden" name="appointment_id" value="<?= $apt['id'] ?>">
-                              <button type="submit" class="btn btn-sm btn-outline-success" style="font-size:11px; padding:4px 8px;" title="Mark Completed">
-                                <i class="bi bi-check-lg"></i>
-                              </button>
-                            </form>
-
-                            <form method="POST" onsubmit="return confirm('Cancel this appointment?');">
-                              <?= csrfField() ?>
-                              <input type="hidden" name="action" value="cancel">
-                              <input type="hidden" name="appointment_id" value="<?= $apt['id'] ?>">
-                              <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:11px; padding:4px 8px;" title="Cancel">
-                                <i class="bi bi-x-lg"></i>
-                              </button>
-                            </form>
-                          <?php endif; ?>
-                        </div>
-                      </td>
-                    </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
-
-    </div>
-  </main>
+<div class="mc-stats">
+  <div class="mc-stat"><div class="l">Serials</div><div class="v"><?= (int)$totalCount ?></div></div>
+  <div class="mc-stat"><div class="l">Waiting</div><div class="v"><?= (int)$waitingCount ?></div></div>
+  <div class="mc-stat"><div class="l">In consult</div><div class="v"><?= (int)$inConsultCount ?></div></div>
+  <div class="mc-stat"><div class="l">Emergency</div><div class="v"><?= (int)$emergencyCount ?></div></div>
 </div>
 
-</body>
-</html>
+<div class="mc-panel">
+  <div class="mc-panel-h"><h2>Filters</h2></div>
+  <form method="GET" style="display:grid;gap:.75rem;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));align-items:end">
+    <label class="mc-field" style="margin:0">
+      <span>Doctor</span>
+      <select name="doctor">
+        <option value="0">All doctors</option>
+        <?php foreach ($affiliatedDoctors as $ad): ?>
+          <option value="<?= (int)$ad['id'] ?>" <?= $selectedDoctor == $ad['id'] ? 'selected' : '' ?>>
+            <?= htmlspecialchars($ad['full_name']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </label>
+    <label class="mc-field" style="margin:0">
+      <span>Date</span>
+      <input type="date" name="date" value="<?= htmlspecialchars($selectedDate) ?>">
+    </label>
+    <label class="mc-field" style="margin:0">
+      <span>Status</span>
+      <select name="status">
+        <option value="all" <?= $selectedStatus === 'all' ? 'selected' : '' ?>>All</option>
+        <option value="CONFIRMED" <?= $selectedStatus === 'CONFIRMED' ? 'selected' : '' ?>>Confirmed</option>
+        <option value="WAITING" <?= $selectedStatus === 'WAITING' ? 'selected' : '' ?>>Waiting</option>
+        <option value="IN_CONSULTATION" <?= $selectedStatus === 'IN_CONSULTATION' ? 'selected' : '' ?>>In consultation</option>
+        <option value="COMPLETED" <?= $selectedStatus === 'COMPLETED' ? 'selected' : '' ?>>Completed</option>
+        <option value="CANCELLED" <?= $selectedStatus === 'CANCELLED' ? 'selected' : '' ?>>Cancelled</option>
+      </select>
+    </label>
+    <label class="mc-field" style="margin:0">
+      <span>Search</span>
+      <input type="text" name="search" placeholder="Name / UID / token" value="<?= htmlspecialchars($searchQuery) ?>">
+    </label>
+    <div style="display:flex;gap:.45rem">
+      <button type="submit" class="mc-btn mc-btn-primary">Filter</button>
+      <a class="mc-btn mc-btn-secondary" href="<?= APP_URL ?>/hospital/appointments.php">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="mc-panel">
+  <div class="mc-panel-h"><h2>Appointments (<?= count($appointments) ?>)</h2></div>
+  <?php if (empty($appointments)): ?>
+    <p style="color:var(--muted);margin:0">No appointments match these filters.</p>
+  <?php else: ?>
+    <div style="overflow:auto">
+      <table class="lab-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Token</th>
+            <th>Patient</th>
+            <th>Doctor</th>
+            <th>Slot</th>
+            <th>Fee</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($appointments as $apt): ?>
+            <?php $st = $apt['status']; ?>
+            <tr>
+              <td><strong>#<?= str_pad((string)$apt['serial_number'], 2, '0', STR_PAD_LEFT) ?></strong></td>
+              <td><code class="mc-mono"><?= htmlspecialchars($apt['appointment_uid']) ?></code></td>
+              <td>
+                <strong><?= htmlspecialchars($apt['patient_name']) ?></strong>
+                <div style="font-size:.8rem;color:var(--muted)"><?= htmlspecialchars($apt['patient_uid']) ?> · <?= htmlspecialchars($apt['patient_phone'] ?? '—') ?></div>
+              </td>
+              <td>
+                <?= htmlspecialchars($apt['doctor_name']) ?>
+                <div style="font-size:.8rem;color:var(--muted)"><?= htmlspecialchars($apt['doctor_spec']) ?></div>
+              </td>
+              <td>
+                <?= date('d M Y', strtotime($apt['appointment_date'])) ?>
+                <div style="font-size:.8rem;color:var(--muted)"><?= htmlspecialchars($apt['time_slot']) ?></div>
+              </td>
+              <td>
+                <?php if ($apt['payment_status'] === 'PAID'): ?>
+                  <span class="lab-status">Paid ৳<?= number_format((float)$apt['consultation_fee']) ?></span>
+                <?php else: ?>
+                  <form method="POST" style="display:inline">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="action" value="mark_paid">
+                    <input type="hidden" name="appointment_id" value="<?= (int)$apt['id'] ?>">
+                    <button type="submit" class="mc-btn mc-btn-secondary mc-btn-sm">৳<?= number_format((float)$apt['consultation_fee']) ?> pay</button>
+                  </form>
+                <?php endif; ?>
+              </td>
+              <td><span class="lab-status"><?= htmlspecialchars(str_replace('_', ' ', $st)) ?></span></td>
+              <td>
+                <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+                  <?php if ($st === 'CONFIRMED'): ?>
+                    <form method="POST">
+                      <?= csrfField() ?>
+                      <input type="hidden" name="action" value="check_in">
+                      <input type="hidden" name="appointment_id" value="<?= (int)$apt['id'] ?>">
+                      <button type="submit" class="mc-btn mc-btn-primary mc-btn-sm">Check-in</button>
+                    </form>
+                  <?php endif; ?>
+                  <?php if ($st !== 'COMPLETED' && $st !== 'CANCELLED'): ?>
+                    <form method="POST">
+                      <?= csrfField() ?>
+                      <input type="hidden" name="action" value="mark_completed">
+                      <input type="hidden" name="appointment_id" value="<?= (int)$apt['id'] ?>">
+                      <button type="submit" class="mc-btn mc-btn-secondary mc-btn-sm">Done</button>
+                    </form>
+                    <form method="POST" onsubmit="return confirm('Cancel this appointment?');">
+                      <?= csrfField() ?>
+                      <input type="hidden" name="action" value="cancel">
+                      <input type="hidden" name="appointment_id" value="<?= (int)$apt['id'] ?>">
+                      <button type="submit" class="mc-btn mc-btn-ghost mc-btn-sm">Cancel</button>
+                    </form>
+                  <?php endif; ?>
+                </div>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  <?php endif; ?>
+</div>
+
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>
 
