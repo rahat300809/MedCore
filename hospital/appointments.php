@@ -92,11 +92,12 @@ $whereSql = implode(' AND ', $where);
 
 $stmtAppointments = $db->prepare("
     SELECT a.*,
-           p.full_name AS patient_name, p.patient_uid, p.gender, p.date_of_birth, p.phone AS patient_phone,
+           p.full_name AS patient_name, p.patient_uid, p.gender, p.date_of_birth, u.phone AS patient_phone,
            d.full_name AS doctor_name, d.specialization AS doctor_spec,
            dept.name AS department_name
     FROM appointments a
     JOIN patients p ON a.patient_id = p.id
+    JOIN users u ON u.id = p.user_id
     JOIN doctors d ON a.doctor_id = d.id
     LEFT JOIN departments dept ON a.department_id = dept.id
     WHERE {$whereSql}

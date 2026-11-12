@@ -137,7 +137,7 @@ if (!empty($searchPatientQuery)) {
         SELECT p.*, u.email, u.phone AS user_phone
         FROM patients p
         JOIN users u ON u.id = p.user_id
-        WHERE p.patient_uid LIKE ? OR p.full_name LIKE ? OR p.phone LIKE ? OR p.national_id LIKE ?
+        WHERE p.patient_uid LIKE ? OR p.full_name LIKE ? OR u.phone LIKE ? OR p.nid_last4 LIKE ?
         LIMIT 5
     ");
     $termP = "%{$searchPatientQuery}%";
@@ -150,10 +150,11 @@ if (!empty($searchPatientQuery)) {
 // -------------------------------------------------------------
 $stmtQueue = $db->prepare("
     SELECT a.*, p.full_name AS patient_name, p.patient_uid, p.date_of_birth, p.gender, p.blood_group,
-           p.phone AS patient_phone,
+           u.phone AS patient_phone,
            dept.name AS department_name
     FROM appointments a
     JOIN patients p ON a.patient_id = p.id
+    JOIN users u ON u.id = p.user_id
     LEFT JOIN departments dept ON a.department_id = dept.id
     WHERE a.doctor_id = ? AND a.hospital_id = ? AND a.appointment_date = ?
     ORDER BY 

@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         // Authenticate patient
         $stmtUser = $db->prepare("
-            SELECT u.*, p.id AS p_id, p.full_name, p.patient_uid, p.phone AS p_phone
+            SELECT u.*, p.id AS p_id, p.full_name, p.patient_uid, u.phone AS p_phone
             FROM users u
             JOIN patients p ON p.user_id = u.id
             WHERE u.role = 'PATIENT' AND (u.email = ? OR p.patient_uid = ? OR u.phone = ?)
