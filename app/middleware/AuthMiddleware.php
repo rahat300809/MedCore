@@ -18,10 +18,14 @@ function initSession(): void {
             @session_save_path($tempDir);
         }
         session_name(SESSION_NAME);
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+            || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+            || !empty(getenv('VERCEL'));
         session_set_cookie_params([
             'lifetime' => SESSION_LIFETIME,
             'path'     => '/',
-            'secure'   => false, // Set to true with HTTPS
+            'secure'   => $isHttps,
             'httponly' => true,
             'samesite' => 'Lax',
         ]);

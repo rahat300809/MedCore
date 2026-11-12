@@ -38,8 +38,10 @@ function mc_hospital_nav(string $active = ''): array {
     $items = [
         ['key' => 'dashboard', 'href' => APP_URL . '/hospital/dashboard.php', 'label' => 'ড্যাশবোর্ড', 'hint' => 'OPD সারাংশ', 'icon' => 'bi-grid-1x2-fill'],
         ['key' => 'appointments', 'href' => APP_URL . '/hospital/appointments.php', 'label' => 'রিসেপশন', 'hint' => 'চেক-ইন', 'icon' => 'bi-calendar2-check'],
-        ['key' => 'doctors', 'href' => APP_URL . '/hospital/doctors.php', 'label' => 'ডাক্তার রোস্টার', 'hint' => 'অ্যাফিলিয়েশন', 'icon' => 'bi-stethoscope'],
-        ['key' => 'labs', 'href' => APP_URL . '/hospital/laboratories.php', 'label' => 'ল্যাব নেটওয়ার্ক', 'hint' => 'অ্যাফিলিয়েটেড ল্যাব', 'icon' => 'bi-eyedropper'],
+        ['key' => 'doctors', 'href' => APP_URL . '/hospital/doctors.php', 'label' => 'ডাক্তার', 'hint' => 'রোস্টার', 'icon' => 'bi-stethoscope'],
+        ['key' => 'labs', 'href' => APP_URL . '/hospital/laboratories.php', 'label' => 'ল্যাব', 'hint' => 'নেটওয়ার্ক', 'icon' => 'bi-eyedropper'],
+        ['key' => 'departments', 'href' => APP_URL . '/hospital/departments.php', 'label' => 'ডিপার্টমেন্ট', 'hint' => 'বিভাগ', 'icon' => 'bi-diagram-3'],
+        ['key' => 'settings', 'href' => APP_URL . '/hospital/settings.php', 'label' => 'সেটিংস', 'hint' => 'হাসপাতাল', 'icon' => 'bi-gear'],
     ];
     foreach ($items as &$item) {
         $item['active'] = ($item['key'] === $active);

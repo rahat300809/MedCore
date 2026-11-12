@@ -43,9 +43,19 @@ define('MAX_UPLOAD_SIZE_MB', 10);
 define('ALLOWED_DOC_TYPES', ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']);
 define('ALLOWED_DOC_EXTENSIONS', ['pdf', 'jpg', 'jpeg', 'png', 'webp']);
 
-// Paths
-define('STORAGE_PATH', dirname(__DIR__, 2) . '/storage');
+// Paths — on Vercel/serverless use writable /tmp for uploads
+$isServerless = !empty(getenv('VERCEL'))
+    || !empty(getenv('AWS_LAMBDA_FUNCTION_NAME'))
+    || is_dir('/var/task');
+if ($isServerless) {
+    define('STORAGE_PATH', rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'medcore-storage');
+} else {
+    define('STORAGE_PATH', dirname(__DIR__, 2) . '/storage');
+}
 define('UPLOAD_PATH', STORAGE_PATH . '/uploads');
+if (!is_dir(UPLOAD_PATH)) {
+    @mkdir(UPLOAD_PATH, 0755, true);
+}
 
 // Timezone
 date_default_timezone_set('Asia/Dhaka');
