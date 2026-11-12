@@ -2,19 +2,17 @@
 require_once __DIR__ . '/../app/config/app.php';
 require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
-require_once __DIR__ . '/../app/services/AuditService.php';
+require_once __DIR__ . '/../app/views/portal/navs.php';
 
 requireAuth('PATIENT');
 
 $db = getDB();
 $patientId = (int)$_SESSION['patient_id'];
 
-// Patient profile
 $stmt = $db->prepare("SELECT p.*, u.email, u.phone FROM patients p JOIN users u ON u.id = p.user_id WHERE p.id = ?");
 $stmt->execute([$patientId]);
 $patient = $stmt->fetch();
 
-// Fetch timeline events: Consultations
 $stmtCons = $db->prepare("
     SELECT 'CONSULTATION' AS event_type, c.id, c.consultation_date AS event_date, c.consultation_uid AS event_ref,
            c.diagnosis_summary AS title, c.clinical_notes AS detail,
@@ -27,7 +25,6 @@ $stmtCons = $db->prepare("
 $stmtCons->execute([$patientId]);
 $consultations = $stmtCons->fetchAll();
 
-// Fetch timeline events: Prescriptions
 $stmtRx = $db->prepare("
     SELECT 'PRESCRIPTION' AS event_type, rx.id, rx.created_at AS event_date, rx.prescription_uid AS event_ref,
            rx.diagnosis AS title, rx.advice AS detail,
@@ -40,7 +37,6 @@ $stmtRx = $db->prepare("
 $stmtRx->execute([$patientId]);
 $prescriptions = $stmtRx->fetchAll();
 
-// Fetch timeline events: Lab Orders
 $stmtLab = $db->prepare("
     SELECT 'LAB_ORDER' AS event_type, plo.id, plo.created_at AS event_date, plo.lab_token AS event_ref,
            CONCAT('Diagnostic Order (', plo.lab_token, ')') AS title, plo.test_notes AS detail,
@@ -53,154 +49,85 @@ $stmtLab = $db->prepare("
 $stmtLab->execute([$patientId]);
 $labOrders = $stmtLab->fetchAll();
 
-// Combine and sort chronologically descending
 $timeline = array_merge($consultations, $prescriptions, $labOrders);
-usort($timeline, function($a, $b) {
+usort($timeline, function ($a, $b) {
     return strtotime($b['event_date']) - strtotime($a['event_date']);
 });
 
-$csrf = generateCsrfToken();
+$doctorLabel = static function (string $name): string {
+    $clean = preg_replace('/^\s*Dr\.?\s+/i', '', trim($name)) ?: $name;
+    return 'Dr. ' . $clean;
+};
+
+$portalRole = 'Patient';
+$portalRoleBn = 'Patient portal';
+$portalUser = $patient['full_name'] ?? ($_SESSION['name'] ?? 'Patient');
+$portalMeta = ($patient['patient_uid'] ?? '') . ' · Timeline';
+$portalTitle = 'Health timeline';
+$portalSubtitle = 'পরামর্শ, প্রেসক্রিপশন ও ল্যাব অর্ডার এক সারিতে';
+$portalNav = mc_patient_nav('timeline');
+$portalTopAction = '<a class="mc-btn mc-btn-secondary mc-btn-sm" href="' . APP_URL . '/patient/dashboard.php">Dashboard</a>';
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Health Timeline — MedCore Patient Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-  <style>
-    .timeline-container { position: relative; padding: 20px 0; max-width: 800px; margin: 0 auto; }
-    .timeline-container::before {
-      content: ''; position: absolute; left: 24px; top: 0; bottom: 0;
-      width: 2px; background: var(--mc-border);
-    }
-    .timeline-item { position: relative; padding-left: 60px; margin-bottom: 32px; }
-    .timeline-icon {
-      position: absolute; left: 10px; top: 0; width: 30px; height: 30px;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      background: white; border: 2px solid var(--mc-blue); color: var(--mc-blue); font-size: 13px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    }
-    .timeline-item.PRESCRIPTION .timeline-icon { border-color: #10B981; color: #10B981; }
-    .timeline-item.LAB_ORDER .timeline-icon { border-color: #8B5CF6; color: #8B5CF6; }
-    .timeline-card {
-      background: white; border: 1px solid var(--mc-border); border-radius: 12px;
-      padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-  </style>
-</head>
-<body>
-<div class="portal-layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="logo-icon" style="width:32px;height:32px;font-size:14px;">M</div>
-      <div>
-        <div class="brand-name">MedCore</div>
-        <div class="brand-tagline">Patient Portal</div>
-      </div>
-    </div>
-    <nav class="sidebar-nav">
-      <a href="<?= APP_URL ?>/patient/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-      <div class="sidebar-section-title">My Health</div>
-      <a href="<?= APP_URL ?>/patient/medical-history.php"><i class="bi bi-clipboard2-heart-fill"></i> Medical History</a>
-      <a href="<?= APP_URL ?>/patient/timeline.php" class="active"><i class="bi bi-calendar2-heart-fill"></i> Health Timeline</a>
-      <a href="<?= APP_URL ?>/patient/medications.php"><i class="bi bi-capsule-pill"></i> Medications</a>
-      <a href="<?= APP_URL ?>/patient/allergies.php"><i class="bi bi-shield-exclamation"></i> Allergies</a>
-      <a href="<?= APP_URL ?>/patient/lab-reports.php"><i class="bi bi-file-earmark-bar-graph-fill"></i> Lab Reports</a>
-      <div class="sidebar-section-title">Consultations</div>
-      <a href="<?= APP_URL ?>/patient/prescriptions.php"><i class="bi bi-file-earmark-medical-fill"></i> Prescriptions</a>
-      <div class="sidebar-section-title">Privacy & Access</div>
-      <a href="<?= APP_URL ?>/patient/consent-requests.php"><i class="bi bi-person-check-fill"></i> Consent Requests</a>
-      <a href="<?= APP_URL ?>/patient/access-history.php"><i class="bi bi-clock-history"></i> Access History</a>
-      <div class="sidebar-section-title">Account</div>
-      <a href="<?= APP_URL ?>/patient/profile.php"><i class="bi bi-person-circle"></i> My Profile</a>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" data-confirm="Log out?"><i class="bi bi-box-arrow-right"></i> Log Out</a>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="sidebar-avatar"><?= strtoupper(substr($patient['full_name'], 0, 1)) ?></div>
-        <div class="sidebar-user-info">
-          <div class="name"><?= htmlspecialchars($patient['full_name']) ?></div>
-          <div class="role"><?= htmlspecialchars($patient['patient_uid']) ?></div>
-        </div>
-      </div>
-    </div>
-  </aside>
+<style>
+.mc-timeline{position:relative;padding:.25rem 0 1rem;margin:0}
+.mc-timeline::before{content:"";position:absolute;left:14px;top:.25rem;bottom:.25rem;width:2px;background:var(--line)}
+.mc-tl-item{position:relative;padding:0 0 1.15rem 2.75rem}
+.mc-tl-dot{position:absolute;left:4px;top:.35rem;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#fff;border:2px solid var(--accent);color:var(--accent);font-size:.72rem}
+.mc-tl-item.is-rx .mc-tl-dot{border-color:#0f766e;color:#0f766e}
+.mc-tl-item.is-lab .mc-tl-dot{border-color:#7c3aed;color:#7c3aed}
+.mc-tl-meta{font-size:.78rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 .35rem}
+.mc-tl-item.is-rx .mc-tl-meta{color:#0f766e}
+.mc-tl-item.is-lab .mc-tl-meta{color:#7c3aed}
+.mc-tl-head{display:flex;justify-content:space-between;gap:.75rem;align-items:flex-start;flex-wrap:wrap}
+.mc-tl-head h3{margin:0;font-size:1.02rem}
+.mc-tl-time{font-size:.82rem;color:var(--muted);white-space:nowrap}
+.mc-tl-sub{margin:.35rem 0 0;font-size:.86rem;color:var(--muted)}
+.mc-tl-note{margin:.7rem 0 0;padding:.7rem .85rem;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:.88rem;color:#334155}
+</style>
 
-  <!-- MAIN -->
-  <main class="portal-main">
-    <header class="portal-topbar">
-      <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar"><i class="bi bi-list"></i></button>
-      <div style="flex:1;">
-        <h2 style="font-size:16px;font-weight:700;margin:0;">Longitudinal Health Timeline</h2>
-        <div style="font-size:12px;color:var(--mc-text-muted);">Chronological care trajectory across affiliated medical centers</div>
-      </div>
-      <a href="<?= APP_URL ?>/patient/dashboard.php" class="btn btn-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> Dashboard
-      </a>
-    </header>
-
-    <div class="portal-content">
-      <div class="timeline-container">
-        <?php if (empty($timeline)): ?>
-        <div class="card text-center" style="padding:48px 24px;">
-          <div style="font-size:3rem;color:var(--mc-text-muted);"><i class="bi bi-calendar-x"></i></div>
-          <h3 style="margin-top:12px;font-size:16px;">No Health Events Recorded</h3>
-          <p style="color:var(--mc-text-muted);font-size:13px;">Your consultations, prescriptions, and lab tests will automatically appear here chronologically.</p>
-        </div>
-        <?php else: ?>
-          <?php foreach ($timeline as $item): ?>
-          <div class="timeline-item <?= $item['event_type'] ?>">
-            <div class="timeline-icon">
-              <?php if ($item['event_type'] === 'PRESCRIPTION'): ?>
-                <i class="bi bi-prescription2"></i>
-              <?php elseif ($item['event_type'] === 'LAB_ORDER'): ?>
-                <i class="bi bi-flask-fill"></i>
-              <?php else: ?>
-                <i class="bi bi-stethoscope"></i>
-              <?php endif; ?>
-            </div>
-            <div class="timeline-card">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
-                <div>
-                  <span class="badge" style="font-size:10px;text-transform:uppercase;background:<?= $item['event_type'] === 'PRESCRIPTION' ? 'var(--mc-green-light);color:var(--mc-green)' : ($item['event_type'] === 'LAB_ORDER' ? '#EDE9FE;color:#7C3AED' : 'var(--mc-blue-light);color:var(--mc-blue)') ?>;">
-                    <?= str_replace('_', ' ', $item['event_type']) ?>
-                  </span>
-                  <strong style="margin-left:6px;font-size:14px;color:var(--mc-text);"><?= htmlspecialchars($item['title'] ?: 'Clinical Note') ?></strong>
-                </div>
-                <span style="font-size:12px;color:var(--mc-text-muted);white-space:nowrap;">
-                  <i class="bi bi-clock"></i> <?= date('d M Y, h:i A', strtotime($item['event_date'])) ?>
-                </span>
-              </div>
-              <div style="font-size:12px;color:var(--mc-text-secondary);margin-bottom:8px;">
-                <i class="bi bi-person-fill-check"></i> Dr. <?= htmlspecialchars($item['doctor_name']) ?> (<?= htmlspecialchars($item['specialization'] ?? 'Physician') ?>)
-                · <i class="bi bi-building"></i> <?= htmlspecialchars($item['hospital_name']) ?>
-              </div>
-              <?php if (!empty($item['detail'])): ?>
-              <div style="font-size:12px;background:var(--mc-bg);padding:8px 12px;border-radius:8px;color:var(--mc-text-secondary);">
-                <?= nl2br(htmlspecialchars($item['detail'])) ?>
-              </div>
-              <?php endif; ?>
-              <?php if ($item['event_type'] === 'PRESCRIPTION'): ?>
-              <div style="margin-top:10px;">
-                <a href="<?= APP_URL ?>/patient/prescription-report.php?id=<?= $item['id'] ?>" class="btn btn-outline-primary btn-sm" style="font-size:11px;padding:4px 10px;">
-                  <i class="bi bi-printer"></i> View Official Prescription
-                </a>
-              </div>
-              <?php endif; ?>
-            </div>
+<?php if (empty($timeline)): ?>
+  <div class="mc-panel" style="text-align:center;padding:2.4rem 1rem">
+    <h2>কোনো ইভেন্ট নেই</h2>
+    <p style="color:var(--muted);margin:.5rem 0 0">পরামর্শ, প্রেসক্রিপশন ও ল্যাব টেস্ট এখানে আসবে।</p>
+  </div>
+<?php else: ?>
+  <div class="mc-timeline">
+    <?php foreach ($timeline as $item):
+      $type = $item['event_type'];
+      $cls = $type === 'PRESCRIPTION' ? 'is-rx' : ($type === 'LAB_ORDER' ? 'is-lab' : '');
+      $icon = $type === 'PRESCRIPTION' ? 'bi-prescription2' : ($type === 'LAB_ORDER' ? 'bi-eyedropper' : 'bi-stethoscope');
+      $label = str_replace('_', ' ', $type);
+    ?>
+      <article class="mc-tl-item <?= $cls ?>">
+        <div class="mc-tl-dot"><i class="bi <?= $icon ?>"></i></div>
+        <div class="mc-panel" style="margin:0">
+          <div class="mc-tl-meta"><?= htmlspecialchars($label) ?></div>
+          <div class="mc-tl-head">
+            <h3><?= htmlspecialchars($item['title'] ?: 'Clinical note') ?></h3>
+            <span class="mc-tl-time"><?= date('d M Y, h:i A', strtotime($item['event_date'])) ?></span>
           </div>
-          <?php endforeach; ?>
-        <?php endif; ?>
-      </div>
-    </div>
-  </main>
-</div>
-<script src="<?= APP_URL ?>/assets/js/medcore.js"></script>
-</body>
-</html>
+          <p class="mc-tl-sub">
+            <?= htmlspecialchars($doctorLabel((string)$item['doctor_name'])) ?>
+            · <?= htmlspecialchars($item['specialization'] ?? 'Physician') ?>
+            · <?= htmlspecialchars($item['hospital_name']) ?>
+          </p>
+          <?php if (!empty($item['detail'])): ?>
+            <div class="mc-tl-note"><?= nl2br(htmlspecialchars($item['detail'])) ?></div>
+          <?php endif; ?>
+          <?php if ($type === 'PRESCRIPTION'): ?>
+            <div style="margin-top:.85rem">
+              <a class="mc-btn mc-btn-secondary mc-btn-sm" href="<?= APP_URL ?>/patient/prescription-report.php?id=<?= (int)$item['id'] ?>">View prescription</a>
+            </div>
+          <?php elseif ($type === 'LAB_ORDER' && !empty($item['event_ref'])): ?>
+            <div style="margin-top:.85rem">
+              <span class="lab-status"><?= htmlspecialchars($item['event_ref']) ?></span>
+            </div>
+          <?php endif; ?>
+        </div>
+      </article>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
 
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>
