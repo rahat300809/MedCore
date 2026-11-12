@@ -13,7 +13,7 @@ $pageDescription = $pageDescription ?? 'Consent-driven national EHR for Banglade
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Instrument+Sans:wght@500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/competition.css?v=6">
+  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/competition.css?v=7">
   <style>
     /* critical fallback so layout never renders as raw black/unstyled */
     body{margin:0;background:#f3f5f7;color:#101828;font-family:"Hind Siliguri","Instrument Sans",system-ui,sans-serif}

@@ -103,7 +103,7 @@ if (preg_match('#^/assets/(.+)$#', $uri, $matches)) {
         if (isset($mimes[$ext])) {
             header('Content-Type: ' . $mimes[$ext]);
         }
-        header('Cache-Control: public, max-age=86400');
+        header('Cache-Control: public, max-age=' . (in_array($ext, ['css', 'js'], true) ? '300' : '86400'));
         readfile($assetPath);
         exit;
     }
