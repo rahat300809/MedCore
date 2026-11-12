@@ -16,7 +16,7 @@ $allergies = [];
 $conditions = [];
 $age = null;
 
-if (!empty($uid)) {
+if ($uid !== '') {
     $cleanUid = (stripos($uid, 'PT-') === 0) ? strtoupper($uid) : ('PT-' . str_pad($uid, 6, '0', STR_PAD_LEFT));
     $stmt = $db->prepare("
         SELECT p.id, p.patient_uid, p.full_name, p.date_of_birth, p.gender, p.blood_group,
@@ -52,95 +52,153 @@ if (!empty($uid)) {
     }
 }
 
-$currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/emergency.php');
-$qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($currentUrl);
+$scheme = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'))
+    ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$path = APP_URL . '/emergency.php' . ($patient ? ('?uid=' . urlencode($patient['patient_uid'])) : ($uid !== '' ? ('?uid=' . urlencode($uid)) : ''));
+$cardUrl = $scheme . '://' . $host . parse_url($path, PHP_URL_PATH) . (parse_url($path, PHP_URL_QUERY) ? ('?' . parse_url($path, PHP_URL_QUERY)) : '');
+if (str_starts_with($path, 'http')) {
+    $cardUrl = $path;
+}
+$qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . urlencode($cardUrl);
 
 $pageTitle = 'Emergency ICE Card — MedCore';
+$bodyClass = 'ice-page';
 require __DIR__ . '/../app/views/layout/head.php';
 require __DIR__ . '/../app/views/layout/public_header.php';
 ?>
+<style>
+.ice-card{overflow:hidden;border:1px solid #fecaca;border-radius:18px;background:#fff;box-shadow:0 18px 40px rgba(180,35,24,.08)}
+.ice-card-top{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap;padding:1.25rem 1.35rem;background:linear-gradient(135deg,#b42318,#7f1d1d);color:#fff}
+.ice-blood{min-width:5.2rem;padding:.85rem .7rem;border-radius:14px;background:rgba(255,255,255,.14);text-align:center}
+.ice-blood strong{display:block;font-size:1.8rem;line-height:1;font-family:var(--font-d)}
+.ice-blood span{display:block;margin-top:.35rem;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.ice-body{padding:1.25rem 1.35rem;display:grid;gap:1rem}
+.ice-block{border:1px solid var(--line);border-radius:14px;padding:1rem;background:#fafbfc}
+.ice-block.danger{border-color:#fecaca;background:var(--danger-soft)}
+.ice-block h3{margin:0 0 .55rem;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ice-block.danger h3{color:var(--danger)}
+.ice-block ul{margin:0;padding-left:1.1rem}
+.ice-block li{margin:.25rem 0;font-weight:700}
+.ice-call{display:flex;justify-content:space-between;gap:.75rem;align-items:center;flex-wrap:wrap;padding:1rem 1.1rem;border-radius:14px;border:1px solid #a7f3d0;background:#ecfdf5;color:#065f46;font-weight:800;text-decoration:none}
+.ice-qr{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;padding-top:.35rem;border-top:1px solid var(--line)}
+.ice-qr img{width:120px;height:120px;border-radius:12px;border:1px solid var(--line);background:#fff}
+@media print{
+  .mc-strip,.mc-nav,.mc-footer,.ice-search,.no-print{display:none!important}
+  .ice-card{box-shadow:none!important}
+}
+</style>
 
-<section class="relative overflow-hidden py-14">
-  <div class="absolute inset-0 mc-hero-bg" style="background-image:url('<?= MC_IMG_EMERGENCY ?>')"></div>
-  <div class="absolute inset-0 bg-[#3f0a0a]/82"></div>
-  <div class="relative z-10 mx-auto w-[min(720px,calc(100%-1.5rem))]">
-    <p class="mb-3 inline-flex rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white">In Case of Emergency</p>
-    <h1 class="font-display text-4xl font-bold text-white">ICE Health Card</h1>
-    <p class="mt-2 text-white/80">লগইন ছাড়াই জরুরি তথ্য — first responders এর জন্য।</p>
-
-    <form method="GET" class="mt-6 flex gap-2">
-      <input type="text" name="uid" value="<?= htmlspecialchars($uid ?: 'PT-000001') ?>" placeholder="Patient UID e.g. PT-000001"
-             class="flex-1 rounded-2xl border-0 px-4 py-3 text-sm font-semibold outline-none">
-      <button class="mc-btn mc-btn-alert mc-btn-lg" type="submit">Search</button>
-    </form>
+<section class="mc-bleed-hero mc-bleed-hero-compact">
+  <div class="mc-bleed-media" aria-hidden="true">
+    <img src="<?= MC_IMG_EMERGENCY ?>" alt="">
+  </div>
+  <div class="mc-bleed-scrim mc-bleed-scrim-danger"></div>
+  <div class="mc-wrap mc-bleed-copy">
+    <p class="mc-bleed-brand">Med<span>Core</span></p>
+    <p class="mc-bleed-kicker">In Case of Emergency</p>
+    <h1>ICE Health Card</h1>
+    <p>লগইন ছাড়াই জরুরি তথ্য — first responders এর জন্য।</p>
   </div>
 </section>
 
-<section class="mx-auto w-[min(720px,calc(100%-1.5rem))] -mt-6 pb-16">
-  <?php if (!$patient && $uid !== ''): ?>
-    <div class="rounded-[24px] border border-rose-200 bg-white p-8 text-center shadow-soft">
-      <p class="font-display text-xl font-bold">Patient not found</p>
-      <p class="mt-2 text-sm text-ink-soft/70">Try demo UID: PT-000001</p>
+<section class="mc-section ice-search" style="padding-top:1.5rem">
+  <div class="mc-wrap" style="max-width:720px">
+    <div class="mc-panel">
+      <form method="GET" style="display:flex;gap:.55rem;flex-wrap:wrap;align-items:end">
+        <label class="mc-field" style="margin:0;flex:1;min-width:220px">
+          <span>Patient UID / phone</span>
+          <input type="text" name="uid" value="<?= htmlspecialchars($uid ?: 'PT-000001') ?>" placeholder="PT-000001" required>
+        </label>
+        <button class="mc-btn mc-btn-danger" type="submit">Open ICE</button>
+        <a class="mc-btn mc-btn-secondary no-print" href="?uid=PT-000001">Demo PT-000001</a>
+      </form>
     </div>
-  <?php elseif ($patient): ?>
-    <article class="overflow-hidden rounded-[28px] border border-rose-200 bg-white shadow-lift">
-      <div class="bg-gradient-to-r from-red-600 to-red-800 px-6 py-5 text-white">
-        <div class="flex flex-wrap items-start justify-between gap-3">
+
+    <?php if (!$patient && $uid !== ''): ?>
+      <div class="mc-panel" style="text-align:center;padding:2rem 1rem">
+        <h2>Patient not found</h2>
+        <p style="color:var(--muted);margin:.5rem 0 0">Demo UID: <code class="mc-mono">PT-000001</code></p>
+      </div>
+    <?php elseif ($patient): ?>
+      <article class="ice-card" id="ice-card">
+        <div class="ice-card-top">
           <div>
-            <p class="text-xs font-bold uppercase tracking-[0.14em] text-red-100">Verified EHR · Emergency</p>
-            <h2 class="mt-1 font-display text-3xl font-bold"><?= htmlspecialchars($patient['full_name']) ?></h2>
-            <p class="text-sm text-red-100"><?= htmlspecialchars($patient['patient_uid']) ?> · <?= (int)$age ?> yrs · <?= htmlspecialchars($patient['gender'] ?? '') ?></p>
+            <p style="margin:0;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85">Verified EHR · Emergency</p>
+            <h2 style="margin:.35rem 0 0;font-size:clamp(1.5rem,4vw,2rem)"><?= htmlspecialchars($patient['full_name']) ?></h2>
+            <p style="margin:.35rem 0 0;opacity:.9;font-size:.92rem">
+              <?= htmlspecialchars($patient['patient_uid']) ?>
+              · <?= (int)$age ?> yrs
+              · <?= htmlspecialchars($patient['gender'] ?? '') ?>
+            </p>
           </div>
-          <div class="grid h-20 w-20 place-items-center rounded-2xl bg-white/15 text-center backdrop-blur">
-            <p class="font-display text-3xl font-bold leading-none"><?= htmlspecialchars($patient['blood_group'] ?? '—') ?></p>
-            <p class="text-[10px] uppercase tracking-wide text-red-100">Blood</p>
+          <div class="ice-blood">
+            <strong><?= htmlspecialchars($patient['blood_group'] ?? '—') ?></strong>
+            <span>Blood</span>
           </div>
         </div>
-      </div>
 
-      <div class="space-y-4 p-6">
-        <?php if (!empty($allergies)): ?>
-          <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
-            <p class="text-xs font-bold uppercase tracking-[0.1em] text-rose-800">Critical allergies</p>
-            <ul class="mt-2 space-y-1 text-sm font-semibold text-rose-900">
-              <?php foreach ($allergies as $a): ?>
-                <li>• <?= htmlspecialchars($a['allergy_name']) ?> (<?= htmlspecialchars($a['severity']) ?>)</li>
-              <?php endforeach; ?>
-            </ul>
+        <div class="ice-body">
+          <?php if (!empty($allergies)): ?>
+            <div class="ice-block danger">
+              <h3>Critical allergies</h3>
+              <ul>
+                <?php foreach ($allergies as $a): ?>
+                  <li><?= htmlspecialchars($a['allergy_name']) ?> (<?= htmlspecialchars($a['severity']) ?>)</li>
+                <?php endforeach; ?>
+              </ul>
+            </div>
+          <?php else: ?>
+            <div class="ice-block">
+              <h3>Critical allergies</h3>
+              <p style="margin:0;color:var(--muted)">No severe / life-threatening allergies on record.</p>
+            </div>
+          <?php endif; ?>
+
+          <?php if (!empty($conditions)): ?>
+            <div class="ice-block">
+              <h3>Active conditions</h3>
+              <ul>
+                <?php foreach ($conditions as $c): ?>
+                  <li><?= htmlspecialchars($c['condition_name']) ?> <span style="color:var(--muted);font-weight:600">(<?= htmlspecialchars($c['status']) ?>)</span></li>
+                <?php endforeach; ?>
+              </ul>
+            </div>
+          <?php endif; ?>
+
+          <?php if (!empty($patient['emergency_contact_phone'])): ?>
+            <a class="ice-call" href="tel:<?= htmlspecialchars($patient['emergency_contact_phone']) ?>">
+              <span><i class="bi bi-telephone-fill"></i> <?= htmlspecialchars($patient['emergency_contact_name'] ?: 'Emergency contact') ?></span>
+              <span class="mc-mono"><?= htmlspecialchars($patient['emergency_contact_phone']) ?></span>
+            </a>
+          <?php endif; ?>
+
+          <?php if (!empty($patient['phone'])): ?>
+            <div class="ice-block">
+              <h3>Patient phone</h3>
+              <p style="margin:0;font-weight:800"><a href="tel:<?= htmlspecialchars($patient['phone']) ?>" style="color:inherit;text-decoration:none"><?= htmlspecialchars($patient['phone']) ?></a></p>
+            </div>
+          <?php endif; ?>
+
+          <div class="ice-qr">
+            <img src="<?= htmlspecialchars($qrUrl) ?>" alt="ICE QR code">
+            <div>
+              <p style="margin:0;font-weight:800">Scan to reopen this ICE card</p>
+              <p style="margin:.35rem 0 0;color:var(--muted);font-size:.88rem;line-height:1.5">No login required. Share with paramedics / ER staff.</p>
+              <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm no-print" style="margin-top:.75rem" onclick="window.print()">Print card</button>
+            </div>
           </div>
-        <?php endif; ?>
-
-        <?php if (!empty($conditions)): ?>
-          <div class="rounded-2xl border border-[#d7e3ea] bg-mist p-4">
-            <p class="text-xs font-bold uppercase tracking-[0.1em] text-ink-soft/70">Active conditions</p>
-            <ul class="mt-2 space-y-1 text-sm font-semibold">
-              <?php foreach ($conditions as $c): ?>
-                <li>• <?= htmlspecialchars($c['condition_name']) ?></li>
-              <?php endforeach; ?>
-            </ul>
-          </div>
-        <?php endif; ?>
-
-        <?php if (!empty($patient['emergency_contact_phone'])): ?>
-          <a href="tel:<?= htmlspecialchars($patient['emergency_contact_phone']) ?>"
-             class="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-900">
-            <span><i class="bi bi-telephone-fill"></i> <?= htmlspecialchars($patient['emergency_contact_name'] ?: 'Emergency contact') ?></span>
-            <span class="font-mono"><?= htmlspecialchars($patient['emergency_contact_phone']) ?></span>
-          </a>
-        <?php endif; ?>
-
-        <div class="flex flex-wrap items-center justify-between gap-4 border-t border-[#d7e3ea] pt-4">
-          <img src="<?= htmlspecialchars($qrUrl) ?>" alt="ICE QR" class="h-24 w-24 rounded-xl border border-[#d7e3ea]">
-          <p class="max-w-xs text-xs text-ink-soft/70">Scan to reopen this ICE card on any device. No login required.</p>
         </div>
+      </article>
+    <?php else: ?>
+      <div class="mc-panel" style="text-align:center;padding:2rem 1rem">
+        <h2>Enter a Patient UID</h2>
+        <p style="color:var(--muted);margin:.5rem 0 1rem">জরুরি কার্ড খুলতে UID দিন।</p>
+        <a class="mc-btn mc-btn-danger" href="?uid=PT-000001">Open demo ICE (PT-000001)</a>
       </div>
-    </article>
-  <?php else: ?>
-    <div class="rounded-[24px] border border-[#d7e3ea] bg-white p-8 text-center shadow-soft">
-      <p class="font-display text-xl font-bold">Enter a Patient UID</p>
-      <a class="mc-btn mc-btn-alert mc-btn-lg mt-4 inline-flex" href="?uid=PT-000001">Open demo ICE (PT-000001)</a>
-    </div>
-  <?php endif; ?>
+    <?php endif; ?>
+  </div>
 </section>
 
 <?php require __DIR__ . '/../app/views/layout/public_footer.php'; ?>
