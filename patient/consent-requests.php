@@ -176,226 +176,131 @@ $history = $stmt->fetchAll();
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 $csrf = generateCsrfToken();
+
+require_once __DIR__ . '/../app/views/portal/navs.php';
+$portalRole = 'Patient';
+$portalRoleBn = 'Patient portal';
+$portalUser = $_SESSION['name'] ?? 'Patient';
+$portalMeta = ($_SESSION['patient_uid'] ?? '') . ' · Consent';
+$portalTitle = 'Consent & access';
+$portalSubtitle = 'ডাক্তার কে রেকর্ড দেখতে পারবেন, আপনিই নিয়ন্ত্রণ করেন';
+$portalNav = mc_patient_nav('consent');
+$portalTopAction = count($pending) > 0
+    ? '<span class="mc-btn mc-btn-soft mc-btn-sm">' . count($pending) . ' waiting</span>'
+    : '<a class="mc-btn mc-btn-secondary mc-btn-sm" href="' . APP_URL . '/patient/access-history.php">Full history</a>';
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consent Requests — MedCore Patient Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-</head>
-<body>
-<div class="portal-layout">
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="logo-icon" style="width:32px;height:32px;font-size:14px;">M</div>
-      <div><div class="brand-name">MedCore</div><div class="brand-tagline">Patient Portal</div></div>
-    </div>
-    <nav class="sidebar-nav">
-      <a href="<?= APP_URL ?>/patient/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-      <div class="sidebar-section-title">My Health</div>
-      <a href="<?= APP_URL ?>/patient/medical-history.php"><i class="bi bi-clipboard2-heart-fill"></i> Medical History</a>
-      <a href="<?= APP_URL ?>/patient/medications.php"><i class="bi bi-capsule-pill"></i> Medications</a>
-      <a href="<?= APP_URL ?>/patient/prescriptions.php"><i class="bi bi-file-earmark-medical-fill"></i> Prescriptions</a>
-      <a href="<?= APP_URL ?>/patient/lab-reports.php"><i class="bi bi-file-earmark-bar-graph-fill"></i> Lab Reports</a>
-      <div class="sidebar-section-title">Privacy</div>
-      <a href="<?= APP_URL ?>/patient/consent-requests.php" class="active" aria-current="page">
-        <i class="bi bi-person-check-fill"></i> Consent Requests
-        <?php if (count($pending) > 0): ?><span class="nav-badge"><?= count($pending) ?></span><?php endif; ?>
-      </a>
-      <a href="<?= APP_URL ?>/patient/access-history.php"><i class="bi bi-clock-history"></i> Access History</a>
-      <div class="sidebar-section-title">Account</div>
-      <a href="<?= APP_URL ?>/patient/profile.php"><i class="bi bi-person-circle"></i> My Profile</a>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" data-confirm="Log out?"><i class="bi bi-box-arrow-right"></i> Log Out</a>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="sidebar-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'P', 0, 1)) ?></div>
-        <div class="sidebar-user-info">
-          <div class="name"><?= htmlspecialchars($_SESSION['name'] ?? '') ?></div>
-          <div class="role"><?= htmlspecialchars($_SESSION['patient_uid'] ?? '') ?></div>
-        </div>
-      </div>
-    </div>
-  </aside>
+<?php if ($flash): ?>
+  <div class="mc-alert <?= ($flash['type'] ?? '') === 'success' ? 'mc-alert-ok' : (($flash['type'] ?? '') === 'info' ? 'mc-alert-info' : 'mc-alert-danger') ?>">
+    <?= htmlspecialchars($flash['msg'] ?? '') ?>
+  </div>
+<?php endif; ?>
 
-  <main class="portal-main">
-    <header class="portal-topbar">
-      <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar"><i class="bi bi-list"></i></button>
-      <div style="flex:1;">
-        <h2 style="font-size:16px;font-weight:700;margin:0;">Consent &amp; Access Control</h2>
-        <div style="font-size:12px;color:var(--mc-text-muted);">You control who sees your medical record</div>
-      </div>
-    </header>
-
-    <div class="portal-content">
-
-      <?php if ($flash): ?>
-      <div class="alert alert-<?= $flash['type'] ?> mb-4" data-auto-dismiss="5000">
-        <i class="bi bi-<?= $flash['type'] === 'success' ? 'check-circle-fill' : ($flash['type'] === 'info' ? 'info-circle-fill' : 'exclamation-circle-fill') ?>"></i>
-        <?= htmlspecialchars($flash['msg']) ?>
-      </div>
-      <?php endif; ?>
-
-      <!-- Active sessions -->
-      <?php if (!empty($activeSessions)): ?>
-      <div class="card mb-6" style="border-left:3px solid var(--mc-green);">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:var(--space-4);">
-          <i class="bi bi-shield-lock-fill text-green"></i>
-          Currently Active Access Sessions
-        </h3>
-        <?php foreach ($activeSessions as $s): ?>
-        <?php $mins = max(0, (int)ceil($s['secs_remaining'] / 60)); ?>
-        <div style="display:flex;align-items:center;gap:var(--space-4);padding:12px 0;border-bottom:1px solid var(--mc-border);flex-wrap:wrap;">
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:14px;">Dr. <?= htmlspecialchars($s['doctor_name']) ?></div>
-            <div style="font-size:12px;color:var(--mc-text-muted);"><?= htmlspecialchars($s['specialization'] ?? '') ?> · <?= htmlspecialchars($s['hospital_name']) ?></div>
+<?php if (!empty($activeSessions)): ?>
+<div class="mc-panel">
+  <div class="mc-panel-h"><h2>Active access</h2></div>
+  <div class="mc-list">
+    <?php foreach ($activeSessions as $s): ?>
+      <?php $mins = max(0, (int)ceil($s['secs_remaining'] / 60)); ?>
+      <div class="mc-list-item">
+        <div>
+          <strong>Dr. <?= htmlspecialchars($s['doctor_name']) ?></strong>
+          <div style="font-size:.86rem;color:var(--muted)">
+            <?= htmlspecialchars($s['specialization'] ?? '') ?> · <?= htmlspecialchars($s['hospital_name']) ?>
+            · <?= $mins ?> min left
           </div>
-          <div class="access-timer" style="<?= $mins <= 5 ? 'background:var(--mc-red-light);border-color:var(--mc-red);' : '' ?>">
-            <i class="bi bi-clock-fill"></i>
-            <span class="timer-display" id="stimer-<?= $s['id'] ?>"><?= str_pad($mins, 2, '0', STR_PAD_LEFT) ?>:00</span>
-          </div>
-          <form method="POST" style="display:inline;">
-            <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-            <input type="hidden" name="action" value="revoke">
-            <input type="hidden" name="session_id" value="<?= $s['id'] ?>">
-            <button type="submit" class="btn btn-secondary btn-sm" style="color:var(--mc-red);border-color:#FCA5A5;background:#FEF2F2;" data-confirm="Revoke access for Dr. <?= htmlspecialchars($s['doctor_name']) ?>?">
-              <i class="bi bi-x-circle-fill"></i> Revoke Access
-            </button>
-          </form>
         </div>
-        <?php endforeach; ?>
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+          <input type="hidden" name="action" value="revoke">
+          <input type="hidden" name="session_id" value="<?= (int)$s['id'] ?>">
+          <button type="submit" class="mc-btn mc-btn-ghost mc-btn-sm" onclick="return confirm('Revoke access for Dr. <?= htmlspecialchars(addslashes($s['doctor_name'])) ?>?')">Revoke</button>
+        </form>
       </div>
-      <?php endif; ?>
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
 
-      <!-- Pending requests -->
-      <div class="card mb-6">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:var(--space-4);">
-          Pending Consent Requests
-          <?php if (count($pending) > 0): ?><span class="badge badge-warning" style="margin-left:8px;"><?= count($pending) ?></span><?php endif; ?>
-        </h3>
-
-        <?php if (empty($pending)): ?>
-        <div class="empty-state" style="padding:var(--space-8) 0;">
-          <div class="empty-state-icon"><i class="bi bi-person-check"></i></div>
-          <p>No pending access requests.<br>You're in full control.</p>
-        </div>
-        <?php else: ?>
-        <?php foreach ($pending as $req): ?>
-        <div style="padding:var(--space-5) 0;border-bottom:1px solid var(--mc-border);">
-          <div class="d-flex align-center justify-between gap-4" style="flex-wrap:wrap;">
-            <div class="d-flex align-center gap-4">
-              <div class="stat-icon stat-icon-blue" style="flex-shrink:0;">
-                <i class="bi bi-stethoscope"></i>
-              </div>
-              <div>
-                <div style="font-weight:700;font-size:15px;color:var(--mc-navy);">Dr. <?= htmlspecialchars($req['doctor_name']) ?></div>
-                <div style="font-size:12px;color:var(--mc-text-muted);">
-                  <?= htmlspecialchars($req['specialization'] ?? 'Physician') ?>
-                  · BMDC Reg: <code><?= htmlspecialchars($req['medical_registration_id']) ?></code>
-                </div>
-                <div style="font-size:12px;color:var(--mc-text-muted);margin-top:2px;">
-                  <i class="bi bi-building-fill-check"></i>
-                  <?= htmlspecialchars($req['hospital_name']) ?> (<?= ucfirst(strtolower($req['hospital_type'])) ?><?= $req['hospital_city'] ? ', ' . htmlspecialchars($req['hospital_city']) : '' ?>)
-                </div>
-                <?php if (!empty($req['doctor_notes'])): ?>
-                <div style="font-size:12px;background:var(--mc-bg);padding:6px 12px;border-radius:var(--radius-sm);margin-top:6px;border-left:3px solid var(--mc-blue);">
-                  <i class="bi bi-chat-quote-fill" style="color:var(--mc-blue);"></i>
-                  <strong>Clinical Reason:</strong> <em><?= htmlspecialchars($req['doctor_notes']) ?></em>
-                </div>
-                <?php endif; ?>
-                <div style="font-size:11px;color:var(--mc-text-muted);margin-top:4px;">
-                  Requested: <?= date('d M Y, h:i A', strtotime($req['requested_at'])) ?>
-                  <?php if ($req['expires_at']): ?>
-                  · Expires: <?= date('h:i A', strtotime($req['expires_at'])) ?>
-                  <?php endif; ?>
-                </div>
-              </div>
+<div class="mc-panel">
+  <div class="mc-panel-h">
+    <h2>Pending requests</h2>
+    <?php if (count($pending) > 0): ?>
+      <span class="mc-btn mc-btn-soft mc-btn-sm"><?= count($pending) ?></span>
+    <?php endif; ?>
+  </div>
+  <?php if (empty($pending)): ?>
+    <p style="margin:0;color:var(--muted)">কোনো pending request নেই — আপনিই নিয়ন্ত্রণে।</p>
+  <?php else: ?>
+    <div class="mc-list">
+      <?php foreach ($pending as $req): ?>
+        <div class="mc-list-item" style="align-items:flex-start;flex-wrap:wrap;gap:.75rem">
+          <div style="flex:1;min-width:220px">
+            <strong>Dr. <?= htmlspecialchars($req['doctor_name']) ?></strong>
+            <div style="font-size:.86rem;color:var(--muted);margin-top:.2rem">
+              <?= htmlspecialchars($req['specialization'] ?? 'Physician') ?>
+              · <?= htmlspecialchars($req['medical_registration_id']) ?>
+              · <?= htmlspecialchars($req['hospital_name']) ?>
             </div>
-
-            <div class="d-flex gap-2" style="flex-shrink:0;">
-              <form method="POST" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
-                <input type="hidden" name="action" value="approve">
-                <button type="submit" class="btn btn-success" style="font-weight:700;padding:10px 18px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(16,185,129,0.3);">
-                  <i class="bi bi-check-circle-fill"></i> Accept (30 min)
-                </button>
-              </form>
-              <form method="POST" style="display:inline;" onsubmit="return confirm('Decline access request from Dr. <?= htmlspecialchars(addslashes($req['doctor_name'])) ?>?');">
-                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
-                <input type="hidden" name="action" value="deny">
-                <button type="submit" class="btn btn-secondary" style="color:var(--mc-red);border-color:#FCA5A5;background:#FEF2F2;">
-                  <i class="bi bi-x-circle-fill"></i> Decline
-                </button>
-              </form>
+            <?php if (!empty($req['doctor_notes'])): ?>
+              <p style="margin:.45rem 0 0;font-size:.88rem"><?= htmlspecialchars($req['doctor_notes']) ?></p>
+            <?php endif; ?>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:.35rem">
+              <?= date('d M Y, h:i A', strtotime($req['requested_at'])) ?>
             </div>
           </div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <form method="POST">
+              <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+              <input type="hidden" name="request_id" value="<?= (int)$req['id'] ?>">
+              <input type="hidden" name="action" value="approve">
+              <button type="submit" class="mc-btn mc-btn-primary mc-btn-sm">Approve 30m</button>
+            </form>
+            <form method="POST" onsubmit="return confirm('Decline Dr. <?= htmlspecialchars(addslashes($req['doctor_name'])) ?>?');">
+              <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+              <input type="hidden" name="request_id" value="<?= (int)$req['id'] ?>">
+              <input type="hidden" name="action" value="deny">
+              <button type="submit" class="mc-btn mc-btn-secondary mc-btn-sm">Decline</button>
+            </form>
+          </div>
         </div>
-        <?php endforeach; ?>
-        <?php endif; ?>
-      </div>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+</div>
 
-      <!-- Access history -->
-      <div class="card">
-        <div class="d-flex align-center justify-between mb-4">
-          <h3 style="font-size:1rem;font-weight:700;">Access History</h3>
-          <a href="<?= APP_URL ?>/patient/access-history.php" style="font-size:13px;">Full History</a>
-        </div>
-
-        <?php if (empty($history)): ?>
-        <div class="empty-state" style="padding:var(--space-6) 0;">
-          <div class="empty-state-icon"><i class="bi bi-clock-history"></i></div>
-          <p>No past access requests.</p>
-        </div>
-        <?php else: ?>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr><th>Doctor</th><th>Hospital</th><th>Requested</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-            <?php foreach ($history as $h): ?>
+<div class="mc-panel">
+  <div class="mc-panel-h">
+    <h2>Access history</h2>
+    <a href="<?= APP_URL ?>/patient/access-history.php" style="font-weight:800;color:var(--accent);font-size:.88rem">Full history</a>
+  </div>
+  <?php if (empty($history)): ?>
+    <p style="margin:0;color:var(--muted)">No past access requests.</p>
+  <?php else: ?>
+    <div style="overflow:auto">
+      <table class="lab-table">
+        <thead>
+          <tr>
+            <th>Doctor</th>
+            <th>Hospital</th>
+            <th>Requested</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($history as $h): ?>
             <tr>
               <td><strong><?= htmlspecialchars($h['doctor_name']) ?></strong></td>
               <td><?= htmlspecialchars($h['hospital_name']) ?></td>
-              <td style="white-space:nowrap;font-size:12px;"><?= date('d M Y, h:i A', strtotime($h['requested_at'])) ?></td>
-              <td>
-                <?php
-                $statusClass = match($h['status']) {
-                    'APPROVED' => 'success', 'DENIED' => 'error',
-                    'EXPIRED' => 'neutral', default => 'warning'
-                };
-                ?>
-                <span class="badge badge-<?= $statusClass ?>"><?= $h['status'] ?></span>
-              </td>
+              <td><?= date('d M Y, h:i A', strtotime($h['requested_at'])) ?></td>
+              <td><span class="lab-status"><?= htmlspecialchars($h['status']) ?></span></td>
             </tr>
-            <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-        <?php endif; ?>
-      </div>
-
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     </div>
-  </main>
+  <?php endif; ?>
 </div>
 
-<script src="<?= APP_URL ?>/assets/js/medcore.js"></script>
-<script>
-document.getElementById('hamburger-btn')?.addEventListener('click', function() {
-  document.getElementById('sidebar').classList.toggle('open');
-  this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') !== 'true');
-});
-<?php foreach ($activeSessions as $s): ?>
-startAccessTimer('stimer-<?= $s['id'] ?>', <?= max(0, (int)$s['secs_remaining']) ?>, function() { location.reload(); });
-<?php endforeach; ?>
-</script>
-</body>
-</html>
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>
