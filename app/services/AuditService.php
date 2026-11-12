@@ -50,6 +50,9 @@ class AuditService {
                      ip_address, user_agent, severity, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
+            if (!$stmt) {
+                return;
+            }
 
             $severity = $context['severity'] ?? 'INFO';
             $metadata = isset($context['metadata']) ? json_encode($context['metadata']) : null;
@@ -67,7 +70,7 @@ class AuditService {
                 $severity,
                 $metadata,
             ]);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             // Never let audit log failure break the application
             error_log('AuditService error: ' . $e->getMessage());
         }

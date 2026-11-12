@@ -4,22 +4,17 @@ require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/services/OTPService.php';
 require_once __DIR__ . '/../app/services/AuditService.php';
+require_once __DIR__ . '/../app/views/media.php';
 
 initSession();
 
-// Capture redirect target if provided (safe relative redirect only)
 $redirect = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
 if (!empty($redirect) && (!str_starts_with($redirect, '/') || str_starts_with($redirect, '//'))) {
     $redirect = '';
 }
 
-// Already logged in
 if (isLoggedIn('PATIENT')) {
-    if (!empty($redirect)) {
-        header('Location: ' . APP_URL . $redirect);
-    } else {
-        header('Location: ' . APP_URL . '/patient/dashboard.php');
-    }
+    header('Location: ' . APP_URL . (!empty($redirect) ? $redirect : '/patient/dashboard.php'));
     exit;
 }
 
@@ -53,10 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'metadata' => ['reason' => 'account_' . $user['status'], 'email' => $email]
                 ]);
             } else {
-                // Update last login
                 $db->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?")->execute([$user['id']]);
-
-                // Set session
                 session_regenerate_id(true);
                 $_SESSION['user_id']    = $user['id'];
                 $_SESSION['role']       = 'PATIENT';
@@ -71,11 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'metadata'   => ['method' => 'password']
                 ]);
 
-                if (!empty($redirect)) {
-                    header('Location: ' . APP_URL . $redirect);
-                } else {
-                    header('Location: ' . APP_URL . '/patient/dashboard.php');
-                }
+                header('Location: ' . APP_URL . (!empty($redirect) ? $redirect : '/patient/dashboard.php'));
                 exit;
             }
         } else {
@@ -88,186 +76,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $csrf = generateCsrfToken();
+$loginTitle = 'Patient Login';
+$loginTitleBn = 'নাগরিক লগইন';
+$loginImage = MC_IMG_PATIENT;
+$demoEmail = 'rahat@example.com';
+$demoPass = 'Demo123!';
+$demoNote = 'OTP: 1234 · Rahat Mahamud (PT-000001)';
+$registerUrl = APP_URL . '/patient/register.php';
+$backUrl = APP_URL . '/role-selection.php';
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Patient Login — MedCore</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-</head>
-<body style="background:var(--mc-bg);">
+<form method="POST" id="login-form">
+  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+  <?php if (!empty($redirect)): ?>
+    <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect) ?>">
+  <?php endif; ?>
 
-<div class="auth-flow-container">
-  <div class="auth-card">
-    <!-- Logo -->
-    <div class="auth-logo">
-      <a href="<?= APP_URL ?>/" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--mc-text);">
-        <div class="logo-icon">M</div>
-        <span style="font-weight:800;font-size:1.1rem;">MedCore</span>
-      </a>
-    </div>
+  <label class="mc-field">
+    <span>Email</span>
+    <input id="email" name="email" type="email" required autocomplete="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+  </label>
 
-    <h1 style="font-size:1.5rem;font-weight:800;margin-bottom:var(--space-2);">Patient Login</h1>
-    <p style="font-size:14px;color:var(--mc-text-secondary);margin-bottom:var(--space-6);">
-      Access your personal health record securely.
-    </p>
+  <label class="mc-field">
+    <span>Password</span>
+    <input id="password" name="password" type="password" required autocomplete="current-password">
+  </label>
 
-    <?php if ($error): ?>
-      <div class="alert alert-error mb-4" role="alert" data-auto-dismiss="5000">
-        <i class="bi bi-exclamation-circle-fill"></i>
-        <?= htmlspecialchars($error) ?>
-      </div>
-    <?php endif; ?>
-
-    <?php if ($success): ?>
-      <div class="alert alert-success mb-4" role="alert">
-        <i class="bi bi-check-circle-fill"></i>
-        <?= htmlspecialchars($success) ?>
-      </div>
-    <?php endif; ?>
-
-    <form method="POST" id="login-form" novalidate>
-      <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-      <?php if (!empty($redirect)): ?>
-        <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect) ?>">
-      <?php endif; ?>
-
-      <div class="form-group">
-        <label class="form-label" for="email">Email Address</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          class="form-control"
-          placeholder="you@example.com"
-          value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-          required
-          autocomplete="email"
-          aria-required="true"
-        >
-      </div>
-
-      <div class="form-group" style="position:relative;">
-        <label class="form-label" for="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          class="form-control"
-          placeholder="Enter your password"
-          required
-          autocomplete="current-password"
-          aria-required="true"
-        >
-        <button type="button"
-          onclick="togglePassword('password', this)"
-          style="position:absolute;right:12px;top:38px;background:none;border:none;cursor:pointer;color:var(--mc-text-muted);"
-          aria-label="Toggle password visibility">
-          <i class="bi bi-eye" id="password-eye"></i>
-        </button>
-      </div>
-
-      <div class="d-flex justify-between align-center" style="margin-bottom:var(--space-6);">
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-          <input type="checkbox" name="remember" style="width:14px;height:14px;">
-          Remember me
-        </label>
-        <a href="#" style="font-size:13px;">Forgot password?</a>
-      </div>
-
-      <button type="submit" class="btn btn-primary w-100 btn-lg" id="login-submit-btn">
-        <i class="bi bi-shield-lock-fill"></i>
-        Log In Securely
-      </button>
-
-      <!-- Demo Credentials Card -->
-      <div style="background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:14px;padding:14px 16px;margin-top:20px;text-align:left;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="font-size:12px;font-weight:800;color:#0284C7;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:5px;">
-            <i class="bi bi-key-fill"></i> পরীক্ষামূলক ডেমো লগইন আইডি ও পাসওয়ার্ড
-          </span>
-          <span style="font-size:10px;font-weight:800;background:#E0F2FE;color:#0369A1;padding:2px 6px;border-radius:4px;">DEMO</span>
-        </div>
-        <div style="font-size:12px;color:#334155;line-height:1.6;margin-bottom:10px;">
-          <div>ইমেইল: <strong style="color:#0A2540;font-family:monospace;">rahat@example.com</strong></div>
-          <div>পাসওয়ার্ড: <strong style="color:#0A2540;font-family:monospace;">Demo123!</strong></div>
-          <div style="font-size:11px;color:#64748B;">রোগীর নাম: Rahat Mahamud (PT-000001 · 🩸 O+) · ইউনিভার্সাল OTP: <strong>1234</strong></div>
-        </div>
-        <button type="button" onclick="fillPatientDemo()" style="width:100%;background:#0284C7;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 6px rgba(2,132,199,0.25);">
-          <i class="bi bi-lightning-charge-fill"></i> ⚡ ১-ক্লিকে ডেমো তথ্য পূরণ করুন (Auto-Fill)
-        </button>
-      </div>
-    </form>
-
-    <div style="text-align:center;margin-top:var(--space-6);">
-      <p style="font-size:13px;color:var(--mc-text-muted);">
-        Don't have an account?
-        <a href="<?= APP_URL ?>/patient/register.php" style="font-weight:600;">Register Free</a>
-      </p>
-      <p style="font-size:12px;color:var(--mc-text-muted);margin-top:var(--space-3);">
-        <a href="<?= APP_URL ?>/role-selection.php">← Change Portal</a>
-      </p>
-    </div>
-
-    <!-- Security note -->
-    <div style="margin-top:var(--space-6);padding-top:var(--space-5);border-top:1px solid var(--mc-border);">
-      <div style="display:flex;align-items:center;justify-content:center;gap:var(--space-5);">
-        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mc-text-muted);">
-          <i class="bi bi-shield-fill-check" style="color:var(--mc-green);"></i>AES-256 Encrypted
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mc-text-muted);">
-          <i class="bi bi-lock-fill" style="color:var(--mc-blue);"></i>HIPAA Ready
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mc-text-muted);">
-          <i class="bi bi-eye-slash-fill" style="color:var(--mc-amber);"></i>Zero-Trust Access
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<?php if (APP_ENV === 'development'): ?>
-<!-- Dev helper -->
-<div style="position:fixed;bottom:20px;right:20px;background:var(--mc-amber-light);border:1px solid var(--mc-amber);border-radius:var(--radius-md);padding:12px 16px;font-size:12px;max-width:280px;z-index:9999;">
-  <strong>🔧 Dev Credentials:</strong><br>
-  Email: <code>rahat@example.com</code><br>
-  Pass: <code>Demo123!</code> (update hash in seed.sql)<br>
-  <small style="color:var(--mc-text-muted);">Actual hash: password_hash('Demo123!')</small>
-</div>
-<?php endif; ?>
-
-<script>
-function fillPatientDemo() {
-  const emailInput = document.getElementById('email');
-  const passInput = document.getElementById('password');
-  if (emailInput && passInput) {
-    emailInput.value = 'rahat@example.com';
-    passInput.value = 'Demo123!';
-  }
-}
-
-function togglePassword(id, btn) {
-  const input = document.getElementById(id);
-  const eye = document.getElementById(id + '-eye');
-  if (input.type === 'password') {
-    input.type = 'text';
-    eye.className = 'bi bi-eye-slash';
-  } else {
-    input.type = 'password';
-    eye.className = 'bi bi-eye';
-  }
-}
-
-// Loading state on submit
-document.getElementById('login-form')?.addEventListener('submit', function() {
-  const btn = document.getElementById('login-submit-btn');
-  btn.innerHTML = '<span class="spinner-sm"></span> Verifying...';
-  btn.disabled = true;
-});
-</script>
-</body>
-</html>
+  <button type="submit" class="mc-btn mc-btn-primary mc-btn-lg mc-btn-block" style="margin-top:1.1rem">Log in securely</button>
+  <button type="button" onclick="mcFillDemo('rahat@example.com','Demo123!')" class="mc-btn mc-btn-secondary mc-btn-lg mc-btn-block" style="margin-top:.55rem">Fill demo credentials</button>
+</form>
+<?php
+$loginFormHtml = ob_get_clean();
+require __DIR__ . '/../app/views/auth/login_shell.php';

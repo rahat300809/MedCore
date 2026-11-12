@@ -242,28 +242,22 @@ $doctors = $stmtDocs->fetchAll();
 
 $isPatientLoggedIn = isset($_SESSION['role']) && $_SESSION['role'] === 'PATIENT';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Online Doctor Appointment &amp; Serial Booking — MedCore</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/landing.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/chatbot.css">
+<?php
+$pageTitle = 'Online Doctor Booking — MedCore';
+$bodyClass = 'booking-page bg-mist';
+require __DIR__ . '/../app/views/layout/head.php';
+require __DIR__ . '/../app/views/layout/public_header.php';
+require_once __DIR__ . '/../app/views/media.php';
+?>
   <style>
     :root {
-      --mc-teal: #0891b2;
-      --mc-teal-dark: #0e7490;
+      --mc-teal: #0f766e;
+      --mc-teal-dark: #115e59;
     }
     body.booking-page {
-      background: #F8FAFC;
-      color: #0F172A;
-      font-family: 'Inter', sans-serif;
+      background: #eef3f6 !important;
+      color: #0b1f2a !important;
+      font-family: 'Hind Siliguri', 'Instrument Sans', sans-serif !important;
     }
     .booking-hero {
       background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F766E 100%);
@@ -449,38 +443,6 @@ $isPatientLoggedIn = isset($_SESSION['role']) && $_SESSION['role'] === 'PATIENT'
       position: relative;
     }
   </style>
-</head>
-<body class="booking-page">
-
-<!-- NAVBAR -->
-<nav class="navbar" style="background:#ffffff; border-bottom:1px solid #E2E8F0; position:sticky; top:0; z-index:100;">
-  <div class="navbar-inner" style="max-width:1200px; margin:0 auto; padding:0 20px; display:flex; justify-content:space-between; align-items:center; height:68px;">
-    <a href="<?= APP_URL ?>/" class="navbar-logo" style="display:flex; align-items:center; gap:10px; text-decoration:none;">
-      <div class="logo-icon" style="background:linear-gradient(135deg, #0F766E, #0284C7); width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff;">
-        <i class="bi bi-heart-pulse-fill" style="font-size:16px;"></i>
-      </div>
-      <div>
-        <span style="font-weight:900; font-size:1.25rem; color:#0F172A; font-family:'Plus Jakarta Sans',sans-serif; letter-spacing:-0.5px;">MedCore</span>
-        <span style="font-size:10px; display:block; color:#0F766E; font-weight:700; margin-top:-3px; letter-spacing:0.8px;">ONLINE DOCTOR BOOKING</span>
-      </div>
-    </a>
-
-    <div style="display:flex; align-items:center; gap:12px;">
-      <a href="<?= APP_URL ?>/" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">
-        <i class="bi bi-arrow-left"></i> Home
-      </a>
-      <?php if ($isPatientLoggedIn): ?>
-        <a href="<?= APP_URL ?>/patient/dashboard.php" class="btn btn-sm btn-primary" style="background:#0F766E; border-color:#0F766E; border-radius:8px;">
-          <i class="bi bi-person-fill"></i> <?= htmlspecialchars($_SESSION['name'] ?? 'My Portal') ?>
-        </a>
-      <?php else: ?>
-        <a href="<?= APP_URL ?>/patient/login.php" class="btn btn-sm btn-outline-primary" style="border-radius:8px;">
-          <i class="bi bi-box-arrow-in-right"></i> Patient Login
-        </a>
-      <?php endif; ?>
-    </div>
-  </div>
-</nav>
 
 <!-- HERO HEADER -->
 <section class="booking-hero">

@@ -58,36 +58,8 @@ if ($targetRx) {
     $viewRx = $stmtView->fetch();
 
     if ($viewRx) {
-        $stmtMeds = $db->prepare("SELECT * FROM prescription_medicines WHERE prescription_id = ? ORDER BY id ASC");
-        $stmtMeds->execute([$viewRx['id']]);
-        $viewMeds = $stmtMeds->fetchAll();
-
-        // Fetch Lab Order and Tests
-        $stmtLabOrd = $db->prepare("
-            SELECT plo.*, l.name AS assigned_lab_name, l.lab_uid AS assigned_lab_uid
-            FROM prescription_lab_orders plo
-            LEFT JOIN laboratories l ON plo.laboratory_id = l.id
-            WHERE plo.prescription_id = ?
-            LIMIT 1
-        ");
-        $stmtLabOrd->execute([$viewRx['id']]);
-        $viewLabOrder = $stmtLabOrd->fetch();
-
-        $viewLabTests = [];
-        if ($viewLabOrder) {
-            $stmtLT = $db->prepare("
-                SELECT lot.*, ltr.result_status, ltr.result_summary, ltr.result_value, ltr.reference_range,
-                       ltr.technician_name, ltr.uploaded_at AS result_uploaded_at,
-                       rl.name AS result_lab_name
-                FROM lab_order_tests lot
-                LEFT JOIN lab_test_results ltr ON ltr.lab_order_test_id = lot.id
-                LEFT JOIN laboratories rl ON ltr.laboratory_id = rl.id
-                WHERE lot.lab_order_id = ?
-                ORDER BY lot.id ASC
-            ");
-            $stmtLT->execute([$viewLabOrder['id']]);
-            $viewLabTests = $stmtLT->fetchAll();
-        }
+        header('Location: ' . APP_URL . '/patient/prescription-report.php?id=' . (int)$viewRx['id']);
+        exit;
     }
 }
 ?>
@@ -476,7 +448,7 @@ if ($targetRx) {
                       <td><span class="badge badge-info"><?= $rx['medicine_count'] ?> items</span></td>
                       <td><span class="badge badge-success"><?= htmlspecialchars($rx['status']) ?></span></td>
                       <td>
-                        <a href="<?= APP_URL ?>/doctor/prescriptions.php?rx=<?= urlencode($rx['prescription_uid']) ?>" class="btn btn-primary btn-sm">
+                        <a href="<?= APP_URL ?>/patient/prescription-report.php?id=<?= (int)$rx['id'] ?>" class="btn btn-primary btn-sm" target="_blank">
                           <i class="bi bi-eye"></i> View / Print
                         </a>
                       </td>

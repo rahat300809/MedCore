@@ -153,13 +153,16 @@ if ($prescriptionLabOrder) {
     $labTestsOrdered = $stmtLT->fetchAll();
 }
 
-$age = date_diff(new DateTime($rx['date_of_birth']), new DateTime())->y;
-
 AuditService::log('VIEW_PRESCRIPTION_REPORT', [
     'user_id'    => $_SESSION['user_id'],
     'patient_id' => $patientId,
     'metadata'   => ['prescription_uid' => $rx['prescription_uid']]
 ]);
+
+$labOrder = $prescriptionLabOrder;
+$labTests = $labTestsOrdered;
+$showToolbar = true;
+$backUrl = 'javascript:history.back()';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -167,436 +170,38 @@ AuditService::log('VIEW_PRESCRIPTION_REPORT', [
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prescription — <?= htmlspecialchars($rx['prescription_uid']) ?> — MedCore</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=Source+Sans+3:wght@400;600;700;800&family=Great+Vibes&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/competition.css?v=4">
+  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/rx-pad.css?v=1">
   <style>
-    body {
-      background: #F1F5F9;
-      color: #0F172A;
-      font-family: 'Inter', sans-serif;
-      padding: 30px 16px;
-    }
-    .rx-paper {
-      background: #fff;
-      max-width: 820px;
-      margin: 0 auto;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-      overflow: hidden;
-      border: 1px solid #E2E8F0;
-    }
-    .rx-header {
-      background: linear-gradient(135deg, #0F766E, #0D9488);
-      color: #fff;
-      padding: 28px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .rx-body {
-      padding: 32px;
-    }
-    .patient-strip {
-      background: #F8FAFC;
-      border: 1px solid #E2E8F0;
-      border-radius: 10px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
-    }
-    .med-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 14px;
-      font-size: 13px;
-    }
-    .med-table th {
-      background: #F8FAFC;
-      color: #475569;
-      font-weight: 700;
-      text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: .5px;
-      padding: 10px 12px;
-      border-bottom: 2px solid #CBD5E1;
-      text-align: left;
-    }
-    .med-table td {
-      padding: 12px;
-      border-bottom: 1px solid #E2E8F0;
-      vertical-align: top;
-    }
-    .med-table tr:nth-child(even) {
-      background: #FAFAFA;
-    }
-    .allergy-banner {
-      background: #FEF2F2;
-      border: 1.5px solid #FECACA;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #991B1B;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .rx-symbol {
-      font-family: serif;
-      font-size: 32px;
-      font-weight: 800;
-      color: #0F766E;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    @media print {
-      body {
-        background: #fff;
-        padding: 0;
-      }
-      .no-print {
-        display: none !important;
-      }
-      .rx-paper {
-        border: none;
-        box-shadow: none;
-        max-width: 100%;
-        border-radius: 0;
-      }
-      .rx-header {
-        background: #0F766E !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-    }
+    body { background: #e8eef3; margin: 0; padding: 24px 14px 40px; font-family: 'Source Sans 3', system-ui, sans-serif; }
   </style>
 </head>
 <body>
+<?php require __DIR__ . '/../app/views/partials/rx_pad.php'; ?>
 
-<div style="max-width: 820px; margin: 0 auto 16px; display: flex; justify-content: space-between; align-items: center;" class="no-print">
-  <a href="javascript:history.back()" style="color: #475569; font-size: 13px; font-weight: 600; text-decoration: none;">
-    <i class="bi bi-arrow-left"></i> Back
-  </a>
-  <div style="display: flex; gap: 10px;">
-    <button onclick="window.print()" class="btn btn-primary btn-sm" style="background: #0F766E; border-color: #0F766E; font-weight: 700;">
-      <i class="bi bi-printer-fill"></i> Print / Save as PDF
-    </button>
-  </div>
-</div>
-
-<div class="rx-paper">
-  <!-- OFFICIAL HOSPITAL HEADER -->
-  <div class="rx-header">
-    <div>
-      <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.9; font-weight: 700;">Accredited Medical Facility</div>
-      <h1 style="font-size: 1.5rem; font-weight: 800; margin: 2px 0 6px 0;"><?= htmlspecialchars($rx['hospital_name']) ?></h1>
-      <div style="font-size: 12px; opacity: 0.9; line-height: 1.5;">
-        <?= htmlspecialchars($rx['hosp_addr'] ?: $rx['hosp_city']) ?>
-        <?php if ($rx['hosp_phone']): ?> · Tel: <?= htmlspecialchars($rx['hosp_phone']) ?><?php endif; ?>
-      </div>
-      <div style="font-size: 11px; opacity: 0.8; font-family: 'JetBrains Mono', monospace; margin-top: 4px;">
-        Facility License: <?= htmlspecialchars($rx['hosp_reg']) ?>
-      </div>
-    </div>
-
-    <div style="text-align: right; min-width: 180px;">
-      <div style="background: rgba(255,255,255,0.18); backdrop-filter: blur(4px); padding: 8px 14px; border-radius: 8px; display: inline-block;">
-        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Official E-Prescription</div>
-        <div style="font-size: 13px; font-family: 'JetBrains Mono', monospace; font-weight: 700;"><?= htmlspecialchars($rx['prescription_uid']) ?></div>
-        <div style="font-size: 11px; opacity: 0.9;"><?= date('d M Y, h:i A', strtotime($rx['created_at'])) ?></div>
-      </div>
+<?php if (!empty($prevPrescriptions)): ?>
+  <div class="no-print" style="max-width:860px;margin:18px auto 0">
+    <div style="font-weight:800;font-size:.85rem;color:#475569;margin-bottom:8px">Previous prescriptions</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <?php foreach ($prevPrescriptions as $prx): ?>
+        <a href="<?= APP_URL ?>/patient/prescription-report.php?id=<?= (int)$prx['id'] ?>"
+           style="background:#fff;border:1px solid #d5dde6;border-radius:10px;padding:10px 14px;text-decoration:none;color:#0f1c2e;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <span>
+            <strong style="font-family:JetBrains Mono,monospace;color:#0b6e6a"><?= htmlspecialchars($prx['prescription_uid']) ?></strong>
+            · <?= date('d M Y', strtotime($prx['created_at'])) ?>
+            · Dr. <?= htmlspecialchars($prx['doc_name']) ?>
+          </span>
+          <span style="color:#64748b;font-size:.85rem"><?= (int)$prx['med_cnt'] ?> meds</span>
+        </a>
+      <?php endforeach; ?>
     </div>
   </div>
+<?php endif; ?>
 
-  <div class="rx-body">
-    <!-- DOCTOR CREDENTIAL STRIP -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 16px; border-bottom: 2px solid #E2E8F0; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-      <div>
-        <h2 style="font-size: 1.25rem; font-weight: 800; color: #0F172A; margin: 0;">
-          Dr. <?= htmlspecialchars($rx['doctor_name']) ?>
-        </h2>
-        <div style="font-size: 13px; font-weight: 600; color: #0F766E; margin-top: 2px;">
-          <?= htmlspecialchars($rx['doctor_spec'] ?? 'Medical Specialist') ?>
-        </div>
-        <div style="font-size: 12px; color: #475569; margin-top: 2px;">
-          <?= htmlspecialchars($rx['doctor_qual'] ?? 'MBBS') ?>
-        </div>
-      </div>
-      <div style="text-align: right; font-size: 12px; color: #475569;">
-        <div>BMDC Reg No: <strong style="font-family: 'JetBrains Mono', monospace; color: #0F766E;"><?= htmlspecialchars($rx['medical_registration_id']) ?></strong></div>
-        <div style="font-size: 11px; color: var(--mc-text-muted); margin-top: 2px;">Verified Central Physician</div>
-      </div>
-    </div>
-
-    <!-- PATIENT IDENTIFICATION STRIP -->
-    <div class="patient-strip">
-      <div>
-        <span style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Patient Name</span>
-        <div style="font-weight: 800; font-size: 14px; color: #0F172A;"><?= htmlspecialchars($rx['patient_name']) ?></div>
-      </div>
-      <div>
-        <span style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Patient UID</span>
-        <div style="font-weight: 700; font-size: 13px; font-family: 'JetBrains Mono', monospace; color: #1E40AF;"><?= htmlspecialchars($rx['patient_uid']) ?></div>
-      </div>
-      <div>
-        <span style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Age / Gender</span>
-        <div style="font-weight: 600; font-size: 13px;"><?= $age ?> yrs · <?= ucfirst(strtolower($rx['gender'])) ?></div>
-      </div>
-      <div>
-        <span style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Blood Group</span>
-        <div style="font-weight: 700; font-size: 13px; color: #DC2626;"><?= htmlspecialchars($rx['blood_group'] ?: 'Unknown') ?></div>
-      </div>
-      <div>
-        <span style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Date Issued</span>
-        <div style="font-weight: 600; font-size: 13px;"><?= date('d M Y', strtotime($rx['created_at'])) ?></div>
-      </div>
-    </div>
-
-    <!-- DOCUMENTED ALLERGIES WARNING -->
-    <?php if (!empty($allergies)): ?>
-    <div class="allergy-banner">
-      <i class="bi bi-exclamation-triangle-fill" style="font-size: 16px;"></i>
-      <div>
-        <strong>Patient Allergy Alert:</strong>
-        <?php foreach ($allergies as $idx => $alg): ?>
-          <?= htmlspecialchars($alg['allergy_name']) ?> (<?= htmlspecialchars($alg['severity']) ?>)<?= $idx < count($allergies)-1 ? ', ' : '' ?>
-        <?php endforeach; ?>
-      </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- CLINICAL DIAGNOSIS & REASON -->
-    <div style="margin-bottom: 24px; padding: 14px 18px; background: #F0FDFA; border-left: 4px solid #0F766E; border-radius: 6px;">
-      <div style="font-size: 11px; font-weight: 700; color: #0F766E; text-transform: uppercase; letter-spacing: .5px;">Clinical Impression / Diagnosis</div>
-      <div style="font-size: 15px; font-weight: 800; color: #0F172A; margin-top: 4px;">
-        <?= htmlspecialchars($rx['diagnosis'] ?: 'Clinical Assessment & Evaluation') ?>
-      </div>
-      <?php if ($rx['chief_complaint']): ?>
-      <div style="font-size: 12px; color: #475569; margin-top: 4px;">
-        <strong>Chief Complaints:</strong> <?= htmlspecialchars($rx['chief_complaint']) ?>
-      </div>
-      <?php endif; ?>
-    </div>
-
-    <!-- RX SECTION -->
-    <div style="margin-bottom: 28px;">
-      <div class="rx-symbol">℞</div>
-      <table class="med-table">
-        <thead>
-          <tr>
-            <th style="width: 40px;">#</th>
-            <th>Medicine Name &amp; Generic</th>
-            <th>Strength / Form</th>
-            <th>Dosage &amp; Schedule</th>
-            <th>Instructions</th>
-            <th>Duration</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if (empty($medicines)): ?>
-          <tr>
-            <td colspan="6" style="text-align: center; color: var(--mc-text-muted); padding: 20px;">
-              No medicines prescribed in this record.
-            </td>
-          </tr>
-          <?php else: ?>
-            <?php foreach ($medicines as $idx => $med): ?>
-            <tr>
-              <td style="font-weight: 700; color: #64748B;"><?= $idx + 1 ?></td>
-              <td>
-                <div style="font-weight: 800; font-size: 14px; color: #0F172A;"><?= htmlspecialchars($med['medicine_name']) ?></div>
-                <?php if ($med['generic_name']): ?>
-                  <div style="font-size: 11px; color: #64748B;"><?= htmlspecialchars($med['generic_name']) ?></div>
-                <?php endif; ?>
-              </td>
-              <td>
-                <span style="font-weight: 600;"><?= htmlspecialchars($med['strength'] ?: '—') ?></span>
-                <?php if ($med['dosage_form']): ?>
-                  <div style="font-size: 11px; color: #64748B;"><?= htmlspecialchars($med['dosage_form']) ?></div>
-                <?php endif; ?>
-              </td>
-              <td>
-                <div style="font-weight: 700; color: #0F766E; font-size: 13px;"><?= htmlspecialchars($med['dosage'] ?: '1+0+1') ?></div>
-                <div style="font-size: 11px; color: #64748B;"><?= htmlspecialchars($med['frequency'] ?: 'Daily') ?></div>
-              </td>
-              <td>
-                <div style="font-size: 12px; color: #334155;"><?= htmlspecialchars($med['instructions'] ?: 'After meals') ?></div>
-                <div style="font-size: 10px; color: #64748B;">Route: <?= htmlspecialchars($med['route'] ?: 'ORAL') ?></div>
-              </td>
-              <td>
-                <span class="badge" style="background: #E0F2FE; color: #0369A1; font-weight: 700;">
-                  <?= htmlspecialchars($med['duration'] ?: '7 Days') ?>
-                </span>
-              </td>
-            </tr>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- OFFICIAL LABORATORY ORDER & TOKEN (IF ORDERED) -->
-    <?php if ($prescriptionLabOrder && !empty($labTestsOrdered)): ?>
-    <div style="margin-bottom: 28px; border: 2px solid #6366F1; border-radius: 12px; overflow: hidden; background: #FAF5FF;">
-      <div style="background: linear-gradient(135deg, #4F46E5, #6366F1); color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 20px;">🔬</span>
-          <div>
-            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.9; font-weight: 700;">Official Lab Order Token</div>
-            <div style="font-size: 14px; font-weight: 800;">Diagnostic &amp; Pathology Tests Prescribed</div>
-          </div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 10px; opacity: 0.85; text-transform: uppercase;">Present Token at Laboratory</div>
-          <div style="font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 900; background: rgba(255,255,255,0.22); padding: 4px 12px; border-radius: 6px; letter-spacing: 1.5px; display: inline-block;">
-            <?= htmlspecialchars($prescriptionLabOrder['lab_token']) ?>
-          </div>
-        </div>
-      </div>
-
-      <div style="padding: 16px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; font-size: 12px; color: #4B5563;">
-          <div>
-            Order Status:
-            <span class="badge" style="background: <?= $prescriptionLabOrder['status'] === 'COMPLETED' ? '#DCFCE7; color: #166534;' : ($prescriptionLabOrder['status'] === 'PARTIAL' ? '#FEF3C7; color: #92400E;' : '#EEF2FF; color: #4338CA;') ?> font-weight: 700; padding: 3px 8px; border-radius: 6px;">
-              <?= htmlspecialchars($prescriptionLabOrder['status']) ?>
-            </span>
-            &nbsp;·&nbsp; Valid 30 days (Expires <?= date('d M Y', strtotime($prescriptionLabOrder['expires_at'])) ?>)
-          </div>
-          <div style="font-size: 11px; color: #4338CA;">
-            <i class="bi bi-info-circle-fill"></i> Results automatically link to your Patient Portal when uploaded by the lab.
-          </div>
-        </div>
-
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB;">
-          <thead>
-            <tr style="background: #F3F4F6; text-align: left; color: #374151;">
-              <th style="padding: 8px 12px; width: 35px;">#</th>
-              <th style="padding: 8px 12px;">Test Name</th>
-              <th style="padding: 8px 12px;">Category</th>
-              <th style="padding: 8px 12px;">Urgency</th>
-              <th style="padding: 8px 12px;">Status</th>
-              <th style="padding: 8px 12px;">Issuing Lab</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($labTestsOrdered as $tidx => $lt): ?>
-            <tr style="border-top: 1px solid #E5E7EB;">
-              <td style="padding: 8px 12px; color: #9CA3AF;"><?= $tidx + 1 ?></td>
-              <td style="padding: 8px 12px; font-weight: 700; color: #1F2937;"><?= htmlspecialchars($lt['test_name']) ?></td>
-              <td style="padding: 8px 12px; color: #6B7280;"><?= htmlspecialchars($lt['test_category'] ?: 'General') ?></td>
-              <td style="padding: 8px 12px;">
-                <span style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; <?= $lt['urgency'] === 'STAT' ? 'background: #FEE2E2; color: #991B1B;' : ($lt['urgency'] === 'URGENT' ? 'background: #FEF3C7; color: #92400E;' : 'background: #F3F4F6; color: #374151;') ?>">
-                  <?= htmlspecialchars($lt['urgency']) ?>
-                </span>
-              </td>
-              <td style="padding: 8px 12px;">
-                <?php if ($lt['status'] === 'COMPLETED'): ?>
-                  <span style="color: #16A34A; font-weight: 700;"><i class="bi bi-check-circle-fill"></i> Completed</span>
-                <?php else: ?>
-                  <span style="color: #6366F1; font-weight: 600;"><i class="bi bi-hourglass-split"></i> Awaiting Lab</span>
-                <?php endif; ?>
-              </td>
-              <td style="padding: 8px 12px; font-size: 11px; color: #4B5563;">
-                <?= htmlspecialchars($lt['result_lab_name'] ?? ($prescriptionLabOrder['lab_name'] ?? 'Affiliated Lab')) ?>
-              </td>
-            </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-
-        <?php if (!empty($prescriptionLabOrder['test_notes'])): ?>
-        <div style="margin-top: 10px; font-size: 11px; color: #4B5563; background: #fff; border: 1px dashed #D1D5DB; border-radius: 6px; padding: 8px 12px;">
-          <strong>Doctor Instructions for Lab:</strong> <?= htmlspecialchars($prescriptionLabOrder['test_notes']) ?>
-        </div>
-        <?php endif; ?>
-      </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- ADVICE & LAB INVESTIGATIONS -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 28px;">
-      <?php if ($rx['advice']): ?>
-      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px;">
-        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748B; margin-bottom: 6px;">
-          <i class="bi bi-chat-left-text"></i> Doctor's Advice
-        </div>
-        <div style="font-size: 13px; color: #334155; line-height: 1.5; white-space: pre-line;">
-          <?= htmlspecialchars($rx['advice']) ?>
-        </div>
-      </div>
-      <?php endif; ?>
-
-      <?php if ($rx['investigation']): ?>
-      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px;">
-        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748B; margin-bottom: 6px;">
-          <i class="bi bi-eyedropper"></i> Recommended Tests
-        </div>
-        <div style="font-size: 13px; color: #334155; line-height: 1.5; white-space: pre-line;">
-          <?= htmlspecialchars($rx['investigation']) ?>
-        </div>
-      </div>
-      <?php endif; ?>
-    </div>
-
-    <!-- FOLLOW UP & SIGNATURE -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 20px; border-top: 2px dashed #E2E8F0; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-      <div>
-        <?php if ($rx['follow_up_date']): ?>
-        <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; padding: 10px 16px; display: inline-block;">
-          <div style="font-size: 11px; font-weight: 700; color: #065F46; text-transform: uppercase;">Next Follow-Up Consultation</div>
-          <div style="font-size: 14px; font-weight: 800; color: #047857; margin-top: 2px;">
-            <i class="bi bi-calendar-check-fill"></i> <?= date('l, F j, Y', strtotime($rx['follow_up_date'])) ?>
-          </div>
-        </div>
-        <?php else: ?>
-          <div style="font-size: 12px; color: #64748B;">Follow up as needed if symptoms persist.</div>
-        <?php endif; ?>
-      </div>
-
-      <div style="text-align: right; min-width: 200px;">
-        <div style="font-family: cursive; font-size: 18px; color: #0F766E; margin-bottom: 4px;">Dr. <?= htmlspecialchars($rx['doctor_name']) ?></div>
-        <div style="border-top: 1px solid #94A3B8; padding-top: 4px; font-size: 11px; color: #64748B;">
-          Digitally Signed via MedCore Security Token
-        </div>
-        <div style="font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #94A3B8;">
-          HASH: <?= strtoupper(substr(hash('sha256', $rx['prescription_uid'] . $rx['created_at']), 0, 16)) ?>
-        </div>
-      </div>
-    </div>
-
-    <!-- PREVIOUS CARE HISTORY ACCORDION (FOR PATIENT COMPREHENSIVE VIEW) -->
-    <?php if (!empty($prevPrescriptions)): ?>
-    <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #E2E8F0;">
-      <div style="font-weight: 700; font-size: 13px; color: #475569; margin-bottom: 10px;">
-        <i class="bi bi-clock-history"></i> Patient's Previous Prescriptions Summary
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        <?php foreach ($prevPrescriptions as $prx): ?>
-        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-          <div>
-            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #0F766E;"><?= htmlspecialchars($prx['prescription_uid']) ?></span>
-            &nbsp;·&nbsp; <?= date('d M Y', strtotime($prx['created_at'])) ?>
-            &nbsp;·&nbsp; <strong><?= htmlspecialchars($prx['diagnosis'] ?: 'General Consultation') ?></strong>
-            &nbsp;·&nbsp; <span style="color: #64748B;">Prescribed by Dr. <?= htmlspecialchars($prx['doc_name']) ?> at <?= htmlspecialchars($prx['hosp_name']) ?></span>
-          </div>
-          <a href="<?= APP_URL ?>/patient/prescription-report.php?id=<?= $prx['id'] ?>" class="btn btn-outline btn-sm no-print" style="padding: 2px 8px; font-size: 11px;">
-            View
-          </a>
-        </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-    <?php endif; ?>
-
-  </div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="<?= APP_URL ?>/assets/js/rx-pad.js?v=1"></script>
 </body>
 </html>
