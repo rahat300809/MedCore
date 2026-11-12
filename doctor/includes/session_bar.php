@@ -581,3 +581,47 @@ if (!function_exists('renderExecutiveClinicalSummary')) {
         <?php
     }
 }
+
+
+if (!function_exists('renderDoctorSessionBar')) {
+    function renderDoctorSessionBar(?array $activeSession, string $currentPage = ''): void {
+        renderActivePatientSessionBar($activeSession, $currentPage);
+    }
+}
+
+if (!function_exists('mc_doctor_shell_setup')) {
+    function mc_doctor_shell_setup(PDO $db, int $doctorId, int $hospitalId, ?array $activeSession, string $currentPage = ''): int {
+        $stmtCount = $db->prepare("
+            SELECT COUNT(*) FROM appointments
+            WHERE doctor_id = ? AND hospital_id = ? AND appointment_date = ? AND status IN ('CONFIRMED','WAITING','IN_CONSULTATION')
+        ");
+        $waitingQueueCount = 0;
+        if ($stmtCount) {
+            $stmtCount->execute([$doctorId, $hospitalId, date('Y-m-d')]);
+            $waitingQueueCount = (int)$stmtCount->fetchColumn();
+        }
+
+        ob_start();
+        renderActivePatientSessionBar($activeSession, $currentPage);
+        $GLOBALS['portalTopBanner'] = ob_get_clean();
+
+        $hospName = $_SESSION['hospital_name'] ?? 'Hospital';
+        $deptName = $_SESSION['department_name'] ?? '';
+        ob_start();
+        ?>
+        <div class="mc-rail-context">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:.4rem">
+            <span class="mc-rail-context-label">Active hospital</span>
+            <a href="<?= APP_URL ?>/doctor/select-hospital.php?switch=1" style="font-size:.74rem;font-weight:800;color:var(--accent)">Switch</a>
+          </div>
+          <div class="mc-rail-context-val"><i class="bi bi-building-fill-check"></i> <?= htmlspecialchars($hospName) ?></div>
+          <?php if ($deptName !== ''): ?>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:.15rem"><?= htmlspecialchars($deptName) ?></div>
+          <?php endif; ?>
+        </div>
+        <?php
+        $GLOBALS['portalRailContext'] = ob_get_clean();
+
+        return $waitingQueueCount;
+    }
+}

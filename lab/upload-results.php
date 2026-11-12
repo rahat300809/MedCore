@@ -37,6 +37,7 @@ if (!$order) {
     $portalTitle = 'Upload results';
     $portalSubtitle = 'আগে টোকেন খুঁজে টেস্ট সিলেক্ট করুন';
     $portalNav = mc_lab_nav('upload');
+    $bodyClass = 'lab-desk';
     require __DIR__ . '/../app/views/layout/portal_shell_start.php';
     echo '<div class="mc-panel" style="text-align:center;padding:2.2rem 1rem"><h2>Select a test first</h2><p style="color:var(--muted)">রিপোর্ট আপলোড করতে টোকেন সার্চ করে টেস্ট খুলুন।</p><a class="mc-btn mc-btn-primary" style="margin-top:1rem" href="' . APP_URL . '/lab/search-token.php">Search token</a></div>';
     require __DIR__ . '/../app/views/layout/portal_shell_end.php';

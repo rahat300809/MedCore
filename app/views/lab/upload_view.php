@@ -39,25 +39,25 @@ $csrf = generateCsrfToken();
   <div class="mc-panel">
     <div class="mc-panel-h"><h2>Result details</h2></div>
 
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem;margin-bottom:1rem">
+    <div class="mc-form-grid" style="margin-bottom:1rem">
       <?php
       $statuses = [
-        'NORMAL' => 'Normal',
-        'ABNORMAL' => 'Abnormal',
-        'CRITICAL' => 'Critical',
-        'PENDING_REVIEW' => 'Pending review',
+        'NORMAL' => ['Normal', 'tone-ok'],
+        'ABNORMAL' => ['Abnormal', 'tone-warn'],
+        'CRITICAL' => ['Critical', 'tone-danger'],
+        'PENDING_REVIEW' => ['Pending review', ''],
       ];
       $cur = $existingResult['result_status'] ?? 'PENDING_REVIEW';
-      foreach ($statuses as $val => $label):
+      foreach ($statuses as $val => [$label, $tone]):
       ?>
-        <label style="display:flex;align-items:center;gap:.55rem;border:1px solid var(--line);border-radius:12px;padding:.7rem .85rem;background:#fff;cursor:pointer">
+        <label class="mc-radio-card <?= $tone ?>">
           <input type="radio" name="result_status" value="<?= $val ?>" <?= $cur === $val ? 'checked' : '' ?>>
-          <span style="font-weight:700;font-size:.9rem"><?= $label ?></span>
+          <span><?= $label ?></span>
         </label>
       <?php endforeach; ?>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
+    <div class="mc-form-grid">
       <label class="mc-field" style="margin-top:0">
         <span>Result value</span>
         <input type="text" name="result_value" placeholder="e.g. 5.2 mmol/L" value="<?= htmlspecialchars($existingResult['result_value'] ?? '') ?>">

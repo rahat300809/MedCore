@@ -262,346 +262,212 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_prescription']))
         }
     }
 }
+require_once __DIR__ . '/../app/views/portal/navs.php';
+$waitingQueueCount = mc_doctor_shell_setup($db, $doctorId, $hospitalId, $accessSession, 'create-prescription');
+$portalRole = 'Doctor';
+$portalRoleBn = 'Clinical portal';
+$portalAccent = '#0f766e';
+$portalUser = $_SESSION['name'] ?? 'Doctor';
+$portalMeta = ($_SESSION['hospital_name'] ?? '') . ' · Write Rx';
+$portalTitle = 'Digital prescription pad';
+$portalSubtitle = 'Patient: ' . ($patient['full_name'] ?? '') . ' (' . ($patient['patient_uid'] ?? '') . ')';
+$portalNav = mc_doctor_nav('prescriptions', $waitingQueueCount);
+$portalTopAction = '<a class="mc-btn mc-btn-secondary mc-btn-sm" href="' . APP_URL . '/doctor/medical-record.php?patient_id=' . $patientId . '"><i class="bi bi-arrow-left"></i> Medical record</a>';
+$extraHead = <<<'CSS'
+<style>
+  .med-row {
+    background:#fafbfc;border:1px solid var(--line);border-radius:12px;padding:.9rem;margin-bottom:.75rem;
+  }
+  .med-row:hover { border-color:var(--accent); }
+  .rx-row-grid { display:grid; gap:.65rem; grid-template-columns:1fr; align-items:end; }
+  @media (min-width:760px) {
+    .rx-row-grid { grid-template-columns:2fr 1fr 1fr 1.5fr 1fr auto; }
+  }
+  .lab-row-grid { display:grid; gap:.65rem; grid-template-columns:1fr; align-items:end; }
+  @media (min-width:760px) {
+    .lab-row-grid { grid-template-columns:2fr 1.3fr 1fr 1.3fr auto; }
+  }
+</style>
+CSS;
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Write Prescription — MedCore Doctor Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-  <style>
-    .med-row {
-      background: #F8FAFC;
-      border: 1px solid var(--mc-border);
-      border-radius: var(--radius-lg);
-      padding: var(--space-4);
-      margin-bottom: var(--space-3);
-      position: relative;
-      transition: var(--transition-fast);
-    }
-    .med-row:hover {
-      border-color: var(--mc-blue);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .vitals-bar {
-      background: #F1F5F9;
-      border-radius: var(--radius-lg);
-      padding: var(--space-4);
-      margin-bottom: var(--space-6);
-    }
-  </style>
-</head>
-<body>
 
-<div class="portal-layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-icon">M</div>
-      <div>
-        <div class="brand-name">MedCore</div>
-        <div class="brand-sub">Doctor Portal</div>
+<?php if ($error): ?>
+  <div class="mc-alert mc-alert-danger"><?= htmlspecialchars($error) ?></div>
+<?php endif; ?>
+
+<?php if (!empty($patientClinicalSummary)): ?>
+  <details class="mc-panel" style="padding:0;overflow:hidden">
+    <summary style="padding:.95rem 1.15rem;font-weight:800;color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
+      <span><i class="bi bi-stars"></i> Quick clinical history: past diagnoses, medicines &amp; lab tests</span>
+      <span style="font-size:.82rem">Toggle reference</span>
+    </summary>
+    <div style="padding:1rem;border-top:1px solid var(--line)">
+      <?php renderExecutiveClinicalSummary($patientClinicalSummary, true); ?>
+    </div>
+  </details>
+<?php endif; ?>
+
+<div class="mc-panel" style="border-left:4px solid var(--accent)">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem">
+    <div>
+      <h2 style="font-size:1.15rem;margin:0 0 .25rem"><?= htmlspecialchars($patient['full_name']) ?></h2>
+      <div style="font-size:.86rem;color:var(--muted)">
+        ID <strong class="mc-mono"><?= htmlspecialchars($patient['patient_uid']) ?></strong>
+        · <?= $age ?> yrs · <?= ucfirst(strtolower($patient['gender'])) ?>
+        · Blood <strong style="color:var(--danger)"><?= htmlspecialchars($patient['blood_group'] ?? 'Unknown') ?></strong>
       </div>
     </div>
-
-    <div class="doctor-context-badge" style="margin: 0 var(--space-4) var(--space-4); padding: var(--space-3); background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-md);">
-      <div style="font-size: 0.75rem; color: #1E40AF; font-weight: 700; text-transform: uppercase;">Active Practice Context</div>
-      <div style="font-weight: 600; font-size: 0.88rem; color: #1E3A8A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= htmlspecialchars($_SESSION['hospital_name']) ?></div>
-      <div style="font-size: 0.78rem; color: #3B82F6;"><?= htmlspecialchars($_SESSION['department_name'] ?? 'General Practitioner') ?></div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <div class="nav-section-title">Clinical Care</div>
-      <a href="<?= APP_URL ?>/doctor/dashboard.php" class="nav-item">
-        <i class="bi bi-grid-1x2-fill"></i>
-        <span>Dashboard</span>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/patient-search.php" class="nav-item">
-        <i class="bi bi-search"></i>
-        <span>Search Patient</span>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $patientId ?>" class="nav-item">
-        <i class="bi bi-heart-pulse-fill"></i>
-        <span>Patient Record</span>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $patientId ?>" class="nav-item active">
-        <i class="bi bi-file-earmark-medical-fill"></i>
-        <span>Write Prescription</span>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/consultations.php" class="nav-item">
-        <i class="bi bi-chat-heart-fill"></i>
-        <span>Consultations</span>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/prescriptions.php" class="nav-item">
-        <i class="bi bi-prescription2"></i>
-        <span>Prescriptions</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="user-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'D', 0, 1)) ?></div>
-        <div class="user-info">
-          <div class="user-name"><?= htmlspecialchars($_SESSION['name'] ?? 'Doctor') ?></div>
-          <div class="user-role">BMDC Verified</div>
-        </div>
+    <?php if (!empty($allergies)): ?>
+      <div style="background:var(--danger-soft);border:1px solid #fecdca;border-radius:10px;padding:.55rem .8rem;font-size:.84rem;color:var(--danger);display:flex;flex-wrap:wrap;gap:.35rem;align-items:center">
+        <strong><i class="bi bi-exclamation-triangle-fill"></i> Known allergies:</strong>
+        <?php foreach ($allergies as $alg): ?>
+          <span class="lab-status danger"><?= htmlspecialchars($alg['allergy_name']) ?></span>
+        <?php endforeach; ?>
       </div>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="btn btn-outline btn-sm" style="width: 100%; margin-top: var(--space-3);">
-        <i class="bi bi-box-arrow-right"></i> Sign Out
-      </a>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="portal-main">
-    <?php renderActivePatientSessionBar($accessSession, 'create-prescription'); ?>
-
-    <header class="portal-header">
-      <div class="d-flex align-items-center gap-3">
-        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
-          <span></span><span></span><span></span>
-        </button>
-        <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $patientId ?>" class="btn btn-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Medical Record
-        </a>
-        <h1 class="portal-title" style="font-size: 1.25rem; margin: 0;">Digital Prescription Pad</h1>
-      </div>
-      <div class="header-actions">
-        <span class="badge badge-success"><i class="bi bi-shield-check"></i> Session Active</span>
-      </div>
-    </header>
-
-    <div class="portal-body" style="max-width: 1080px;">
-
-      <?php if ($error): ?>
-        <div class="alert alert-danger mb-4"><i class="bi bi-exclamation-circle-fill"></i> <?= htmlspecialchars($error) ?></div>
-      <?php endif; ?>
-
-      <!-- Quick Expandable Clinical Reference -->
-      <?php if (!empty($patientClinicalSummary)): ?>
-        <details class="card mb-4" style="border: 1px solid #BFDBFE; background:#F8FAFC; border-radius:12px; overflow:hidden;">
-          <summary style="padding:14px 18px; font-weight:700; color:#1E40AF; cursor:pointer; display:flex; align-items:center; justify-content:space-between; user-select:none;">
-            <span><i class="bi bi-stars"></i> Quick Clinical History: Past Diagnoses, Medicines &amp; Lab Tests (এক নজরে অতীত বিবরণ)</span>
-            <span style="font-size:12px; font-weight:600; color:#2563EB;">Toggle Reference <i class="bi bi-chevron-down"></i></span>
-          </summary>
-          <div style="padding:16px; border-top:1px solid #E2E8F0; background:#fff;">
-            <?php renderExecutiveClinicalSummary($patientClinicalSummary, true); ?>
-          </div>
-        </details>
-      <?php endif; ?>
-
-      <!-- Patient Summary Card -->
-      <div class="card mb-4" style="border-left: 4px solid var(--mc-blue);">
-        <div class="card-body py-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <div>
-            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 4px;"><?= htmlspecialchars($patient['full_name']) ?></h3>
-            <div class="text-muted" style="font-size: 0.88rem;">
-              ID: <strong><?= htmlspecialchars($patient['patient_uid']) ?></strong> &bull;
-              <?= $age ?> yrs &bull; <?= ucfirst(strtolower($patient['gender'])) ?> &bull;
-              Blood: <strong><?= htmlspecialchars($patient['blood_group'] ?? 'Unknown') ?></strong>
-            </div>
-          </div>
-          <?php if (!empty($allergies)): ?>
-            <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: 0.85rem; color: #991B1B;">
-              <strong><i class="bi bi-exclamation-triangle-fill"></i> Known Allergies:</strong>
-              <?php foreach ($allergies as $alg): ?>
-                <span class="badge badge-danger" style="margin-left: 4px;"><?= htmlspecialchars($alg['allergy_name']) ?></span>
-              <?php endforeach; ?>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
-
-      <!-- Prescription Form -->
-      <form method="POST" id="prescription-form">
-        <?= csrfField() ?>
-        <input type="hidden" name="save_prescription" value="1">
-
-        <!-- 1. Vitals -->
-        <div class="card mb-4">
-          <div class="card-header"><h4 class="card-title" style="font-size: 1rem;"><i class="bi bi-speedometer2"></i> Clinical Vitals &amp; Patient Presentation</h4></div>
-          <div class="card-body">
-            <div class="row g-3">
-              <div class="col-md-3">
-                <label class="form-label">Blood Pressure (mmHg)</label>
-                <input type="text" name="bp" class="form-control" placeholder="120/80">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Pulse (bpm)</label>
-                <input type="number" name="pulse" class="form-control" placeholder="75">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Temperature (°F)</label>
-                <input type="text" name="temp" class="form-control" placeholder="98.6">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Weight (kg)</label>
-                <input type="number" step="0.1" name="weight" class="form-control" placeholder="68.5">
-              </div>
-              <div class="col-md-6 mt-3">
-                <label class="form-label">Chief Complaints / Presenting Symptoms</label>
-                <textarea name="chief_complaint" rows="2" class="form-control" placeholder="e.g. High fever for 3 days, dry cough, body aches"></textarea>
-              </div>
-              <div class="col-md-6 mt-3">
-                <label class="form-label">Primary Diagnosis <span class="text-danger">*</span></label>
-                <textarea name="diagnosis" rows="2" class="form-control" placeholder="e.g. Acute Viral Upper Respiratory Tract Infection" required></textarea>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. Medicines / Rx -->
-        <div class="card mb-4">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="card-title" style="font-size: 1rem;"><i class="bi bi-prescription2"></i> Prescribed Medicines (Rx)</h4>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="addMedicineRow()">
-              <i class="bi bi-plus-lg"></i> Add Medicine
-            </button>
-          </div>
-          <div class="card-body">
-            <div id="medicines-container">
-              <!-- Medicine Row 1 -->
-              <div class="med-row" id="med-row-0">
-                <div class="row g-2 align-items-center">
-                  <div class="col-md-3">
-                    <label class="form-label" style="font-size: 0.8rem;">Medicine Name / Generic <span class="text-danger">*</span></label>
-                    <input type="text" name="med_name[]" class="form-control form-control-sm" placeholder="e.g. Paracetamol / Napa Extra" required>
-                  </div>
-                  <div class="col-md-2">
-                    <label class="form-label" style="font-size: 0.8rem;">Form</label>
-                    <select name="med_form[]" class="form-control form-control-sm">
-                      <option value="Tablet">Tablet</option>
-                      <option value="Capsule">Capsule</option>
-                      <option value="Syrup">Syrup</option>
-                      <option value="Suspension">Suspension</option>
-                      <option value="Injection">Injection</option>
-                      <option value="Inhaler">Inhaler</option>
-                      <option value="Eye Drop">Eye Drop</option>
-                      <option value="Ointment">Ointment</option>
-                    </select>
-                  </div>
-                  <div class="col-md-2">
-                    <label class="form-label" style="font-size: 0.8rem;">Strength</label>
-                    <input type="text" name="med_strength[]" class="form-control form-control-sm" placeholder="e.g. 500 mg">
-                  </div>
-                  <div class="col-md-2">
-                    <label class="form-label" style="font-size: 0.8rem;">Frequency</label>
-                    <select name="med_frequency[]" class="form-control form-control-sm">
-                      <option value="1+0+1 (Morning + Night)">1+0+1 (Morning + Night)</option>
-                      <option value="1+1+1 (3 times daily)">1+1+1 (3 times daily)</option>
-                      <option value="1+0+0 (Morning only)">1+0+0 (Morning only)</option>
-                      <option value="0+0+1 (Night only)">0+0+1 (Night only)</option>
-                      <option value="1+1+1+1 (4 times daily)">1+1+1+1 (4 times daily)</option>
-                      <option value="SOS (As needed)">SOS (As needed)</option>
-                    </select>
-                  </div>
-                  <div class="col-md-2">
-                    <label class="form-label" style="font-size: 0.8rem;">Duration</label>
-                    <input type="text" name="med_duration[]" class="form-control form-control-sm" placeholder="e.g. 7 days" value="7 days">
-                  </div>
-                  <div class="col-md-1 text-end" style="padding-top: 18px;">
-                    <button type="button" class="btn btn-outline text-danger btn-sm" onclick="removeMedicineRow(0)" title="Delete row">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                  <div class="col-12 mt-2">
-                    <input type="text" name="med_instructions[]" class="form-control form-control-sm" placeholder="Instructions: e.g. After meal, with warm water">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="text-center mt-3">
-              <button type="button" class="btn btn-outline btn-sm" onclick="addMedicineRow()">
-                <i class="bi bi-plus-circle"></i> Add Another Medicine
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Investigations & Advice -->
-        <div class="card mb-4">
-          <div class="card-header"><h4 class="card-title" style="font-size: 1rem;"><i class="bi bi-clipboard2-check"></i> Investigations, Advice &amp; Follow-up</h4></div>
-          <div class="card-body">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label">Investigations / Diagnostic Tests Recommended</label>
-                <textarea name="investigation" rows="3" class="form-control" placeholder="e.g. CBC, Serum Creatinine, Chest X-Ray P/A view"></textarea>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Special Advice &amp; Dietary Guidelines</label>
-                <textarea name="advice" rows="3" class="form-control" placeholder="e.g. Plenty of oral fluids, rest, avoid spicy and oily food"></textarea>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Follow-up After</label>
-                <select name="follow_up_days" class="form-control">
-                  <option value="0">No follow-up scheduled</option>
-                  <option value="3">3 Days</option>
-                  <option value="5">5 Days</option>
-                  <option value="7" selected>7 Days</option>
-                  <option value="14">14 Days (2 Weeks)</option>
-                  <option value="30">1 Month</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. Lab Tests (New) -->
-        <div class="card mb-4" style="border:1px solid rgba(14,165,233,0.3);">
-          <div class="card-header d-flex justify-content-between align-items-center" style="background:rgba(14,165,233,0.08);">
-            <h4 class="card-title" style="font-size:1rem;color:#38bdf8;margin:0;"><i class="bi bi-eyedropper"></i> 🔬 Lab Tests &amp; Investigations <span style="font-size:.75rem;color:#64748b;font-weight:400">(optional — generates a Lab Token)</span></h4>
-            <button type="button" class="btn btn-sm" onclick="addLabTestRow()" style="background:rgba(14,165,233,0.15);border:1px solid rgba(14,165,233,0.3);color:#38bdf8;">
-              <i class="bi bi-plus-lg"></i> Add Test
-            </button>
-          </div>
-          <div class="card-body">
-            <!-- Quick Preset Chips -->
-            <div class="mb-3" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-              <span style="font-size: 0.8rem; font-weight: 700; color: #475569;"><i class="bi bi-stars text-primary"></i> Quick Presets:</span>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('MRI of Brain', 'Radiology', 'ROUTINE', 'Plain and contrast study')">🧠 Brain MRI</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Chest X-Ray P/A View', 'Radiology', 'ROUTINE', '')">🩻 Chest X-Ray</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Complete Blood Count (CBC)', 'Haematology', 'ROUTINE', '')">🩸 CBC</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Fasting Blood Sugar (FBS)', 'Biochemistry', 'ROUTINE', '10-12 hrs fasting')">🧪 FBS</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('HbA1c', 'Endocrinology', 'ROUTINE', '')">📊 HbA1c</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Lipid Profile', 'Biochemistry', 'ROUTINE', '12 hrs fasting')">🩺 Lipid Profile</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('Serum Creatinine', 'Biochemistry', 'ROUTINE', '')">🧪 Creatinine</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('USG of Whole Abdomen', 'Radiology', 'ROUTINE', 'Full bladder')">🩻 USG Abdomen</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPresetTest('12-Lead ECG', 'Cardiac', 'ROUTINE', '')">💓 ECG</button>
-            </div>
-
-            <div id="lab-tests-container">
-              <!-- empty by default; doctor adds rows -->
-            </div>
-            <div id="lab-tests-placeholder" style="text-align:center;padding:1.5rem;color:#475569;font-size:.875rem;">
-              Click <strong>Add Test</strong> or select a <strong>Quick Preset</strong> above to prescribe lab investigations. A unique <strong>Lab Token</strong> will be generated automatically on the prescription pad.
-            </div>
-            <div class="mt-3" id="lab-notes-wrap" style="display:none;">
-              <label class="form-label">Special Notes for the Lab</label>
-              <textarea name="lab_test_notes" rows="2" class="form-control" placeholder="e.g. Patient is fasting. Please collect early morning sample."></textarea>
-            </div>
-          </div>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mb-5">
-          <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $patientId ?>" class="btn btn-secondary">
-            Cancel
-          </a>
-          <div class="d-flex gap-3">
-            <button type="submit" class="btn btn-primary btn-lg" style="padding: 12px 32px;">
-              <i class="bi bi-check2-circle"></i> Issue &amp; Sign Prescription
-            </button>
-          </div>
-        </div>
-
-      </form>
-    </div>
-  </main>
+    <?php endif; ?>
+  </div>
 </div>
+
+<form method="POST" id="prescription-form">
+  <?= csrfField() ?>
+  <input type="hidden" name="save_prescription" value="1">
+
+  <div class="mc-panel">
+    <div class="mc-panel-h"><h2><i class="bi bi-speedometer2"></i> Clinical vitals &amp; presentation</h2></div>
+    <div class="mc-form-grid-4">
+      <label class="mc-field" style="margin:0"><span>Blood pressure (mmHg)</span><input type="text" name="bp" placeholder="120/80"></label>
+      <label class="mc-field" style="margin:0"><span>Pulse (bpm)</span><input type="number" name="pulse" placeholder="75"></label>
+      <label class="mc-field" style="margin:0"><span>Temperature (°F)</span><input type="text" name="temp" placeholder="98.6"></label>
+      <label class="mc-field" style="margin:0"><span>Weight (kg)</span><input type="number" step="0.1" name="weight" placeholder="68.5"></label>
+    </div>
+    <div class="mc-form-grid" style="margin-top:.85rem">
+      <label class="mc-field" style="margin:0">
+        <span>Chief complaints / symptoms</span>
+        <textarea name="chief_complaint" rows="2" placeholder="e.g. High fever for 3 days, dry cough, body aches"></textarea>
+      </label>
+      <label class="mc-field" style="margin:0">
+        <span>Primary diagnosis *</span>
+        <textarea name="diagnosis" rows="2" placeholder="e.g. Acute Viral Upper Respiratory Tract Infection" required></textarea>
+      </label>
+    </div>
+  </div>
+
+  <div class="mc-panel">
+    <div class="mc-panel-h">
+      <h2><i class="bi bi-prescription2"></i> Prescribed medicines (Rx)</h2>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addMedicineRow()"><i class="bi bi-plus-lg"></i> Add medicine</button>
+    </div>
+    <div id="medicines-container">
+      <div class="med-row" id="med-row-0">
+        <div class="rx-row-grid">
+          <label class="mc-field" style="margin:0">
+            <span>Medicine / Generic *</span>
+            <input type="text" name="med_name[]" placeholder="e.g. Paracetamol / Napa Extra" required>
+          </label>
+          <label class="mc-field" style="margin:0">
+            <span>Form</span>
+            <select name="med_form[]">
+              <option value="Tablet">Tablet</option>
+              <option value="Capsule">Capsule</option>
+              <option value="Syrup">Syrup</option>
+              <option value="Suspension">Suspension</option>
+              <option value="Injection">Injection</option>
+              <option value="Inhaler">Inhaler</option>
+              <option value="Eye Drop">Eye Drop</option>
+              <option value="Ointment">Ointment</option>
+            </select>
+          </label>
+          <label class="mc-field" style="margin:0">
+            <span>Strength</span>
+            <input type="text" name="med_strength[]" placeholder="e.g. 500 mg">
+          </label>
+          <label class="mc-field" style="margin:0">
+            <span>Frequency</span>
+            <select name="med_frequency[]">
+              <option value="1+0+1 (Morning + Night)">1+0+1 (Morning + Night)</option>
+              <option value="1+1+1 (3 times daily)">1+1+1 (3 times daily)</option>
+              <option value="1+0+0 (Morning only)">1+0+0 (Morning only)</option>
+              <option value="0+0+1 (Night only)">0+0+1 (Night only)</option>
+              <option value="1+1+1+1 (4 times daily)">1+1+1+1 (4 times daily)</option>
+              <option value="SOS (As needed)">SOS (As needed)</option>
+            </select>
+          </label>
+          <label class="mc-field" style="margin:0">
+            <span>Duration</span>
+            <input type="text" name="med_duration[]" placeholder="e.g. 7 days" value="7 days">
+          </label>
+          <button type="button" class="mc-btn mc-btn-ghost mc-btn-sm" onclick="removeMedicineRow(0)" title="Delete row" style="color:var(--danger)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+        <label class="mc-field" style="margin-top:.6rem">
+          <span>Instructions</span>
+          <input type="text" name="med_instructions[]" placeholder="e.g. After meal, with warm water">
+        </label>
+      </div>
+    </div>
+    <button type="button" class="mc-btn mc-btn-soft mc-btn-sm" onclick="addMedicineRow()"><i class="bi bi-plus-circle"></i> Add another medicine</button>
+  </div>
+
+  <div class="mc-panel">
+    <div class="mc-panel-h"><h2><i class="bi bi-clipboard2-check"></i> Investigations, advice &amp; follow-up</h2></div>
+    <div class="mc-form-grid">
+      <label class="mc-field" style="margin:0">
+        <span>Investigations / diagnostic notes</span>
+        <textarea name="investigation" rows="3" placeholder="e.g. CBC, Serum Creatinine, Chest X-Ray P/A view"></textarea>
+      </label>
+      <label class="mc-field" style="margin:0">
+        <span>Special advice &amp; dietary guidelines</span>
+        <textarea name="advice" rows="3" placeholder="e.g. Plenty of oral fluids, rest, avoid spicy and oily food"></textarea>
+      </label>
+    </div>
+    <label class="mc-field" style="max-width:260px">
+      <span>Follow-up after</span>
+      <select name="follow_up_days">
+        <option value="0">No follow-up scheduled</option>
+        <option value="3">3 Days</option>
+        <option value="5">5 Days</option>
+        <option value="7" selected>7 Days</option>
+        <option value="14">14 Days (2 Weeks)</option>
+        <option value="30">1 Month</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="mc-panel" style="border-color:#bae6fd;background:#f8fcff">
+    <div class="mc-panel-h">
+      <h2><i class="bi bi-eyedropper" style="color:var(--accent-2)"></i> Lab tests &amp; token (optional)</h2>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addLabTestRow()"><i class="bi bi-plus-lg"></i> Add test</button>
+    </div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-bottom:.85rem">
+      <span style="font-size:.8rem;font-weight:800;color:var(--muted)">Quick presets:</span>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addPresetTest('MRI of Brain', 'Radiology', 'ROUTINE', 'Plain and contrast study')">Brain MRI</button>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addPresetTest('Chest X-Ray P/A View', 'Radiology', 'ROUTINE', '')">Chest X-Ray</button>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addPresetTest('Complete Blood Count (CBC)', 'Haematology', 'ROUTINE', '')">CBC</button>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addPresetTest('Fasting Blood Sugar (FBS)', 'Biochemistry', 'ROUTINE', '10-12 hrs fasting')">FBS</button>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addPresetTest('HbA1c', 'Endocrinology', 'ROUTINE', '')">HbA1c</button>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addPresetTest('Lipid Profile', 'Biochemistry', 'ROUTINE', '12 hrs fasting')">Lipid Profile</button>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addPresetTest('Serum Creatinine', 'Biochemistry', 'ROUTINE', '')">Creatinine</button>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addPresetTest('USG of Whole Abdomen', 'Radiology', 'ROUTINE', 'Full bladder')">USG Abdomen</button>
+      <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="addPresetTest('12-Lead ECG', 'Cardiac', 'ROUTINE', '')">ECG</button>
+    </div>
+
+    <div id="lab-tests-container"></div>
+    <div id="lab-tests-placeholder" style="text-align:center;padding:1.25rem;color:var(--muted);font-size:.88rem;border:1px dashed var(--line);border-radius:10px;background:#fff">
+      Click <strong>Add test</strong> or select a quick preset above to generate an automatic <strong>Lab Token</strong> on the prescription.
+    </div>
+    <label class="mc-field" id="lab-notes-wrap" style="display:none">
+      <span>Special notes for the lab</span>
+      <textarea name="lab_test_notes" rows="2" placeholder="e.g. Patient is fasting. Please collect early morning sample."></textarea>
+    </label>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap">
+    <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $patientId ?>" class="mc-btn mc-btn-secondary">Cancel</a>
+    <button type="submit" class="mc-btn mc-btn-primary mc-btn-lg"><i class="bi bi-check2-circle"></i> Issue &amp; sign prescription</button>
+  </div>
+</form>
 
 <script>
 let medCount = 1;
@@ -613,14 +479,14 @@ function addMedicineRow() {
   div.className = 'med-row';
   div.id = 'med-row-' + id;
   div.innerHTML = `
-    <div class="row g-2 align-items-center">
-      <div class="col-md-3">
-        <label class="form-label" style="font-size: 0.8rem;">Medicine Name / Generic <span class="text-danger">*</span></label>
-        <input type="text" name="med_name[]" class="form-control form-control-sm" placeholder="e.g. Amoxicillin / Moxaclav" required>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label" style="font-size: 0.8rem;">Form</label>
-        <select name="med_form[]" class="form-control form-control-sm">
+    <div class="rx-row-grid">
+      <label class="mc-field" style="margin:0">
+        <span>Medicine / Generic *</span>
+        <input type="text" name="med_name[]" placeholder="e.g. Amoxicillin / Moxaclav" required>
+      </label>
+      <label class="mc-field" style="margin:0">
+        <span>Form</span>
+        <select name="med_form[]">
           <option value="Tablet">Tablet</option>
           <option value="Capsule">Capsule</option>
           <option value="Syrup">Syrup</option>
@@ -630,14 +496,14 @@ function addMedicineRow() {
           <option value="Eye Drop">Eye Drop</option>
           <option value="Ointment">Ointment</option>
         </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label" style="font-size: 0.8rem;">Strength</label>
-        <input type="text" name="med_strength[]" class="form-control form-control-sm" placeholder="e.g. 625 mg">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label" style="font-size: 0.8rem;">Frequency</label>
-        <select name="med_frequency[]" class="form-control form-control-sm">
+      </label>
+      <label class="mc-field" style="margin:0">
+        <span>Strength</span>
+        <input type="text" name="med_strength[]" placeholder="e.g. 625 mg">
+      </label>
+      <label class="mc-field" style="margin:0">
+        <span>Frequency</span>
+        <select name="med_frequency[]">
           <option value="1+0+1 (Morning + Night)">1+0+1 (Morning + Night)</option>
           <option value="1+1+1 (3 times daily)">1+1+1 (3 times daily)</option>
           <option value="1+0+0 (Morning only)">1+0+0 (Morning only)</option>
@@ -645,20 +511,19 @@ function addMedicineRow() {
           <option value="1+1+1+1 (4 times daily)">1+1+1+1 (4 times daily)</option>
           <option value="SOS (As needed)">SOS (As needed)</option>
         </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label" style="font-size: 0.8rem;">Duration</label>
-        <input type="text" name="med_duration[]" class="form-control form-control-sm" placeholder="e.g. 5 days" value="5 days">
-      </div>
-      <div class="col-md-1 text-end" style="padding-top: 18px;">
-        <button type="button" class="btn btn-outline text-danger btn-sm" onclick="removeMedicineRow(${id})" title="Delete row">
-          <i class="bi bi-trash"></i>
-        </button>
-      </div>
-      <div class="col-12 mt-2">
-        <input type="text" name="med_instructions[]" class="form-control form-control-sm" placeholder="Instructions: e.g. After meal, full course complete">
-      </div>
+      </label>
+      <label class="mc-field" style="margin:0">
+        <span>Duration</span>
+        <input type="text" name="med_duration[]" placeholder="e.g. 5 days" value="5 days">
+      </label>
+      <button type="button" class="mc-btn mc-btn-ghost mc-btn-sm" onclick="removeMedicineRow(${id})" title="Delete row" style="color:var(--danger)">
+        <i class="bi bi-trash"></i>
+      </button>
     </div>
+    <label class="mc-field" style="margin-top:.6rem">
+      <span>Instructions</span>
+      <input type="text" name="med_instructions[]" placeholder="e.g. After meal, complete full course">
+    </label>
   `;
   document.getElementById('medicines-container').appendChild(div);
 }
@@ -666,8 +531,7 @@ function addMedicineRow() {
 function removeMedicineRow(id) {
   const row = document.getElementById('med-row-' + id);
   if (row) {
-    const totalRows = document.querySelectorAll('.med-row').length;
-    if (totalRows <= 1) {
+    if (document.querySelectorAll('.med-row').length <= 1) {
       alert('Prescription must have at least one medicine row.');
       return;
     }
@@ -680,18 +544,18 @@ function addLabTestRow() {
   document.getElementById('lab-tests-placeholder').style.display = 'none';
   document.getElementById('lab-notes-wrap').style.display = 'block';
   const div = document.createElement('div');
-  div.className = 'lab-test-row';
+  div.className = 'lab-test-row med-row';
   div.id = 'lab-test-row-' + id;
-  div.style.cssText = 'background:rgba(14,165,233,0.04);border:1px solid rgba(14,165,233,0.15);border-radius:10px;padding:12px;margin-bottom:10px;';
+  div.style.background = '#fff';
   div.innerHTML = `
-    <div class="row g-2 align-items-center">
-      <div class="col-md-4">
-        <label class="form-label" style="font-size:.8rem;">Test Name <span class="text-danger">*</span></label>
-        <input type="text" name="lab_test_name[]" class="form-control form-control-sm" placeholder="e.g. CBC, HbA1c, Chest X-Ray" required>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label" style="font-size:.8rem;">Category</label>
-        <select name="lab_test_category[]" class="form-control form-control-sm">
+    <div class="lab-row-grid">
+      <label class="mc-field" style="margin:0">
+        <span>Test name *</span>
+        <input type="text" name="lab_test_name[]" placeholder="e.g. CBC, HbA1c, Chest X-Ray" required>
+      </label>
+      <label class="mc-field" style="margin:0">
+        <span>Category</span>
+        <select name="lab_test_category[]">
           <option value="">— Select —</option>
           <option value="Haematology">Haematology</option>
           <option value="Biochemistry">Biochemistry</option>
@@ -704,24 +568,22 @@ function addLabTestRow() {
           <option value="Endocrinology">Endocrinology</option>
           <option value="Other">Other</option>
         </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label" style="font-size:.8rem;">Urgency</label>
-        <select name="lab_test_urgency[]" class="form-control form-control-sm">
+      </label>
+      <label class="mc-field" style="margin:0">
+        <span>Urgency</span>
+        <select name="lab_test_urgency[]">
           <option value="ROUTINE">Routine</option>
           <option value="URGENT">Urgent</option>
           <option value="STAT">STAT</option>
         </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label" style="font-size:.8rem;">Instructions</label>
-        <input type="text" name="lab_test_instructions[]" class="form-control form-control-sm" placeholder="e.g. Fasting">
-      </div>
-      <div class="col-md-1 text-end" style="padding-top:18px;">
-        <button type="button" class="btn btn-outline text-danger btn-sm" onclick="removeLabTestRow(${id})" title="Remove">
-          <i class="bi bi-trash"></i>
-        </button>
-      </div>
+      </label>
+      <label class="mc-field" style="margin:0">
+        <span>Instructions</span>
+        <input type="text" name="lab_test_instructions[]" placeholder="e.g. Fasting">
+      </label>
+      <button type="button" class="mc-btn mc-btn-ghost mc-btn-sm" onclick="removeLabTestRow(${id})" title="Remove" style="color:var(--danger)">
+        <i class="bi bi-trash"></i>
+      </button>
     </div>
   `;
   document.getElementById('lab-tests-container').appendChild(div);
@@ -752,6 +614,4 @@ function addPresetTest(name, category, urgency, instructions) {
   }
 }
 </script>
-
-</body>
-</html>
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>

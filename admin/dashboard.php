@@ -129,494 +129,222 @@ $stmt->execute();
 $recentLogs = $stmt->fetchAll();
 
 $csrf = generateCsrfToken();
+require_once __DIR__ . '/../app/views/portal/navs.php';
+$portalRole = 'Admin';
+$portalRoleBn = 'Central Administration';
+$portalAccent = '#1e40af';
+$portalUser = $_SESSION['name'] ?? 'System Admin';
+$portalMeta = $_SESSION['email'] ?? 'admin@medcore.local';
+$portalTitle = 'Platform Overview & Verification Hub';
+$portalSubtitle = 'Central governance, BMDC credential review, hospital network & audit trail';
+$portalNav = mc_admin_nav('dashboard', (int)($stats['pending_doctors'] ?? 0));
+$portalTopAction = '<a href="' . APP_URL . '/admin/doctor-create.php" class="mc-btn mc-btn-primary mc-btn-sm"><i class="bi bi-plus-circle"></i> Register Doctor</a> '
+    . '<a href="' . APP_URL . '/admin/doctors.php?tab=pending" class="mc-btn mc-btn-secondary mc-btn-sm"><i class="bi bi-patch-check"></i> Pending (' . (int)$stats['pending_doctors'] . ')</a>';
+$bodyClass = 'lab-desk';
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard — MedCore Central Administration</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-  <style>
-    :root {
-      --admin-primary: #1E40AF;
-      --admin-dark: #0F172A;
-      --admin-surface: #1E293B;
-    }
-    .badge-pending { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
-    .badge-verified { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
-    .badge-rejected { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
-    .badge-suspended { background: #F3F4F6; color: #4B5563; border: 1px solid #E5E7EB; }
 
-    .stat-card-admin {
-      background: var(--mc-white);
-      border: 1px solid var(--mc-border);
-      border-radius: var(--radius-lg);
-      padding: var(--space-5);
-      transition: var(--transition-slow);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .stat-card-admin:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-    }
-    .stat-card-admin .stat-num {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--mc-text);
-      line-height: 1;
-      margin: 8px 0 4px;
-    }
-    .stat-card-admin .stat-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--mc-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .stat-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-    }
+<?php if ($flashSuccess): ?>
+  <div class="mc-alert mc-alert-ok" data-auto-dismiss="6000">
+    <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($flashSuccess) ?>
+  </div>
+<?php endif; ?>
 
-    .doctor-pending-card {
-      background: #FFFBEB;
-      border: 1px solid #FDE68A;
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
-      margin-bottom: var(--space-3);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      transition: var(--transition);
-    }
-    .doctor-pending-card:hover {
-      background: #FEF3C7;
-      border-color: #FCD34D;
-    }
-    .doctor-avatar-circle {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: #DBEAFE;
-      color: #1E40AF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 16px;
-      flex-shrink: 0;
-    }
-  </style>
-</head>
-<body>
-
-<div class="portal-layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar" style="background: var(--admin-dark);">
-    <div class="sidebar-brand" style="border-color: rgba(255,255,255,0.1);">
-      <div class="brand-icon" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">M</div>
+<?php if ($stats['pending_doctors'] > 0): ?>
+  <div class="mc-alert mc-alert-warn" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <i class="bi bi-exclamation-octagon-fill" style="font-size:1.4rem;"></i>
       <div>
-        <div class="brand-name" style="color:white;">MedCore</div>
-        <div class="brand-sub" style="color: #94A3B8; font-size:11px;">Central Administration</div>
+        <strong style="display:block;font-size:.98rem;"><?= $stats['pending_doctors'] ?> Doctor<?= $stats['pending_doctors'] > 1 ? 's' : '' ?> Awaiting BMDC Credential Approval</strong>
+        <span style="font-size:.84rem;">Doctors cannot be affiliated with any hospital until verified by the Central Admin board.</span>
       </div>
     </div>
+    <a href="<?= APP_URL ?>/admin/doctors.php?tab=pending" class="mc-btn mc-btn-primary mc-btn-sm">
+      Review Verification Queue →
+    </a>
+  </div>
+<?php endif; ?>
 
-    <nav class="sidebar-nav">
-      <div class="nav-section-title" style="color: #64748B;">Central Oversight</div>
-      <a href="<?= APP_URL ?>/admin/dashboard.php" class="nav-item active">
-        <i class="bi bi-grid-1x2-fill"></i> System Dashboard
-      </a>
-      <a href="<?= APP_URL ?>/admin/doctors.php" class="nav-item">
-        <i class="bi bi-person-badge-fill"></i> Doctor Verification
-        <?php if ($stats['pending_doctors'] > 0): ?>
-          <span class="badge badge-pending" style="margin-left:auto; font-size:11px; padding:2px 6px;">
-            <?= $stats['pending_doctors'] ?>
-          </span>
-        <?php endif; ?>
-      </a>
-      <a href="<?= APP_URL ?>/admin/hospitals.php" class="nav-item">
-        <i class="bi bi-building-fill-check"></i> Hospital Network
-      </a>
-      <a href="<?= APP_URL ?>/admin/laboratories.php" class="nav-item">
-        <i class="bi bi-flask-fill"></i> Diagnostic Labs
-        <?php if (($stats['pending_labs'] ?? 0) > 0): ?>
-          <span class="badge badge-pending" style="margin-left:auto; font-size:11px; padding:2px 6px;">
-            <?= $stats['pending_labs'] ?>
-          </span>
-        <?php endif; ?>
-      </a>
-      <a href="<?= APP_URL ?>/admin/affiliations.php" class="nav-item">
-        <i class="bi bi-diagram-3-fill"></i> Hospital Affiliations
-      </a>
-
-      <div class="nav-section-title" style="color: #64748B; margin-top: 16px;">National Registry</div>
-      <a href="<?= APP_URL ?>/admin/patients.php" class="nav-item">
-        <i class="bi bi-people-fill"></i> Patient Registry
-      </a>
-      <a href="<?= APP_URL ?>/admin/audit-logs.php" class="nav-item">
-        <i class="bi bi-shield-check"></i> Audit & Compliance
-      </a>
-    </nav>
-
-    <div class="sidebar-footer" style="border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div class="user-avatar" style="background: #3B82F6; color:white; width:36px; height:36px; font-size:13px;">
-          SA
-        </div>
-        <div style="overflow:hidden;">
-          <div style="font-weight:700; font-size:13px; color:white;"><?= htmlspecialchars($_SESSION['name'] ?? 'System Admin') ?></div>
-          <div style="font-size:11px; color:#94A3B8;"><?= htmlspecialchars($_SESSION['email'] ?? 'admin@medcore.local') ?></div>
-        </div>
-      </div>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="btn btn-secondary btn-sm w-100" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: white;">
-        <i class="bi bi-box-arrow-right"></i> Sign Out
-      </a>
+<section class="mc-stats" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));">
+  <div class="mc-stat">
+    <div class="l">Total Doctors</div>
+    <div class="v"><?= $stats['total_doctors'] ?></div>
+    <div style="font-size:.78rem;color:var(--muted);margin-top:.25rem;">
+      <span style="color:#027a48;font-weight:700;">✓ <?= $stats['verified_doctors'] ?> Verified</span> ·
+      <span style="color:#b54708;font-weight:700;">⏳ <?= $stats['pending_doctors'] ?> Pending</span>
     </div>
-  </aside>
+  </div>
+  <div class="mc-stat">
+    <div class="l">Hospitals in Network</div>
+    <div class="v"><?= $stats['total_hospitals'] ?></div>
+    <div style="font-size:.78rem;color:#027a48;font-weight:600;margin-top:.25rem;">Accredited across districts</div>
+  </div>
+  <div class="mc-stat">
+    <div class="l">Hospital Affiliations</div>
+    <div class="v"><?= $stats['total_affiliations'] ?></div>
+    <div style="font-size:.78rem;color:var(--muted);margin-top:.25rem;">Active Doctor-Hospital links</div>
+  </div>
+  <div class="mc-stat">
+    <div class="l">Total Consultations</div>
+    <div class="v"><?= $stats['total_consultations'] ?></div>
+    <div style="font-size:.78rem;color:var(--muted);margin-top:.25rem;">Across all network hospitals</div>
+  </div>
+  <a href="<?= APP_URL ?>/admin/laboratories.php" class="mc-stat" style="display:block;">
+    <div class="l">Diagnostic Labs</div>
+    <div class="v"><?= $stats['total_labs'] ?></div>
+    <div style="font-size:.78rem;color:var(--muted);margin-top:.25rem;">
+      <span style="color:#027a48;font-weight:700;">✓ <?= $stats['verified_labs'] ?> Verified</span> ·
+      <span style="color:#b54708;font-weight:700;">⏳ <?= $stats['pending_labs'] ?> Pending</span>
+    </div>
+  </a>
+</section>
 
-  <!-- MAIN CONTENT -->
-  <main class="portal-content">
-    <!-- Top Nav -->
-    <header class="top-nav">
-      <div class="top-nav-left">
-        <button class="mobile-sidebar-toggle btn btn-sm btn-ghost d-md-none" onclick="toggleSidebar()">
-          <i class="bi bi-list"></i>
-        </button>
-        <div>
-          <span class="eyebrow" style="color: var(--admin-primary); font-size: 11px; font-weight: 700;">CENTRAL GOVERNANCE ENGINE</span>
-          <h1 class="page-title" style="font-size: 1.3rem;">Platform Overview & Verification Hub</h1>
-        </div>
+<div class="mc-grid-2" style="margin-bottom:1rem;align-items:start;">
+  <!-- DOCTOR VERIFICATION QUEUE -->
+  <section class="mc-panel">
+    <div class="mc-panel-h">
+      <div>
+        <h2><i class="bi bi-patch-question-fill" style="color:#d97706;"></i> Doctor Verification Queue</h2>
+        <div style="font-size:.82rem;color:var(--muted);">Review and approve BMDC license credentials</div>
       </div>
-      <div class="top-nav-right" style="display: flex; gap: 10px;">
-        <a href="<?= APP_URL ?>/admin/doctor-create.php" class="btn btn-primary btn-sm" style="background: var(--admin-primary); border: none;">
-          <i class="bi bi-plus-circle"></i> Register Doctor
-        </a>
-        <a href="<?= APP_URL ?>/admin/doctors.php?tab=pending" class="btn btn-secondary btn-sm">
-          <i class="bi bi-patch-check"></i> Pending Approvals (<?= $stats['pending_doctors'] ?>)
-        </a>
+      <a href="<?= APP_URL ?>/admin/doctors.php" class="mc-btn mc-btn-secondary mc-btn-sm">View All</a>
+    </div>
+
+    <?php if (empty($pendingDoctors)): ?>
+      <div class="mc-empty">
+        <i class="bi bi-check-circle-fill" style="color:#027a48;"></i>
+        <strong>All Doctor Verifications Up to Date!</strong>
+        <span>No pending applications currently in queue.</span>
       </div>
-    </header>
-
-    <div class="portal-body" style="padding: var(--space-6);">
-
-      <?php if ($flashSuccess): ?>
-      <div class="alert alert-success mb-5" data-auto-dismiss="6000">
-        <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($flashSuccess) ?>
+    <?php else: ?>
+      <div class="mc-list">
+        <?php foreach ($pendingDoctors as $doc): ?>
+          <div class="mc-list-item" style="background:#fffaeb;border-color:#fedf89;">
+            <div style="min-width:0;flex:1;">
+              <strong><?= htmlspecialchars($doc['full_name']) ?></strong>
+              <span>
+                <span class="mc-mono" style="color:#1e40af;"><?= htmlspecialchars($doc['medical_registration_id']) ?></span>
+                · <?= htmlspecialchars($doc['specialization'] ?? 'General') ?> · <?= (int)$doc['experience_years'] ?> yrs exp
+              </span>
+              <span style="font-size:.76rem;color:var(--muted);">Applied: <?= date('M d, Y h:i A', strtotime($doc['registered_at'])) ?></span>
+            </div>
+            <div style="display:flex;gap:.4rem;flex-shrink:0;">
+              <form method="POST" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                <input type="hidden" name="doctor_id" value="<?= $doc['id'] ?>">
+                <input type="hidden" name="quick_action" value="approve_doctor">
+                <button type="submit" class="mc-btn mc-btn-primary mc-btn-sm" style="background:#027a48;">
+                  <i class="bi bi-check-lg"></i> Approve
+                </button>
+              </form>
+              <a href="<?= APP_URL ?>/admin/doctor-detail.php?id=<?= $doc['id'] ?>" class="mc-btn mc-btn-secondary mc-btn-sm">Inspect</a>
+            </div>
+          </div>
+        <?php endforeach; ?>
       </div>
-      <?php endif; ?>
+    <?php endif; ?>
 
-      <?php if ($stats['pending_doctors'] > 0): ?>
-      <!-- ACTION CALLOUT BANNER -->
-      <div style="background: linear-gradient(135deg, #FEF3C7, #FDE68A); border: 1.5px solid #F59E0B; border-radius: var(--radius-lg); padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-        <div style="display: flex; align-items: center; gap: 16px;">
-          <div style="width: 48px; height: 48px; border-radius: 50%; background: #F59E0B; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
-            <i class="bi bi-exclamation-octagon-fill"></i>
+    <div style="margin-top:1.15rem;padding-top:1rem;border-top:1px solid var(--line);">
+      <div style="font-size:.82rem;font-weight:700;color:var(--ink-2);margin-bottom:.6rem;">Recently Verified &amp; Multi-Hospital Practice</div>
+      <div class="mc-list">
+        <?php foreach ($recentApprovedDoctors as $rd): ?>
+          <div class="mc-list-item">
+            <div style="min-width:0;">
+              <strong><?= htmlspecialchars($rd['full_name']) ?></strong>
+              <span class="mc-mono" style="font-size:.78rem;"><?= htmlspecialchars($rd['medical_registration_id']) ?> · <?= htmlspecialchars($rd['specialization']) ?></span>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <span class="lab-status ok"><i class="bi bi-patch-check-fill"></i> Verified</span>
+              <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem;">Practicing at <strong><?= $rd['hospital_count'] ?></strong> hospital<?= $rd['hospital_count'] != 1 ? 's' : '' ?></div>
+            </div>
           </div>
-          <div>
-            <h3 style="font-size: 1.1rem; font-weight: 800; color: #78350F; margin: 0 0 2px 0;">
-              <?= $stats['pending_doctors'] ?> Doctor<?= $stats['pending_doctors'] > 1 ? 's' : '' ?> Awaiting BMDC Credential Approval
-            </h3>
-            <p style="font-size: 13px; color: #92400E; margin: 0;">
-              Doctors cannot be affiliated with any hospital until verified by the Central Admin board.
-            </p>
-          </div>
-        </div>
-        <a href="<?= APP_URL ?>/admin/doctors.php?tab=pending" class="btn btn-primary btn-sm" style="background: #D97706; border-color: #B45309; font-weight: 700; white-space: nowrap;">
-          Review Verification Queue →
-        </a>
+        <?php endforeach; ?>
       </div>
-      <?php endif; ?>
+    </div>
+  </section>
 
-      <!-- ECOSYSTEM STATS GRID -->
-      <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px;">
-        <!-- Stat 1 -->
-        <div class="stat-card-admin">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <span class="stat-label">Total Doctors</span>
-            <div class="stat-icon" style="background: #EFF6FF; color: #2563EB;">
-              <i class="bi bi-person-badge"></i>
-            </div>
-          </div>
-          <div class="stat-num"><?= $stats['total_doctors'] ?></div>
-          <div style="font-size: 12px; color: var(--mc-text-muted); display: flex; gap: 8px;">
-            <span style="color: #166534; font-weight: 600;">✓ <?= $stats['verified_doctors'] ?> Verified</span>
-            <span>·</span>
-            <span style="color: #92400E; font-weight: 600;">⏳ <?= $stats['pending_doctors'] ?> Pending</span>
-          </div>
-        </div>
-
-        <!-- Stat 2 -->
-        <div class="stat-card-admin">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <span class="stat-label">Hospitals in Network</span>
-            <div class="stat-icon" style="background: #ECFDF5; color: #059669;">
-              <i class="bi bi-building"></i>
-            </div>
-          </div>
-          <div class="stat-num"><?= $stats['total_hospitals'] ?></div>
-          <div style="font-size: 12px; color: var(--mc-text-muted);">
-            <span style="color: #059669; font-weight: 600;">100% Accredited</span> across districts
-          </div>
-        </div>
-
-        <!-- Stat 3 -->
-        <div class="stat-card-admin">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <span class="stat-label">Multi-Hospital Affiliations</span>
-            <div class="stat-icon" style="background: #F5F3FF; color: #7C3AED;">
-              <i class="bi bi-diagram-3"></i>
-            </div>
-          </div>
-          <div class="stat-num"><?= $stats['total_affiliations'] ?></div>
-          <div style="font-size: 12px; color: var(--mc-text-muted);">
-            Active Doctor-Hospital links
-          </div>
-        </div>
-
-        <!-- Stat 4 -->
-        <div class="stat-card-admin">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <span class="stat-label">Total Consultations</span>
-            <div class="stat-icon" style="background: #FFF1F2; color: #E11D48;">
-              <i class="bi bi-clipboard2-pulse"></i>
-            </div>
-          </div>
-          <div class="stat-num"><?= $stats['total_consultations'] ?></div>
-          <div style="font-size: 12px; color: var(--mc-text-muted);">
-            Across all network hospitals
-          </div>
-        </div>
-
-        <!-- Stat 5: Diagnostic Labs -->
-        <a href="<?= APP_URL ?>/admin/laboratories.php" style="text-decoration:none; color:inherit;">
-          <div class="stat-card-admin" style="cursor:pointer; transition:transform .15s;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <span class="stat-label">Diagnostic Labs</span>
-              <div class="stat-icon" style="background: #EEF2FF; color: #4F46E5;">
-                <i class="bi bi-flask-fill"></i>
-              </div>
-            </div>
-            <div class="stat-num"><?= $stats['total_labs'] ?></div>
-            <div style="font-size: 12px; color: var(--mc-text-muted); display: flex; gap: 8px;">
-              <span style="color: #166534; font-weight: 600;">✓ <?= $stats['verified_labs'] ?> Verified</span>
-              <span>·</span>
-              <span style="color: #92400E; font-weight: 600;">⏳ <?= $stats['pending_labs'] ?> Pending</span>
-            </div>
-          </div>
-        </a>
+  <!-- HOSPITAL ECOSYSTEM -->
+  <section class="mc-panel">
+    <div class="mc-panel-h">
+      <div>
+        <h2><i class="bi bi-hospital" style="color:#1e40af;"></i> Hospital Ecosystem</h2>
+        <div style="font-size:.82rem;color:var(--muted);">Participating medical centers</div>
       </div>
+      <a href="<?= APP_URL ?>/admin/hospitals.php" class="mc-btn mc-btn-secondary mc-btn-sm">Manage</a>
+    </div>
 
-      <!-- TWO COLUMN LAYOUT: PENDING QUEUE + HOSPITAL ECOSYSTEM -->
-      <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-bottom: 28px;">
-        
-        <!-- PENDING VERIFICATIONS / RECENT DOCTORS -->
-        <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--mc-border);">
-          <div style="padding: 16px 20px; background: var(--mc-white); border-bottom: 1px solid var(--mc-border); display: flex; align-items: center; justify-content: space-between;">
+    <div class="mc-list">
+      <?php foreach ($topHospitals as $hosp): ?>
+        <div class="mc-list-item" style="display:block;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;">
             <div>
-              <h2 style="font-size: 1.05rem; font-weight: 700; margin: 0;">
-                <i class="bi bi-patch-question-fill text-amber-500" style="color: #F59E0B;"></i>
-                Doctor Verification Queue
-              </h2>
-              <div style="font-size: 12px; color: var(--mc-text-muted);">Review and approve BMDC license credentials</div>
+              <strong><?= htmlspecialchars($hosp['name']) ?></strong>
+              <span><?= htmlspecialchars($hosp['city'] ?? 'Dhaka') ?> · <?= ucfirst(strtolower($hosp['type'])) ?></span>
             </div>
-            <a href="<?= APP_URL ?>/admin/doctors.php" class="btn btn-secondary btn-sm" style="font-size: 12px;">View All Doctors</a>
+            <span class="lab-status ok">Accredited</span>
           </div>
-
-          <div style="padding: 16px 20px;">
-            <?php if (empty($pendingDoctors)): ?>
-              <div class="empty-state" style="padding: 24px; text-align: center;">
-                <div style="font-size: 32px; color: #10B981; margin-bottom: 8px;"><i class="bi bi-check-circle-fill"></i></div>
-                <div style="font-weight: 700; font-size: 14px;">All Doctor Verifications Up to Date!</div>
-                <div style="font-size: 12px; color: var(--mc-text-muted);">No pending applications currently in queue.</div>
-              </div>
-            <?php else: ?>
-              <?php foreach ($pendingDoctors as $doc): ?>
-              <div class="doctor-pending-card">
-                <div style="display: flex; align-items: center; gap: 14px;">
-                  <div class="doctor-avatar-circle">
-                    <?= strtoupper(substr($doc['full_name'], 4, 1) ?: substr($doc['full_name'], 0, 1)) ?>
-                  </div>
-                  <div>
-                    <div style="font-weight: 700; font-size: 14px; color: #0F172A;">
-                      <?= htmlspecialchars($doc['full_name']) ?>
-                    </div>
-                    <div style="font-size: 12px; color: #64748B;">
-                      <strong style="color: #1E40AF;"><?= htmlspecialchars($doc['medical_registration_id']) ?></strong>
-                      · <?= htmlspecialchars($doc['specialization'] ?? 'General') ?>
-                      · <?= (int)$doc['experience_years'] ?> yrs exp
-                    </div>
-                    <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">
-                      Applied: <?= date('M d, Y h:i A', strtotime($doc['registered_at'])) ?>
-                    </div>
-                  </div>
-                </div>
-
-                <div style="display: flex; gap: 8px; flex-shrink: 0;">
-                  <form method="POST" style="display:inline;">
-                    <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                    <input type="hidden" name="doctor_id" value="<?= $doc['id'] ?>">
-                    <input type="hidden" name="quick_action" value="approve_doctor">
-                    <button type="submit" class="btn btn-primary btn-sm" style="background: #166534; border-color: #166534; padding: 5px 12px; font-size: 12px;">
-                      <i class="bi bi-check-lg"></i> Approve
-                    </button>
-                  </form>
-                  <a href="<?= APP_URL ?>/admin/doctor-detail.php?id=<?= $doc['id'] ?>" class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-size: 12px;">
-                    Inspect
-                  </a>
-                </div>
-              </div>
-              <?php endforeach; ?>
-            <?php endif; ?>
-
-            <!-- RECENTLY VERIFIED -->
-            <div style="margin-top: 20px; border-top: 1px solid var(--mc-border); padding-top: 16px;">
-              <div style="font-weight: 700; font-size: 13px; color: var(--mc-text-secondary); margin-bottom: 10px;">
-                Recently Verified Doctors & Multi-Hospital Practice
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                <?php foreach ($recentApprovedDoctors as $rd): ?>
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--mc-bg); border-radius: var(--radius-md); font-size: 13px;">
-                  <div>
-                    <strong><?= htmlspecialchars($rd['full_name']) ?></strong>
-                    <span style="font-size: 11px; color: var(--mc-text-muted); margin-left: 6px;">(<?= htmlspecialchars($rd['medical_registration_id']) ?>)</span>
-                    <div style="font-size: 11px; color: var(--mc-text-muted);"><?= htmlspecialchars($rd['specialization']) ?></div>
-                  </div>
-                  <div style="text-align: right;">
-                    <span class="badge badge-verified" style="font-size: 11px;">
-                      <i class="bi bi-patch-check-fill"></i> Verified
-                    </span>
-                    <div style="font-size: 11px; color: var(--mc-text-secondary); margin-top: 2px;">
-                      Practicing at <strong><?= $rd['hospital_count'] ?></strong> hospital<?= $rd['hospital_count'] != 1 ? 's' : '' ?>
-                    </div>
-                  </div>
-                </div>
-                <?php endforeach; ?>
-              </div>
-            </div>
+          <div style="display:flex;gap:1rem;font-size:.8rem;color:var(--ink-2);margin-top:.55rem;padding-top:.5rem;border-top:1px dashed var(--line);">
+            <span><i class="bi bi-people-fill"></i> <strong><?= $hosp['doctor_count'] ?></strong> Affiliated Doctors</span>
+            <span><i class="bi bi-grid-fill"></i> <strong><?= $hosp['dept_count'] ?></strong> Departments</span>
           </div>
         </div>
-
-        <!-- HOSPITAL ECOSYSTEM OVERVIEW -->
-        <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--mc-border);">
-          <div style="padding: 16px 20px; background: var(--mc-white); border-bottom: 1px solid var(--mc-border); display: flex; align-items: center; justify-content: space-between;">
-            <div>
-              <h2 style="font-size: 1.05rem; font-weight: 700; margin: 0;">
-                <i class="bi bi-hospital text-blue"></i> Hospital Ecosystem
-              </h2>
-              <div style="font-size: 12px; color: var(--mc-text-muted);">Participating medical centers</div>
-            </div>
-            <a href="<?= APP_URL ?>/admin/hospitals.php" class="btn btn-secondary btn-sm" style="font-size: 12px;">Manage</a>
-          </div>
-
-          <div style="padding: 16px 20px;">
-            <?php foreach ($topHospitals as $hosp): ?>
-            <div style="padding: 12px; border: 1px solid var(--mc-border); border-radius: var(--radius-md); margin-bottom: 12px; background: var(--mc-white);">
-              <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px;">
-                <div>
-                  <div style="font-weight: 700; font-size: 14px;"><?= htmlspecialchars($hosp['name']) ?></div>
-                  <div style="font-size: 12px; color: var(--mc-text-muted);">
-                    <?= htmlspecialchars($hosp['city'] ?? 'Dhaka') ?> · <?= ucfirst(strtolower($hosp['type'])) ?>
-                  </div>
-                </div>
-                <span class="badge badge-verified" style="font-size: 10px;">Accredited</span>
-              </div>
-              <div style="display: flex; gap: 16px; font-size: 12px; color: var(--mc-text-secondary); margin-top: 8px; border-top: 1px dashed var(--mc-border); padding-top: 6px;">
-                <div><i class="bi bi-people-fill text-blue"></i> <strong><?= $hosp['doctor_count'] ?></strong> Affiliated Doctors</div>
-                <div><i class="bi bi-grid-fill text-teal"></i> <strong><?= $hosp['dept_count'] ?></strong> Departments</div>
-              </div>
-            </div>
-            <?php endforeach; ?>
-
-            <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-md); padding: 12px; margin-top: 16px; font-size: 12px; color: #166534;">
-              <i class="bi bi-info-circle-fill"></i>
-              <strong>Hospitalization Flow:</strong> Once you verify a doctor, all these hospitals can independently add, schedule, or remove the doctor as needed.
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- AUDIT STREAM -->
-      <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--mc-border);">
-        <div style="padding: 16px 20px; background: var(--mc-white); border-bottom: 1px solid var(--mc-border); display: flex; align-items: center; justify-content: space-between;">
-          <div>
-            <h2 style="font-size: 1.05rem; font-weight: 700; margin: 0;">
-              <i class="bi bi-shield-shaded text-slate-600"></i> Central Audit & Security Trail
-            </h2>
-            <div style="font-size: 12px; color: var(--mc-text-muted);">Live stream of verifications, doctor affiliations, and clinical record access</div>
-          </div>
-          <a href="<?= APP_URL ?>/admin/audit-logs.php" class="btn btn-secondary btn-sm" style="font-size: 12px;">Full Log Stream</a>
-        </div>
-
-        <div class="table-responsive">
-          <table class="data-table" style="font-size: 13px;">
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Action</th>
-                <th>Actor</th>
-                <th>Details / Target</th>
-                <th>Severity</th>
-                <th>IP Address</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($recentLogs as $log): ?>
-              <tr>
-                <td style="white-space:nowrap; font-family: var(--font-mono); font-size: 11px; color: var(--mc-text-muted);">
-                  <?= date('M d H:i:s', strtotime($log['created_at'])) ?>
-                </td>
-                <td>
-                  <span class="badge" style="background: #F1F5F9; color: #334155; font-family: var(--font-mono); font-size: 11px;">
-                    <?= htmlspecialchars($log['action']) ?>
-                  </span>
-                </td>
-                <td>
-                  <div style="font-weight: 600;"><?= htmlspecialchars($log['actor_email'] ?? 'System') ?></div>
-                  <div style="font-size: 11px; color: var(--mc-text-muted);"><?= htmlspecialchars($log['actor_role'] ?? 'SYSTEM') ?></div>
-                </td>
-                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                  <?= htmlspecialchars($log['metadata'] ?? '-') ?>
-                </td>
-                <td>
-                  <?php if ($log['severity'] === 'CRITICAL'): ?>
-                    <span class="badge badge-rejected">CRITICAL</span>
-                  <?php elseif ($log['severity'] === 'WARNING'): ?>
-                    <span class="badge badge-pending">WARNING</span>
-                  <?php else: ?>
-                    <span class="badge" style="background: #F8FAFC; color: #64748B;">INFO</span>
-                  <?php endif; ?>
-                </td>
-                <td style="font-family: var(--font-mono); font-size: 11px; color: var(--mc-text-muted);">
-                  <?= htmlspecialchars($log['ip_address']) ?>
-                </td>
-              </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
+      <?php endforeach; ?>
     </div>
-  </main>
+
+    <div class="mc-alert mc-alert-ok" style="margin-top:1rem;margin-bottom:0;font-size:.84rem;">
+      <i class="bi bi-info-circle-fill"></i>
+      <strong>Hospitalization Flow:</strong> Once you verify a doctor, all these hospitals can independently add, schedule, or remove the doctor as needed.
+    </div>
+  </section>
 </div>
 
-<script>
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-}
-</script>
-</body>
-</html>
+<!-- AUDIT STREAM -->
+<section class="mc-panel">
+  <div class="mc-panel-h">
+    <div>
+      <h2><i class="bi bi-shield-shaded"></i> Central Audit &amp; Security Trail</h2>
+      <div style="font-size:.82rem;color:var(--muted);">Live stream of verifications, doctor affiliations, and clinical record access</div>
+    </div>
+    <a href="<?= APP_URL ?>/admin/audit-logs.php" class="mc-btn mc-btn-secondary mc-btn-sm">Full Log Stream</a>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="lab-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Action</th>
+          <th>Actor</th>
+          <th>Details / Target</th>
+          <th>Severity</th>
+          <th>IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($recentLogs as $log): ?>
+          <tr>
+            <td class="mc-mono" style="white-space:nowrap;font-size:.78rem;color:var(--muted);"><?= date('M d H:i:s', strtotime($log['created_at'])) ?></td>
+            <td><span class="lab-status info mc-mono"><?= htmlspecialchars($log['action']) ?></span></td>
+            <td>
+              <div style="font-weight:700;"><?= htmlspecialchars($log['actor_email'] ?? 'System') ?></div>
+              <div style="font-size:.76rem;color:var(--muted);"><?= htmlspecialchars($log['actor_role'] ?? 'SYSTEM') ?></div>
+            </td>
+            <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($log['metadata'] ?? '-') ?></td>
+            <td>
+              <?php if ($log['severity'] === 'CRITICAL'): ?>
+                <span class="lab-status danger">CRITICAL</span>
+              <?php elseif ($log['severity'] === 'WARNING'): ?>
+                <span class="lab-status warn">WARNING</span>
+              <?php else: ?>
+                <span class="lab-status">INFO</span>
+              <?php endif; ?>
+            </td>
+            <td class="mc-mono" style="font-size:.78rem;color:var(--muted);"><?= htmlspecialchars($log['ip_address']) ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>

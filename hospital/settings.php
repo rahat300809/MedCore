@@ -37,11 +37,13 @@ $hospital = $stmtHosp->fetch();
 
 $portalRole = 'Hospital';
 $portalRoleBn = 'Hospital portal';
+$portalAccent = '#0b4f6c';
 $portalUser = $hospital['name'] ?? 'Hospital';
 $portalMeta = ($hospital['hospital_uid'] ?? '') . ' · Settings';
 $portalTitle = 'Hospital settings';
 $portalSubtitle = 'যোগাযোগ ও পাবলিক তথ্য';
 $portalNav = mc_hospital_nav('settings');
+$bodyClass = 'lab-desk';
 require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
 

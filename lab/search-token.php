@@ -158,7 +158,14 @@ unset($_SESSION['flash']);
             </tr>
           </thead>
           <tbody>
-            <?php foreach ($tests as $test): ?>
+            <?php foreach ($tests as $test):
+              $urg = $test['urgency'] ?? 'ROUTINE';
+              $uCls = $urg === 'STAT' ? 'danger' : ($urg === 'URGENT' ? 'warn' : '');
+              $tSt = $test['status'] ?? 'PENDING';
+              $tCls = $tSt === 'COMPLETED' ? 'ok' : ($tSt === 'IN_PROGRESS' ? 'info' : 'warn');
+              $rSt = $test['result_status'] ?? '';
+              $rCls = $rSt === 'NORMAL' ? 'ok' : ($rSt === 'CRITICAL' ? 'danger' : ($rSt === 'ABNORMAL' ? 'warn' : 'info'));
+            ?>
               <tr>
                 <td>
                   <strong><?= htmlspecialchars($test['test_name']) ?></strong>
@@ -167,12 +174,12 @@ unset($_SESSION['flash']);
                     <div style="font-size:.8rem;color:var(--muted)"><?= htmlspecialchars($test['instructions']) ?></div>
                   <?php endif; ?>
                 </td>
-                <td><?= htmlspecialchars($test['urgency'] ?? 'ROUTINE') ?></td>
-                <td><span class="lab-status"><?= htmlspecialchars(str_replace('_', ' ', $test['status'] ?? 'PENDING')) ?></span></td>
+                <td><span class="lab-status <?= $uCls ?>"><?= htmlspecialchars($urg) ?></span></td>
+                <td><span class="lab-status <?= $tCls ?>"><?= htmlspecialchars(str_replace('_', ' ', $tSt)) ?></span></td>
                 <td style="max-width:220px">
                   <?php if (!empty($test['result_id'])): ?>
-                    <?= htmlspecialchars($test['result_status'] ?? '') ?>
-                    <?php if (!empty($test['result_value'])): ?> · <?= htmlspecialchars($test['result_value']) ?><?php endif; ?>
+                    <span class="lab-status <?= $rCls ?>"><?= htmlspecialchars(str_replace('_', ' ', $rSt)) ?></span>
+                    <?php if (!empty($test['result_value'])): ?> · <strong><?= htmlspecialchars($test['result_value']) ?></strong><?php endif; ?>
                   <?php else: ?>
                     <span style="color:var(--muted)">—</span>
                   <?php endif; ?>

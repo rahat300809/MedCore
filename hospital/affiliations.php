@@ -71,203 +71,116 @@ $stmtHistory = $db->prepare("
 ");
 $stmtHistory->execute([$hospitalId]);
 $history = $stmtHistory->fetchAll();
+
+require_once __DIR__ . '/../app/views/portal/navs.php';
+$portalRole = 'Hospital';
+$portalRoleBn = 'Hospital portal';
+$portalAccent = '#0b4f6c';
+$portalUser = $hospital['name'] ?? 'Hospital';
+$portalMeta = ($hospital['hospital_uid'] ?? '') . ' · Affiliations';
+$portalTitle = 'Doctor affiliation approvals';
+$portalSubtitle = 'ডাক্তার যোগদানের আবেদন ও সিদ্ধান্তের ইতিহাস';
+$portalNav = mc_hospital_nav('affiliations', count($pending));
+$bodyClass = 'lab-desk';
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Affiliation Approvals — <?= htmlspecialchars($hospital['name']) ?></title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-</head>
-<body>
 
-<div class="portal-layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-icon" style="background: var(--mc-teal);">H</div>
-      <div>
-        <div class="brand-name">MedCore</div>
-        <div class="brand-sub">Hospital Admin</div>
-      </div>
+<?php if ($success): ?>
+  <div class="mc-alert mc-alert-ok"><i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($success) ?></div>
+<?php endif; ?>
+<?php if ($error): ?>
+  <div class="mc-alert mc-alert-danger"><i class="bi bi-exclamation-circle-fill"></i> <?= htmlspecialchars($error) ?></div>
+<?php endif; ?>
+
+<div class="mc-panel">
+  <div class="mc-panel-h">
+    <h2>Awaiting hospital authorization (<?= count($pending) ?>)</h2>
+    <?php if (count($pending) > 0): ?><span class="lab-status warn"><?= count($pending) ?> pending</span><?php endif; ?>
+  </div>
+  <?php if (empty($pending)): ?>
+    <p style="margin:0;color:var(--muted)">No pending doctor affiliation requests. All caught up.</p>
+  <?php else: ?>
+    <div style="overflow-x:auto">
+      <table class="lab-table">
+        <thead>
+          <tr>
+            <th>Doctor</th>
+            <th>BMDC Reg</th>
+            <th>Specialization</th>
+            <th>Requested dept</th>
+            <th>Designation</th>
+            <th>Date</th>
+            <th>Decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($pending as $p): ?>
+            <tr>
+              <td>
+                <strong>Dr. <?= htmlspecialchars($p['full_name']) ?></strong>
+                <div style="font-size:.8rem;color:var(--muted)"><?= htmlspecialchars($p['email']) ?></div>
+              </td>
+              <td class="mc-mono" style="color:var(--accent)"><?= htmlspecialchars($p['medical_registration_id']) ?></td>
+              <td><?= htmlspecialchars($p['specialization'] ?? 'General') ?></td>
+              <td><?= htmlspecialchars($p['department_name'] ?? 'General') ?></td>
+              <td><?= htmlspecialchars($p['designation'] ?? 'Consultant') ?></td>
+              <td><?= date('d M Y', strtotime($p['created_at'])) ?></td>
+              <td>
+                <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+                  <form method="POST" style="display:inline;margin:0">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="action" value="approve">
+                    <input type="hidden" name="dh_id" value="<?= (int)$p['id'] ?>">
+                    <button type="submit" class="mc-btn mc-btn-primary mc-btn-sm">Approve</button>
+                  </form>
+                  <form method="POST" style="display:inline;margin:0">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="action" value="reject">
+                    <input type="hidden" name="dh_id" value="<?= (int)$p['id'] ?>">
+                    <button type="submit" class="mc-btn mc-btn-danger mc-btn-sm" onclick="return confirm('Reject this doctor affiliation?');">Reject</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     </div>
-
-    <nav class="sidebar-nav">
-      <div class="nav-section-title">Hospital Ops</div>
-      <a href="<?= APP_URL ?>/hospital/dashboard.php" class="nav-item">
-        <i class="bi bi-grid-1x2-fill"></i>
-        <span>Dashboard</span>
-      </a>
-      <a href="<?= APP_URL ?>/hospital/doctors.php" class="nav-item">
-        <i class="bi bi-person-badge-fill"></i>
-        <span>Affiliated Doctors</span>
-      </a>
-      <a href="<?= APP_URL ?>/hospital/affiliations.php" class="nav-item active">
-        <i class="bi bi-clock-history"></i>
-        <span>Pending Requests</span>
-      </a>
-      <a href="<?= APP_URL ?>/hospital/departments.php" class="nav-item">
-        <i class="bi bi-building"></i>
-        <span>Departments</span>
-      </a>
-      <a href="<?= APP_URL ?>/hospital/consultations.php" class="nav-item">
-        <i class="bi bi-stethoscope"></i>
-        <span>Consultations</span>
-      </a>
-      <a href="<?= APP_URL ?>/hospital/settings.php" class="nav-item">
-        <i class="bi bi-gear-fill"></i>
-        <span>Hospital Settings</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="user-avatar" style="background: var(--mc-teal);"><?= strtoupper(substr($hospital['name'], 0, 1)) ?></div>
-        <div class="user-info">
-          <div class="user-name"><?= htmlspecialchars(mb_strimwidth($hospital['name'], 0, 20, '...')) ?></div>
-          <div class="user-role"><?= htmlspecialchars($hospital['hospital_uid']) ?></div>
-        </div>
-      </div>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="btn btn-outline btn-sm" style="width: 100%; margin-top: var(--space-3);">
-        <i class="bi bi-box-arrow-right"></i> Sign Out
-      </a>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="portal-main">
-    <header class="portal-header">
-      <div class="d-flex align-items-center gap-3">
-        <h1 class="portal-title" style="font-size: 1.25rem; margin: 0;">Doctor Affiliation Approvals</h1>
-      </div>
-    </header>
-
-    <div class="portal-body">
-      <?php if ($success): ?>
-        <div class="alert alert-success mb-4"><i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($success) ?></div>
-      <?php endif; ?>
-      <?php if ($error): ?>
-        <div class="alert alert-danger mb-4"><i class="bi bi-exclamation-circle-fill"></i> <?= htmlspecialchars($error) ?></div>
-      <?php endif; ?>
-
-      <!-- Pending Card -->
-      <div class="card mb-4" style="border-left: 4px solid var(--mc-warning);">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h3 class="card-title"><i class="bi bi-hourglass-split"></i> Awaiting Hospital Authorization (<?= count($pending) ?>)</h3>
-        </div>
-        <div class="card-body">
-          <?php if (empty($pending)): ?>
-            <div class="text-center py-4 text-muted">
-              <i class="bi bi-check-circle" style="font-size: 2.5rem; color: #10B981;"></i>
-              <p class="mt-2">No pending doctor affiliation requests. All caught up!</p>
-            </div>
-          <?php else: ?>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Doctor</th>
-                    <th>BMDC Reg</th>
-                    <th>Specialization</th>
-                    <th>Requested Dept</th>
-                    <th>Requested Designation</th>
-                    <th>Date Requested</th>
-                    <th>Decision</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php foreach ($pending as $p): ?>
-                    <tr>
-                      <td>
-                        <strong>Dr. <?= htmlspecialchars($p['full_name']) ?></strong>
-                        <div class="text-muted" style="font-size: 0.8rem;"><?= htmlspecialchars($p['email']) ?></div>
-                      </td>
-                      <td><span class="badge badge-secondary"><?= htmlspecialchars($p['medical_registration_id']) ?></span></td>
-                      <td><?= htmlspecialchars($p['specialization'] ?? 'General') ?></td>
-                      <td><?= htmlspecialchars($p['department_name'] ?? 'General') ?></td>
-                      <td><?= htmlspecialchars($p['designation'] ?? 'Consultant') ?></td>
-                      <td><?= date('d M Y', strtotime($p['created_at'])) ?></td>
-                      <td>
-                        <div class="d-flex gap-2">
-                          <form method="POST" style="display:inline;">
-                            <?= csrfField() ?>
-                            <input type="hidden" name="action" value="approve">
-                            <input type="hidden" name="dh_id" value="<?= $p['id'] ?>">
-                            <button type="submit" class="btn btn-primary btn-sm" title="Approve Affiliation">
-                              <i class="bi bi-check-lg"></i> Approve
-                            </button>
-                          </form>
-                          <form method="POST" style="display:inline;">
-                            <?= csrfField() ?>
-                            <input type="hidden" name="action" value="reject">
-                            <input type="hidden" name="dh_id" value="<?= $p['id'] ?>">
-                            <button type="submit" class="btn btn-outline text-danger btn-sm" title="Reject Affiliation" onclick="return confirm('Reject this doctor affiliation?');">
-                              <i class="bi bi-x-lg"></i> Reject
-                            </button>
-                          </form>
-                        </div>
-                      </td>
-                    </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
-
-      <!-- History Card -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title"><i class="bi bi-clock-history"></i> Affiliation Decision History</h3>
-        </div>
-        <div class="card-body">
-          <?php if (empty($history)): ?>
-            <div class="text-muted py-3">No processed affiliation history found.</div>
-          <?php else: ?>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Doctor</th>
-                    <th>BMDC Reg</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Updated At</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php foreach ($history as $h): ?>
-                    <tr>
-                      <td>Dr. <?= htmlspecialchars($h['full_name']) ?></td>
-                      <td><?= htmlspecialchars($h['medical_registration_id']) ?></td>
-                      <td><?= htmlspecialchars($h['department_name'] ?? 'General') ?></td>
-                      <td>
-                        <?php if ($h['status'] === 'APPROVED'): ?>
-                          <span class="badge badge-success">Approved</span>
-                        <?php elseif ($h['status'] === 'REJECTED'): ?>
-                          <span class="badge badge-danger">Rejected</span>
-                        <?php else: ?>
-                          <span class="badge badge-secondary"><?= htmlspecialchars($h['status']) ?></span>
-                        <?php endif; ?>
-                      </td>
-                      <td><?= date('d M Y, h:i A', strtotime($h['updated_at'])) ?></td>
-                    </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
-
-    </div>
-  </main>
+  <?php endif; ?>
 </div>
 
-</body>
-</html>
+<div class="mc-panel">
+  <div class="mc-panel-h"><h2>Affiliation decision history</h2></div>
+  <?php if (empty($history)): ?>
+    <p style="margin:0;color:var(--muted)">No processed affiliation history found.</p>
+  <?php else: ?>
+    <div style="overflow-x:auto">
+      <table class="lab-table">
+        <thead>
+          <tr>
+            <th>Doctor</th>
+            <th>BMDC Reg</th>
+            <th>Department</th>
+            <th>Status</th>
+            <th>Updated at</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($history as $h):
+            $sCls = $h['status'] === 'APPROVED' ? 'ok' : ($h['status'] === 'REJECTED' ? 'danger' : '');
+          ?>
+            <tr>
+              <td><strong>Dr. <?= htmlspecialchars($h['full_name']) ?></strong></td>
+              <td class="mc-mono"><?= htmlspecialchars($h['medical_registration_id']) ?></td>
+              <td><?= htmlspecialchars($h['department_name'] ?? 'General') ?></td>
+              <td><span class="lab-status <?= $sCls ?>"><?= htmlspecialchars($h['status']) ?></span></td>
+              <td style="font-size:.84rem;color:var(--muted)"><?= date('d M Y, h:i A', strtotime($h['updated_at'])) ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  <?php endif; ?>
+</div>
+
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>

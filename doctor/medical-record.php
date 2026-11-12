@@ -183,675 +183,300 @@ foreach ($allergies as $alg) {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($patient['full_name']) ?> — Medical Record — MedCore</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-  <style>
-    .record-header-banner {
-      background: linear-gradient(135deg, #0B57D0 0%, #1A73E8 100%);
-      color: #fff;
-      border-radius: var(--radius-xl);
-      padding: var(--space-6) var(--space-8);
-      margin-bottom: var(--space-6);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: var(--space-4);
-      box-shadow: 0 4px 14px rgba(26, 115, 232, 0.25);
-    }
-    .session-badge {
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.3);
-      backdrop-filter: blur(8px);
-      padding: var(--space-2) var(--space-4);
-      border-radius: var(--radius-full);
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-    .critical-alert-box {
-      background: #FEF2F2;
-      border: 1px solid #FCA5A5;
-      border-left: 5px solid var(--mc-danger);
-      border-radius: var(--radius-lg);
-      padding: var(--space-4) var(--space-5);
-      margin-bottom: var(--space-6);
-      display: flex;
-      align-items: center;
-      gap: var(--space-4);
-      color: #991B1B;
-    }
-    .tab-nav {
-      display: flex;
-      gap: var(--space-2);
-      border-bottom: 2px solid var(--mc-border);
-      margin-bottom: var(--space-6);
-      overflow-x: auto;
-    }
-    .tab-btn {
-      padding: var(--space-3) var(--space-5);
-      border: none;
-      background: none;
-      font-weight: 600;
-      color: var(--mc-text-muted);
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -2px;
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-      transition: var(--transition-fast);
-      white-space: nowrap;
-    }
-    .tab-btn:hover {
-      color: var(--mc-blue);
-    }
-    .tab-btn.active {
-      color: var(--mc-blue);
-      border-bottom-color: var(--mc-blue);
-    }
-    .tab-pane {
-      display: none;
-    }
-    .tab-pane.active {
-      display: block;
-    }
-  </style>
-</head>
-<body>
+<?php
+require_once __DIR__ . '/../app/views/portal/navs.php';
+$waitingQueueCount = mc_doctor_shell_setup($db, $doctorId, $hospitalId, $accessSession, 'medical-record');
+$portalRole = 'Doctor';
+$portalRoleBn = 'Clinical portal';
+$portalAccent = '#0f766e';
+$portalUser = $_SESSION['name'] ?? 'Doctor';
+$portalMeta = ($_SESSION['hospital_name'] ?? '') . ' · Medical record';
+$portalTitle = $patient['full_name'] ?? 'Medical record';
+$portalSubtitle = ($patient['patient_uid'] ?? '') . ' · Authorized clinical record';
+$portalNav = mc_doctor_nav('search', $waitingQueueCount);
+ob_start();
+?>
+<div style="display:flex;gap:.45rem;flex-wrap:wrap;align-items:center">
+  <span class="lab-status warn"><i class="bi bi-hourglass-split"></i> <strong id="timer-text" class="mc-mono">--:--</strong></span>
+  <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $patientId ?>" class="mc-btn mc-btn-primary mc-btn-sm">
+    <i class="bi bi-plus-circle-fill"></i> New Rx
+  </a>
+  <form method="POST" style="display:inline;margin:0" onsubmit="return confirm('Are you sure you want to end this medical record session?');">
+    <?= csrfField() ?>
+    <input type="hidden" name="end_session" value="1">
+    <button type="submit" class="mc-btn mc-btn-danger mc-btn-sm"><i class="bi bi-x-circle"></i> End session</button>
+  </form>
+</div>
+<?php
+$portalTopAction = ob_get_clean();
+$extraHead = <<<'CSS'
+<style>
+  .tab-pane { display:none; }
+  .tab-pane.active { display:block; }
+  .record-stats { display:grid; gap:.75rem; grid-template-columns:repeat(2,1fr); margin-bottom:1rem; }
+  @media (min-width:900px) { .record-stats { grid-template-columns:repeat(5,1fr); } }
+</style>
+CSS;
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
+?>
 
-<div class="portal-layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar" role="navigation">
-    <div class="sidebar-brand">
-      <div class="brand-icon">M</div>
-      <div>
-        <div class="brand-name">MedCore</div>
-        <div class="brand-sub">Doctor Portal</div>
+<?php if ($hasCriticalAllergy): ?>
+  <div class="mc-alert mc-alert-danger">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <strong>CRITICAL CLINICAL ALERT:</strong> Severe/life-threatening allergies documented. Review the Allergies tab before prescribing.
+  </div>
+<?php endif; ?>
+
+<div class="mc-panel" style="background:linear-gradient(135deg,#0b2538 0%,#0f766e 100%);color:#fff;border:0">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+    <div>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <h2 style="font-size:1.4rem;color:#fff;margin:0"><?= htmlspecialchars($patient['full_name']) ?></h2>
+        <span class="mc-mono" style="background:rgba(255,255,255,.18);padding:.2rem .55rem;border-radius:7px;font-size:.82rem"><?= htmlspecialchars($patient['patient_uid']) ?></span>
+        <span style="background:#059669;color:#fff;padding:.2rem .55rem;border-radius:999px;font-size:.74rem;font-weight:800"><i class="bi bi-shield-check"></i> Consent verified</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;font-size:.88rem;opacity:.92;margin-top:.55rem">
+        <span><?= $age ?> yrs (<?= date('d M Y', strtotime($patient['date_of_birth'])) ?>) · <?= ucfirst(strtolower($patient['gender'])) ?></span>
+        <span>Blood: <strong><?= htmlspecialchars($patient['blood_group'] ?? 'Unknown') ?></strong></span>
+        <span>NID: ●●●● <?= htmlspecialchars($patient['nid_last4']) ?></span>
+        <span>Emergency: <?= htmlspecialchars($patient['emergency_contact_name'] ?? 'N/A') ?> (<?= htmlspecialchars($patient['emergency_contact_phone'] ?? 'N/A') ?>)</span>
       </div>
     </div>
+    <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $patientId ?>" class="mc-btn mc-btn-secondary">
+      <i class="bi bi-prescription2"></i> Start consultation &amp; Rx
+    </a>
+  </div>
+</div>
 
-    <div class="doctor-context-badge" style="margin: 0 var(--space-4) var(--space-4); padding: var(--space-3); background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-md);">
-      <div style="font-size: 0.75rem; color: #1E40AF; font-weight: 700; text-transform: uppercase;">Active Practice Context</div>
-      <div style="font-weight: 600; font-size: 0.88rem; color: #1E3A8A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= htmlspecialchars($_SESSION['hospital_name']) ?></div>
-      <div style="font-size: 0.78rem; color: #3B82F6;"><?= htmlspecialchars($_SESSION['department_name'] ?? 'General Practitioner') ?></div>
+<div class="record-stats">
+  <div class="mc-stat"><div class="l">Conditions</div><div class="v"><?= count($conditions) ?></div></div>
+  <div class="mc-stat"><div class="l">Medications</div><div class="v"><?= count($medications) ?></div></div>
+  <div class="mc-stat"><div class="l">Allergies</div><div class="v" style="color:<?= $hasCriticalAllergy ? 'var(--danger)' : 'var(--accent)' ?>"><?= count($allergies) ?></div></div>
+  <div class="mc-stat"><div class="l">Prescriptions</div><div class="v"><?= count($prescriptions) ?></div></div>
+  <div class="mc-stat"><div class="l">Lab reports</div><div class="v"><?= count($labReports) ?></div></div>
+</div>
+
+<div class="mc-tabs" role="tablist">
+  <button type="button" class="mc-tab active" onclick="switchTab('tab-summary', this)"><i class="bi bi-stars"></i> Executive summary</button>
+  <button type="button" class="mc-tab" onclick="switchTab('tab-conditions', this)"><i class="bi bi-heart-pulse-fill"></i> History <span class="mc-tab-count"><?= count($conditions) ?></span></button>
+  <button type="button" class="mc-tab" onclick="switchTab('tab-allergies', this)"><i class="bi bi-exclamation-octagon-fill"></i> Allergies <span class="mc-tab-count"><?= count($allergies) ?></span></button>
+  <button type="button" class="mc-tab" onclick="switchTab('tab-medications', this)"><i class="bi bi-capsule-pill"></i> Medications <span class="mc-tab-count"><?= count($medications) ?></span></button>
+  <button type="button" class="mc-tab" onclick="switchTab('tab-prescriptions', this)"><i class="bi bi-prescription2"></i> Prescriptions <span class="mc-tab-count"><?= count($prescriptions) ?></span></button>
+  <button type="button" class="mc-tab" onclick="switchTab('tab-labs', this)"><i class="bi bi-file-earmark-medical"></i> Lab reports <span class="mc-tab-count"><?= count($labReports) ?></span></button>
+  <button type="button" class="mc-tab" onclick="switchTab('tab-consultations', this)"><i class="bi bi-journal-medical"></i> Consultations <span class="mc-tab-count"><?= count($consultations) ?></span></button>
+</div>
+
+<div id="tab-summary" class="tab-pane active">
+  <?php renderExecutiveClinicalSummary($clinicalSummary, false); ?>
+</div>
+
+<div id="tab-conditions" class="tab-pane">
+  <div class="mc-panel">
+    <div class="mc-panel-h"><h2>Chronic illnesses &amp; diagnosed conditions</h2><span class="lab-status info"><?= count($conditions) ?> records</span></div>
+    <?php if (empty($conditions)): ?>
+      <p style="margin:0;color:var(--muted)">No prior chronic conditions or diagnoses recorded.</p>
+    <?php else: ?>
+      <div style="overflow-x:auto">
+        <table class="lab-table">
+          <thead><tr><th>Condition</th><th>ICD</th><th>Status</th><th>Date</th><th>By</th><th>Notes</th></tr></thead>
+          <tbody>
+            <?php foreach ($conditions as $cond): ?>
+              <tr>
+                <td>
+                  <strong><?= htmlspecialchars($cond['condition_name']) ?></strong>
+                  <?php if ($cond['description']): ?><div style="font-size:.82rem;color:var(--muted)"><?= htmlspecialchars($cond['description']) ?></div><?php endif; ?>
+                </td>
+                <td class="mc-mono"><?= htmlspecialchars($cond['icd_code'] ?? 'N/A') ?></td>
+                <td><span class="lab-status <?= in_array($cond['status'], ['ACTIVE','CHRONIC']) ? 'warn' : 'ok' ?>"><?= htmlspecialchars($cond['status']) ?></span></td>
+                <td><?= $cond['diagnosed_date'] ? date('d M Y', strtotime($cond['diagnosed_date'])) : 'Undated' ?></td>
+                <td><?= htmlspecialchars($cond['doctor_name'] ? 'Dr. ' . $cond['doctor_name'] : 'System') ?></td>
+                <td><?= htmlspecialchars($cond['notes'] ?? '—') ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </div>
+</div>
+
+<div id="tab-allergies" class="tab-pane">
+  <div class="mc-panel">
+    <div class="mc-panel-h"><h2>Allergies &amp; adverse drug reactions</h2><span class="lab-status danger"><?= count($allergies) ?> documented</span></div>
+    <?php if (empty($allergies)): ?>
+      <p style="margin:0;color:var(--muted)">No known drug, food, or environmental allergies documented.</p>
+    <?php else: ?>
+      <div style="overflow-x:auto">
+        <table class="lab-table">
+          <thead><tr><th>Allergen</th><th>Category</th><th>Severity</th><th>Reaction</th><th>Verification</th></tr></thead>
+          <tbody>
+            <?php foreach ($allergies as $alg):
+              $sev = $alg['severity'] ?? '';
+              $sCls = in_array($sev, ['LIFE_THREATENING', 'SEVERE']) ? 'danger' : ($sev === 'MODERATE' ? 'warn' : 'info');
+            ?>
+              <tr style="<?= $sCls === 'danger' ? 'background:#fef2f2' : '' ?>">
+                <td><strong style="<?= $sCls === 'danger' ? 'color:var(--danger)' : '' ?>"><?= htmlspecialchars($alg['allergy_name']) ?></strong></td>
+                <td><span class="lab-status"><?= htmlspecialchars($alg['allergy_type']) ?></span></td>
+                <td><span class="lab-status <?= $sCls ?>"><?= htmlspecialchars(str_replace('_', ' ', $sev)) ?></span></td>
+                <td><?= htmlspecialchars($alg['reaction'] ?? 'General sensitivity') ?></td>
+                <td><span class="lab-status <?= $alg['verified'] ? 'ok' : '' ?>"><?= $alg['verified'] ? 'Verified' : 'Patient reported' ?></span></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </div>
+</div>
+
+<div id="tab-medications" class="tab-pane">
+  <div class="mc-panel">
+    <div class="mc-panel-h"><h2>Current &amp; past medications</h2><span class="lab-status info"><?= count($medications) ?> total</span></div>
+    <?php if (empty($medications)): ?>
+      <p style="margin:0;color:var(--muted)">No medications currently recorded.</p>
+    <?php else: ?>
+      <div style="overflow-x:auto">
+        <table class="lab-table">
+          <thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Route</th><th>Status</th><th>Started</th><th>Prescriber</th></tr></thead>
+          <tbody>
+            <?php foreach ($medications as $med): ?>
+              <tr>
+                <td>
+                  <strong><?= htmlspecialchars($med['brand_name'] ?: $med['generic_name']) ?></strong>
+                  <?php if ($med['brand_name'] && $med['generic_name']): ?>
+                    <div style="font-size:.82rem;color:var(--muted)"><?= htmlspecialchars($med['generic_name']) ?></div>
+                  <?php endif; ?>
+                </td>
+                <td><?= htmlspecialchars($med['dosage'] ?? $med['strength'] ?? 'Standard') ?> · <?= htmlspecialchars($med['dosage_form']) ?></td>
+                <td><span class="lab-status"><?= htmlspecialchars($med['frequency'] ?? 'As directed') ?></span></td>
+                <td><?= htmlspecialchars($med['route']) ?></td>
+                <td><span class="lab-status <?= $med['status'] === 'ACTIVE' ? 'ok' : ($med['status'] === 'COMPLETED' ? '' : 'danger') ?>"><?= htmlspecialchars($med['status']) ?></span></td>
+                <td><?= $med['started_at'] ? date('d M Y', strtotime($med['started_at'])) : '—' ?></td>
+                <td><?= $med['prescribed_by'] == $doctorId ? '<strong>Dr. ' . htmlspecialchars($med['doctor_name']) . '</strong> (You)' : 'Attending Physician' ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </div>
+</div>
+
+<div id="tab-prescriptions" class="tab-pane">
+  <div class="mc-panel">
+    <div class="mc-panel-h">
+      <h2>Prescriptions history</h2>
+      <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $patientId ?>" class="mc-btn mc-btn-primary mc-btn-sm"><i class="bi bi-plus-lg"></i> Issue Rx</a>
     </div>
-
-    <nav class="sidebar-nav">
-      <div class="nav-section-title">Clinical Care</div>
-      <a href="<?= APP_URL ?>/doctor/dashboard.php" class="nav-item">
-        <i class="bi bi-grid-1x2-fill"></i>
-        <span>Dashboard</span>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/patient-search.php" class="nav-item active">
-        <i class="bi bi-search"></i>
-        <span>Search Patient</span>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $patientId ?>" class="nav-item">
-        <i class="bi bi-file-earmark-medical-fill"></i>
-        <span>Write Prescription</span>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/consultations.php" class="nav-item">
-        <i class="bi bi-chat-heart-fill"></i>
-        <span>Consultations</span>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/prescriptions.php" class="nav-item">
-        <i class="bi bi-prescription2"></i>
-        <span>Prescriptions</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="user-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'D', 0, 1)) ?></div>
-        <div class="user-info">
-          <div class="user-name"><?= htmlspecialchars($_SESSION['name'] ?? 'Doctor') ?></div>
-          <div class="user-role">BMDC Verified</div>
-        </div>
+    <?php if (empty($prescriptions)): ?>
+      <p style="margin:0;color:var(--muted)">No past prescriptions found for this patient.</p>
+    <?php else: ?>
+      <div style="overflow-x:auto">
+        <table class="lab-table">
+          <thead><tr><th>Rx ID</th><th>Date</th><th>Doctor</th><th>Hospital</th><th>Diagnosis</th><th>Medicines</th><th>Status</th></tr></thead>
+          <tbody>
+            <?php foreach ($prescriptions as $rx): ?>
+              <tr>
+                <td class="mc-mono" style="color:var(--accent)"><?= htmlspecialchars($rx['prescription_uid']) ?></td>
+                <td><?= date('d M Y, h:i A', strtotime($rx['created_at'])) ?></td>
+                <td><?= $rx['doctor_id'] == $doctorId ? '<strong>Dr. ' . htmlspecialchars($rx['doctor_name']) . '</strong>' : 'Licensed Physician' ?></td>
+                <td><?= htmlspecialchars($rx['hospital_name']) ?></td>
+                <td><?= htmlspecialchars($rx['diagnosis'] ?? 'Clinical Evaluation') ?></td>
+                <td><span class="lab-status info"><?= (int)$rx['medicine_count'] ?> items</span></td>
+                <td><span class="lab-status ok"><?= htmlspecialchars($rx['status']) ?></span></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
       </div>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="btn btn-outline btn-sm" style="width: 100%; margin-top: var(--space-3);">
-        <i class="bi bi-box-arrow-right"></i> Sign Out
-      </a>
+    <?php endif; ?>
+  </div>
+</div>
+
+<div id="tab-labs" class="tab-pane">
+  <?php if (!empty($patientLabOrders)): ?>
+    <div class="mc-panel">
+      <div class="mc-panel-h"><h2>Prescribed lab tokens (<?= count($patientLabOrders) ?>)</h2></div>
+      <div style="overflow-x:auto">
+        <table class="lab-table">
+          <thead><tr><th>Token</th><th>Date</th><th>Doctor / Hospital</th><th>Tests</th><th>Lab</th><th>Status</th></tr></thead>
+          <tbody>
+            <?php foreach ($patientLabOrders as $plo):
+              $oCls = $plo['status'] === 'COMPLETED' ? 'ok' : ($plo['status'] === 'IN_PROGRESS' ? 'info' : 'warn');
+            ?>
+              <tr>
+                <td class="mc-mono" style="color:var(--accent)"><?= htmlspecialchars($plo['lab_token']) ?></td>
+                <td><?= date('d M Y', strtotime($plo['created_at'])) ?></td>
+                <td><strong>Dr. <?= htmlspecialchars($plo['doctor_name']) ?></strong><div style="font-size:.8rem;color:var(--muted)"><?= htmlspecialchars($plo['hospital_name']) ?></div></td>
+                <td><?= (int)$plo['done_tests'] ?> / <?= (int)$plo['total_tests'] ?> done</td>
+                <td><?= htmlspecialchars($plo['lab_name'] ?: 'Any accredited lab') ?></td>
+                <td><span class="lab-status <?= $oCls ?>"><?= htmlspecialchars(str_replace('_', ' ', $plo['status'])) ?></span></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </aside>
+  <?php endif; ?>
 
-  <!-- MAIN CONTENT -->
-  <main class="portal-main">
-    <?php renderActivePatientSessionBar($accessSession, 'medical-record'); ?>
-
-    <!-- Top Header -->
-    <header class="portal-header">
-      <div class="d-flex align-items-center gap-3">
-        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
-          <span></span><span></span><span></span>
-        </button>
-        <a href="<?= APP_URL ?>/doctor/patient-search.php" class="btn btn-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Back to Search
-        </a>
-        <h1 class="portal-title" style="font-size: 1.25rem; margin: 0;">Authorized Health Record</h1>
+  <div class="mc-panel">
+    <div class="mc-panel-h"><h2>Diagnostic lab reports (<?= count($labReports) ?>)</h2></div>
+    <?php if (empty($labReports)): ?>
+      <p style="margin:0;color:var(--muted)">No diagnostic lab reports uploaded for this patient.</p>
+    <?php else: ?>
+      <div style="overflow-x:auto">
+        <table class="lab-table">
+          <thead><tr><th>Test / Report</th><th>Date</th><th>Laboratory</th><th>Result summary</th><th>Status</th></tr></thead>
+          <tbody>
+            <?php foreach ($labReports as $lab): ?>
+              <tr>
+                <td><strong><?= htmlspecialchars($lab['report_name']) ?></strong></td>
+                <td><?= $lab['test_date'] ? date('d M Y', strtotime($lab['test_date'])) : '—' ?></td>
+                <td><?= htmlspecialchars($lab['laboratory_name'] ?? 'Diagnostic Center') ?></td>
+                <td><?= htmlspecialchars($lab['result_summary'] ?? 'Attached document') ?></td>
+                <td><span class="lab-status <?= $lab['verified'] ? 'ok' : 'warn' ?>"><?= $lab['verified'] ? 'Verified' : 'Pending' ?></span></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
       </div>
-      <div class="header-actions d-flex align-items-center gap-3">
-        <div id="session-countdown" class="session-badge" style="background: #FEF3C7; border-color: #FCD34D; color: #92400E;">
-          <i class="bi bi-hourglass-split"></i>
-          <span>Session: <strong id="timer-text">--:--</strong></span>
-        </div>
-        <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $patientId ?>" class="btn btn-primary btn-sm">
-          <i class="bi bi-plus-circle-fill"></i> New Prescription
-        </a>
-        <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to end this medical record session?');">
-          <?= csrfField() ?>
-          <input type="hidden" name="end_session" value="1">
-          <button type="submit" class="btn btn-outline btn-sm text-danger" title="Close access session">
-            <i class="bi bi-x-circle"></i> End Session
-          </button>
-        </form>
+    <?php endif; ?>
+  </div>
+</div>
+
+<div id="tab-consultations" class="tab-pane">
+  <div class="mc-panel">
+    <div class="mc-panel-h"><h2>Past consultations (<?= count($consultations) ?>)</h2></div>
+    <?php if (empty($consultations)): ?>
+      <p style="margin:0;color:var(--muted)">No prior consultations recorded.</p>
+    <?php else: ?>
+      <div style="overflow-x:auto">
+        <table class="lab-table">
+          <thead><tr><th>ID</th><th>Date</th><th>Doctor</th><th>Hospital / Dept</th><th>Complaint</th><th>Advice</th></tr></thead>
+          <tbody>
+            <?php foreach ($consultations as $cons): ?>
+              <tr>
+                <td class="mc-mono"><?= htmlspecialchars($cons['consultation_uid']) ?></td>
+                <td><?= date('d M Y', strtotime($cons['consultation_date'])) ?></td>
+                <td>Dr. <?= htmlspecialchars($cons['doctor_name']) ?></td>
+                <td><?= htmlspecialchars($cons['hospital_name']) ?> · <?= htmlspecialchars($cons['department_name'] ?? 'OPD') ?></td>
+                <td><?= htmlspecialchars($cons['chief_complaint'] ?? 'General checkup') ?></td>
+                <td><?= htmlspecialchars($cons['advice'] ?? '—') ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
       </div>
-    </header>
-
-    <div class="portal-body">
-
-      <!-- Critical Allergies Warning if present -->
-      <?php if ($hasCriticalAllergy): ?>
-        <div class="critical-alert-box">
-          <div style="font-size: 2rem;"><i class="bi bi-exclamation-triangle-fill"></i></div>
-          <div>
-            <strong style="font-size: 1.05rem;">CRITICAL CLINICAL ALERT: Severe Allergies Documented</strong>
-            <div style="font-size: 0.9rem; margin-top: var(--space-1);">
-              Patient has documented severe/life-threatening allergic reactions. Review the Allergies tab before prescribing any medications!
-            </div>
-          </div>
-        </div>
-      <?php endif; ?>
-
-      <!-- Patient Header Banner -->
-      <div class="record-header-banner">
-        <div>
-          <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2);">
-            <h2 style="font-size: 1.6rem; font-weight: 800; margin: 0; color: #fff;"><?= htmlspecialchars($patient['full_name']) ?></h2>
-            <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; border: 1px solid rgba(255,255,255,0.4);"><?= htmlspecialchars($patient['patient_uid']) ?></span>
-            <span class="badge" style="background: #10B981; color: #fff;"><i class="bi bi-shield-check"></i> Consent Verified</span>
-          </div>
-          <div style="display: flex; flex-wrap: wrap; gap: var(--space-6); font-size: 0.92rem; opacity: 0.95;">
-            <div><i class="bi bi-person"></i> <?= $age ?> yrs (<?= date('d M Y', strtotime($patient['date_of_birth'])) ?>) &bull; <?= ucfirst(strtolower($patient['gender'])) ?></div>
-            <div><i class="bi bi-droplet-half"></i> Blood Group: <strong><?= htmlspecialchars($patient['blood_group'] ?? 'Unknown') ?></strong></div>
-            <div><i class="bi bi-person-vcard"></i> NID: &bull;&bull;&bull;&bull; <?= htmlspecialchars($patient['nid_last4']) ?></div>
-            <div><i class="bi bi-telephone"></i> Emergency: <?= htmlspecialchars($patient['emergency_contact_name'] ?? 'N/A') ?> (<?= htmlspecialchars($patient['emergency_contact_phone'] ?? 'N/A') ?>)</div>
-          </div>
-        </div>
-        <div>
-          <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $patientId ?>" class="btn btn-sm" style="background: #fff; color: var(--mc-blue); font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-            <i class="bi bi-prescription2"></i> Start Consultation &amp; Rx
-          </a>
-        </div>
-      </div>
-
-      <!-- Quick Stats Strip -->
-      <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr); margin-bottom: var(--space-6);">
-        <div class="stat-card" style="padding: var(--space-4);">
-          <div class="stat-value" style="font-size: 1.5rem; color: var(--mc-blue);"><?= count($conditions) ?></div>
-          <div class="stat-label">Diagnosed Conditions</div>
-        </div>
-        <div class="stat-card" style="padding: var(--space-4);">
-          <div class="stat-value" style="font-size: 1.5rem; color: #00C49F;"><?= count($medications) ?></div>
-          <div class="stat-label">Medications Record</div>
-        </div>
-        <div class="stat-card" style="padding: var(--space-4);">
-          <div class="stat-value" style="font-size: 1.5rem; color: <?= $hasCriticalAllergy ? 'var(--mc-danger)' : '#10B981' ?>;"><?= count($allergies) ?></div>
-          <div class="stat-label">Known Allergies</div>
-        </div>
-        <div class="stat-card" style="padding: var(--space-4);">
-          <div class="stat-value" style="font-size: 1.5rem; color: #8B5CF6;"><?= count($prescriptions) ?></div>
-          <div class="stat-label">Past Prescriptions</div>
-        </div>
-        <div class="stat-card" style="padding: var(--space-4);">
-          <div class="stat-value" style="font-size: 1.5rem; color: #F59E0B;"><?= count($labReports) ?></div>
-          <div class="stat-label">Lab Reports</div>
-        </div>
-      </div>
-
-      <!-- TAB NAVIGATION -->
-      <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('tab-summary', this)">
-          <i class="bi bi-stars"></i> Executive Summary (ক্লিনিক্যাল সামারি)
-        </button>
-        <button class="tab-btn" onclick="switchTab('tab-conditions', this)">
-          <i class="bi bi-heart-pulse-fill"></i> Medical History (<?= count($conditions) ?>)
-        </button>
-        <button class="tab-btn" onclick="switchTab('tab-allergies', this)">
-          <i class="bi bi-exclamation-octagon-fill"></i> Allergies (<?= count($allergies) ?>)
-        </button>
-        <button class="tab-btn" onclick="switchTab('tab-medications', this)">
-          <i class="bi bi-capsule-pill"></i> Medications (<?= count($medications) ?>)
-        </button>
-        <button class="tab-btn" onclick="switchTab('tab-prescriptions', this)">
-          <i class="bi bi-prescription2"></i> Prescriptions (<?= count($prescriptions) ?>)
-        </button>
-        <button class="tab-btn" onclick="switchTab('tab-labs', this)">
-          <i class="bi bi-file-earmark-medical"></i> Lab Reports (<?= count($labReports) ?>)
-        </button>
-        <button class="tab-btn" onclick="switchTab('tab-consultations', this)">
-          <i class="bi bi-journal-medical"></i> Consultations (<?= count($consultations) ?>)
-        </button>
-      </div>
-
-      <!-- TAB 0: EXECUTIVE CLINICAL SUMMARY -->
-      <div id="tab-summary" class="tab-pane active">
-        <?php renderExecutiveClinicalSummary($clinicalSummary, false); ?>
-      </div>
-
-      <!-- TAB 1: MEDICAL HISTORY / CONDITIONS -->
-      <div id="tab-conditions" class="tab-pane">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title"><i class="bi bi-heart-pulse"></i> Chronic Illnesses &amp; Diagnosed Conditions</h3>
-            <span class="badge badge-info"><?= count($conditions) ?> Records</span>
-          </div>
-          <div class="card-body">
-            <?php if (empty($conditions)): ?>
-              <div class="text-center py-5 text-muted">
-                <i class="bi bi-clipboard-check" style="font-size: 3rem; color: #CBD5E1;"></i>
-                <p class="mt-2">No prior chronic conditions or diagnoses recorded for this patient.</p>
-              </div>
-            <?php else: ?>
-              <div class="table-responsive">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Condition / Illness</th>
-                      <th>ICD Code</th>
-                      <th>Status</th>
-                      <th>Diagnosed Date</th>
-                      <th>Diagnosed By</th>
-                      <th>Clinical Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php foreach ($conditions as $cond): ?>
-                      <tr>
-                        <td>
-                          <strong><?= htmlspecialchars($cond['condition_name']) ?></strong>
-                          <?php if ($cond['description']): ?>
-                            <div class="text-muted" style="font-size: 0.85rem;"><?= htmlspecialchars($cond['description']) ?></div>
-                          <?php endif; ?>
-                        </td>
-                        <td><span class="badge badge-secondary"><?= htmlspecialchars($cond['icd_code'] ?? 'N/A') ?></span></td>
-                        <td>
-                          <?php if ($cond['status'] === 'ACTIVE' || $cond['status'] === 'CHRONIC'): ?>
-                            <span class="badge badge-warning"><?= htmlspecialchars($cond['status']) ?></span>
-                          <?php else: ?>
-                            <span class="badge badge-success"><?= htmlspecialchars($cond['status']) ?></span>
-                          <?php endif; ?>
-                        </td>
-                        <td><?= $cond['diagnosed_date'] ? date('d M Y', strtotime($cond['diagnosed_date'])) : 'Undated' ?></td>
-                        <td><?= htmlspecialchars($cond['doctor_name'] ? 'Dr. ' . $cond['doctor_name'] : 'System Record') ?></td>
-                        <td><?= htmlspecialchars($cond['notes'] ?? '—') ?></td>
-                      </tr>
-                    <?php endforeach; ?>
-                  </tbody>
-                </table>
-              </div>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 2: ALLERGIES -->
-      <div id="tab-allergies" class="tab-pane">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title"><i class="bi bi-shield-exclamation"></i> Patient Allergies &amp; Adverse Drug Reactions</h3>
-            <span class="badge badge-danger"><?= count($allergies) ?> Documented</span>
-          </div>
-          <div class="card-body">
-            <?php if (empty($allergies)): ?>
-              <div class="text-center py-5 text-muted">
-                <i class="bi bi-shield-check" style="font-size: 3rem; color: #10B981;"></i>
-                <p class="mt-2">No known drug, food, or environmental allergies documented.</p>
-              </div>
-            <?php else: ?>
-              <div class="table-responsive">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Allergen / Substance</th>
-                      <th>Category</th>
-                      <th>Severity</th>
-                      <th>Reaction Details</th>
-                      <th>Verification</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php foreach ($allergies as $alg): ?>
-                      <tr style="<?= in_array($alg['severity'], ['SEVERE', 'LIFE_THREATENING']) ? 'background: #FEF2F2;' : '' ?>">
-                        <td>
-                          <strong style="<?= in_array($alg['severity'], ['SEVERE', 'LIFE_THREATENING']) ? 'color: var(--mc-danger);' : '' ?>">
-                            <?= htmlspecialchars($alg['allergy_name']) ?>
-                          </strong>
-                        </td>
-                        <td><span class="badge badge-secondary"><?= htmlspecialchars($alg['allergy_type']) ?></span></td>
-                        <td>
-                          <?php if ($alg['severity'] === 'LIFE_THREATENING'): ?>
-                            <span class="badge badge-danger"><i class="bi bi-exclamation-octagon-fill"></i> LIFE THREATENING</span>
-                          <?php elseif ($alg['severity'] === 'SEVERE'): ?>
-                            <span class="badge badge-danger">SEVERE</span>
-                          <?php elseif ($alg['severity'] === 'MODERATE'): ?>
-                            <span class="badge badge-warning">MODERATE</span>
-                          <?php else: ?>
-                            <span class="badge badge-info">MILD</span>
-                          <?php endif; ?>
-                        </td>
-                        <td><?= htmlspecialchars($alg['reaction'] ?? 'General sensitivity') ?></td>
-                        <td>
-                          <?php if ($alg['verified']): ?>
-                            <span class="badge badge-success"><i class="bi bi-check-circle"></i> Verified</span>
-                          <?php else: ?>
-                            <span class="badge badge-secondary">Patient Reported</span>
-                          <?php endif; ?>
-                        </td>
-                      </tr>
-                    <?php endforeach; ?>
-                  </tbody>
-                </table>
-              </div>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 3: MEDICATIONS -->
-      <div id="tab-medications" class="tab-pane">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title"><i class="bi bi-capsule"></i> Current &amp; Past Medications</h3>
-            <span class="badge badge-info"><?= count($medications) ?> Total</span>
-          </div>
-          <div class="card-body">
-            <?php if (empty($medications)): ?>
-              <div class="text-center py-5 text-muted">
-                <i class="bi bi-capsule" style="font-size: 3rem; color: #CBD5E1;"></i>
-                <p class="mt-2">No medications currently recorded for this patient.</p>
-              </div>
-            <?php else: ?>
-              <div class="table-responsive">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Medicine Name</th>
-                      <th>Dosage &amp; Strength</th>
-                      <th>Frequency</th>
-                      <th>Route</th>
-                      <th>Status</th>
-                      <th>Started</th>
-                      <th>Prescribing Doctor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php foreach ($medications as $med): ?>
-                      <tr>
-                        <td>
-                          <strong><?= htmlspecialchars($med['brand_name'] ?: $med['generic_name']) ?></strong>
-                          <?php if ($med['brand_name'] && $med['generic_name']): ?>
-                            <div class="text-muted" style="font-size: 0.82rem;"><?= htmlspecialchars($med['generic_name']) ?></div>
-                          <?php endif; ?>
-                        </td>
-                        <td><?= htmlspecialchars($med['dosage'] ?? $med['strength'] ?? 'Standard') ?> &bull; <small class="text-muted"><?= htmlspecialchars($med['dosage_form']) ?></small></td>
-                        <td><span class="badge badge-secondary"><?= htmlspecialchars($med['frequency'] ?? 'As directed') ?></span></td>
-                        <td><?= htmlspecialchars($med['route']) ?></td>
-                        <td>
-                          <?php if ($med['status'] === 'ACTIVE'): ?>
-                            <span class="badge badge-success"><i class="bi bi-check2"></i> Active</span>
-                          <?php elseif ($med['status'] === 'COMPLETED'): ?>
-                            <span class="badge badge-secondary">Completed</span>
-                          <?php else: ?>
-                            <span class="badge badge-danger">Discontinued</span>
-                          <?php endif; ?>
-                        </td>
-                        <td><?= $med['started_at'] ? date('d M Y', strtotime($med['started_at'])) : '—' ?></td>
-                        <td>
-                          <?php if ($med['prescribed_by'] == $doctorId): ?>
-                            <strong>Dr. <?= htmlspecialchars($med['doctor_name']) ?></strong> <span class="badge badge-success" style="font-size: 9px;">You</span>
-                          <?php else: ?>
-                            <span class="text-muted" style="font-size: 11px;"><i class="bi bi-shield-lock"></i> Attending Physician</span>
-                          <?php endif; ?>
-                        </td>
-                      </tr>
-                    <?php endforeach; ?>
-                  </tbody>
-                </table>
-              </div>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 4: PRESCRIPTIONS -->
-      <div id="tab-prescriptions" class="tab-pane">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title"><i class="bi bi-file-earmark-medical"></i> Prescriptions History</h3>
-            <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $patientId ?>" class="btn btn-primary btn-sm">
-              <i class="bi bi-plus-lg"></i> Issue New Prescription
-            </a>
-          </div>
-          <div class="card-body">
-            <?php if (empty($prescriptions)): ?>
-              <div class="text-center py-5 text-muted">
-                <i class="bi bi-prescription2" style="font-size: 3rem; color: #CBD5E1;"></i>
-                <p class="mt-2">No past prescriptions found for this patient.</p>
-              </div>
-            <?php else: ?>
-              <div class="table-responsive">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Prescription ID</th>
-                      <th>Date</th>
-                      <th>Doctor</th>
-                      <th>Hospital</th>
-                      <th>Diagnosis</th>
-                      <th>Medicines</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php foreach ($prescriptions as $rx): ?>
-                      <tr>
-                        <td><strong><?= htmlspecialchars($rx['prescription_uid']) ?></strong></td>
-                        <td><?= date('d M Y, h:i A', strtotime($rx['created_at'])) ?></td>
-                        <td>
-                          <?php if ($rx['doctor_id'] == $doctorId): ?>
-                            <strong>Dr. <?= htmlspecialchars($rx['doctor_name']) ?></strong> <span class="badge badge-success" style="font-size: 10px;">You</span>
-                          <?php else: ?>
-                            <span class="badge" style="background: #F1F5F9; color: #475569; font-size: 11px;">
-                              <i class="bi bi-shield-lock"></i> Licensed Physician (Confidential)
-                            </span>
-                          <?php endif; ?>
-                        </td>
-                        <td><?= htmlspecialchars($rx['hospital_name']) ?></td>
-                        <td><?= htmlspecialchars($rx['diagnosis'] ?? 'Clinical Evaluation') ?></td>
-                        <td><span class="badge badge-info"><?= $rx['medicine_count'] ?> items</span></td>
-                        <td><span class="badge badge-success"><?= htmlspecialchars($rx['status']) ?></span></td>
-                      </tr>
-                    <?php endforeach; ?>
-                  </tbody>
-                </table>
-              </div>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 5: LAB REPORTS -->
-      <div id="tab-labs" class="tab-pane">
-        <?php if (!empty($patientLabOrders)): ?>
-          <div class="card mb-4" style="border: 1px solid #C7D2FE; background: #F8FAFC;">
-            <div class="card-header" style="background: #EEF2FF; border-bottom: 1px solid #E0E7FF;">
-              <h4 class="card-title" style="font-size: 0.95rem; color: #4338CA; margin: 0;">
-                <i class="bi bi-eyedropper"></i> Active &amp; Prescribed Lab Tokens (<?= count($patientLabOrders) ?>)
-              </h4>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="data-table mb-0">
-                  <thead>
-                    <tr>
-                      <th>Token ID</th>
-                      <th>Prescribed Date</th>
-                      <th>Doctor / Hospital</th>
-                      <th>Tests Ordered</th>
-                      <th>Assigned Lab</th>
-                      <th>Order Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php foreach ($patientLabOrders as $plo): ?>
-                      <tr>
-                        <td>
-                          <span style="font-family: monospace; font-weight: 800; color: #4F46E5; background: #EEF2FF; padding: 3px 8px; border-radius: 6px; font-size: 13px;">
-                            <?= htmlspecialchars($plo['lab_token']) ?>
-                          </span>
-                        </td>
-                        <td><?= date('d M Y', strtotime($plo['created_at'])) ?></td>
-                        <td>
-                          <strong style="color: #0F172A;">Dr. <?= htmlspecialchars($plo['doctor_name']) ?></strong><br>
-                          <small class="text-muted"><?= htmlspecialchars($plo['hospital_name']) ?></small>
-                        </td>
-                        <td>
-                          <span class="badge" style="background: #E0E7FF; color: #3730A3;">
-                            <?= (int)$plo['done_tests'] ?> / <?= (int)$plo['total_tests'] ?> Tests Done
-                          </span>
-                        </td>
-                        <td><?= htmlspecialchars($plo['lab_name'] ?: 'Any Accredited Lab') ?></td>
-                        <td>
-                          <?php if ($plo['status'] === 'COMPLETED'): ?>
-                            <span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Completed</span>
-                          <?php elseif ($plo['status'] === 'IN_PROGRESS'): ?>
-                            <span class="badge badge-info"><i class="bi bi-gear-fill"></i> In Progress</span>
-                          <?php else: ?>
-                            <span class="badge badge-warning"><i class="bi bi-hourglass-split"></i> Pending Lab Intake</span>
-                          <?php endif; ?>
-                        </td>
-                      </tr>
-                    <?php endforeach; ?>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        <?php endif; ?>
-
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title"><i class="bi bi-clipboard2-pulse"></i> Diagnostic Lab Reports &amp; Verified Results</h3>
-            <span class="badge badge-info"><?= count($labReports) ?> Reports</span>
-          </div>
-          <div class="card-body">
-            <?php if (empty($labReports)): ?>
-              <div class="text-center py-5 text-muted">
-                <i class="bi bi-file-earmark-ruled" style="font-size: 3rem; color: #CBD5E1;"></i>
-                <p class="mt-2">No diagnostic lab reports uploaded for this patient.</p>
-              </div>
-            <?php else: ?>
-              <div class="table-responsive">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Report / Test Name</th>
-                      <th>Date</th>
-                      <th>Laboratory</th>
-                      <th>Result Summary</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php foreach ($labReports as $lab): ?>
-                      <tr>
-                        <td><strong><?= htmlspecialchars($lab['report_name']) ?></strong></td>
-                        <td><?= $lab['test_date'] ? date('d M Y', strtotime($lab['test_date'])) : '—' ?></td>
-                        <td><?= htmlspecialchars($lab['laboratory_name'] ?? 'Diagnostic Center') ?></td>
-                        <td><?= htmlspecialchars($lab['result_summary'] ?? 'Attached Document') ?></td>
-                        <td>
-                          <?php if ($lab['verified']): ?>
-                            <span class="badge badge-success"><i class="bi bi-check-circle"></i> Verified</span>
-                          <?php else: ?>
-                            <span class="badge badge-secondary">Pending Verification</span>
-                          <?php endif; ?>
-                        </td>
-                      </tr>
-                    <?php endforeach; ?>
-                  </tbody>
-                </table>
-              </div>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 6: CONSULTATIONS -->
-      <div id="tab-consultations" class="tab-pane">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title"><i class="bi bi-journal-medical"></i> Past Clinical Consultations</h3>
-            <span class="badge badge-info"><?= count($consultations) ?> Records</span>
-          </div>
-          <div class="card-body">
-            <?php if (empty($consultations)): ?>
-              <div class="text-center py-5 text-muted">
-                <i class="bi bi-journal-medical" style="font-size: 3rem; color: #CBD5E1;"></i>
-                <p class="mt-2">No prior consultations recorded.</p>
-              </div>
-            <?php else: ?>
-              <div class="table-responsive">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Consultation ID</th>
-                      <th>Date</th>
-                      <th>Doctor</th>
-                      <th>Hospital / Dept</th>
-                      <th>Chief Complaint</th>
-                      <th>Advice</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php foreach ($consultations as $cons): ?>
-                      <tr>
-                        <td><strong><?= htmlspecialchars($cons['consultation_uid']) ?></strong></td>
-                        <td><?= date('d M Y', strtotime($cons['consultation_date'])) ?></td>
-                        <td>Dr. <?= htmlspecialchars($cons['doctor_name']) ?></td>
-                        <td><?= htmlspecialchars($cons['hospital_name']) ?> &bull; <?= htmlspecialchars($cons['department_name'] ?? 'OPD') ?></td>
-                        <td><?= htmlspecialchars($cons['chief_complaint'] ?? 'General checkup') ?></td>
-                        <td><?= htmlspecialchars($cons['advice'] ?? '—') ?></td>
-                      </tr>
-                    <?php endforeach; ?>
-                  </tbody>
-                </table>
-              </div>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </main>
+    <?php endif; ?>
+  </div>
 </div>
 
 <script>
-// Session countdown timer
 let secondsLeft = <?= (int)($accessSession['seconds_remaining'] ?? 1800) ?>;
 const timerEl = document.getElementById('timer-text');
 
 function updateTimer() {
+  if (!timerEl) return;
   if (secondsLeft <= 0) {
     timerEl.textContent = 'Expired';
     alert('Your 30-minute authorized access session has expired. Please re-request consent if needed.');
@@ -866,14 +491,11 @@ function updateTimer() {
 updateTimer();
 setInterval(updateTimer, 1000);
 
-// Tab switching
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mc-tab').forEach(b => b.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
   btn.classList.add('active');
 }
 </script>
-
-</body>
-</html>
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>

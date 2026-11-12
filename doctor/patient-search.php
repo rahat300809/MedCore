@@ -323,422 +323,280 @@ $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
 $csrf = generateCsrfToken();
+
+require_once __DIR__ . '/../app/views/portal/navs.php';
+$waitingQueueCount = mc_doctor_shell_setup($db, $doctorId, $hospitalId, $activeSession, 'search');
+$portalRole = 'Doctor';
+$portalRoleBn = 'Clinical portal';
+$portalAccent = '#0f766e';
+$portalUser = $_SESSION['name'] ?? 'Doctor';
+$portalMeta = ($_SESSION['hospital_name'] ?? '') . ' · Patient search';
+$portalTitle = 'Patient search & access';
+$portalSubtitle = 'রোগীর UID, ফোন বা NID দিয়ে রেকর্ড খুঁজুন';
+$portalNav = mc_doctor_nav('search', $waitingQueueCount);
+$portalTopAction = '<a class="mc-btn mc-btn-secondary mc-btn-sm" href="' . APP_URL . '/doctor/queue.php"><i class="bi bi-people-fill"></i> Live queue</a>';
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Patient Search — MedCore Doctor Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-</head>
-<body>
-<div class="portal-layout">
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="logo-icon" style="width:32px;height:32px;font-size:14px;">M</div>
-      <div><div class="brand-name">MedCore</div><div class="brand-tagline" style="color:var(--mc-teal);">Clinical Portal</div></div>
-    </div>
-    <div style="padding:var(--space-3) var(--space-5);background:var(--mc-blue-50);border-bottom:1px solid var(--mc-border);">
-      <div style="font-size:10px;color:var(--mc-text-muted);text-transform:uppercase;letter-spacing:1px;">Active Hospital</div>
-      <div style="font-size:13px;font-weight:700;color:var(--mc-blue);margin-top:2px;">
-        <i class="bi bi-building-fill-check"></i> <?= htmlspecialchars($_SESSION['hospital_name'] ?? '') ?>
+<?php if ($activeSession): ?>
+  <div class="session-lock-card" role="alert">
+    <div class="lock-icon"><i class="bi bi-shield-lock-fill"></i></div>
+    <div class="lock-body">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.35rem">
+        <span class="lab-status danger">ACTIVE CONSULTATION IN PROGRESS</span>
+        <span class="lab-status warn">30-min clinical window active</span>
       </div>
-    </div>
-    <nav class="sidebar-nav">
-      <a href="<?= APP_URL ?>/doctor/dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-      <div class="sidebar-section-title">Patient Care</div>
-      <a href="<?= APP_URL ?>/doctor/patient-search.php" class="active" aria-current="page"><i class="bi bi-search-heart-fill"></i> Patient Search</a>
-      <a href="<?= APP_URL ?>/doctor/consultations.php"><i class="bi bi-stethoscope"></i> My Consultations</a>
-      <a href="<?= APP_URL ?>/doctor/prescriptions.php"><i class="bi bi-file-earmark-medical-fill"></i> My Prescriptions</a>
-      <div class="sidebar-section-title">Account</div>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" data-confirm="End your clinical session?"><i class="bi bi-box-arrow-right"></i> End Session</a>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="sidebar-avatar" style="background:var(--mc-teal);"><?= strtoupper(substr($_SESSION['name'] ?? 'D', 3, 1)) ?></div>
-        <div class="sidebar-user-info">
-          <div class="name"><?= htmlspecialchars($_SESSION['name'] ?? '') ?></div>
-          <div class="role">Doctor</div>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <main class="portal-main">
-    <?php renderActivePatientSessionBar($activeSession, 'patient-search'); ?>
-
-    <header class="portal-topbar">
-      <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
-      <div style="flex:1;">
-        <h2 style="font-size:16px;font-weight:700;margin:0;">Patient Search &amp; Access</h2>
-        <div style="font-size:12px;color:var(--mc-text-muted);">Search by Patient ID or last 4 NID digits</div>
-      </div>
-      <a href="<?= APP_URL ?>/doctor/dashboard.php" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Dashboard</a>
-    </header>
-
-    <div class="portal-content">
-
-      <!-- Active Patient Consultation Strict Lock Banner -->
-      <?php if ($activeSession): ?>
-        <div class="session-lock-card mb-4" role="alert">
-          <div class="lock-icon"><i class="bi bi-shield-lock-fill"></i></div>
-          <div class="lock-body">
-            <div class="d-flex align-items-center gap-2 mb-1">
-              <span class="badge" style="background:#EF4444;color:#fff;font-weight:700;font-size:11px;letter-spacing:0.5px;">ACTIVE CONSULTATION IN PROGRESS / রোগী চলমান</span>
-              <span class="clinical-elapsed-badge" style="background:#FEF3C7;color:#92400E;border-color:#FCD34D;"><i class="bi bi-hourglass-split"></i> 30-min Clinical Window Active</span>
-            </div>
-            <h3 style="margin:4px 0 8px;font-size:1.15rem;font-weight:800;color:var(--mc-text-dark);">
-              Currently Consulting with <?= htmlspecialchars($activeSession['full_name']) ?> (<?= htmlspecialchars($activeSession['patient_uid']) ?>)
-            </h3>
-            <p style="margin:0 0 12px;font-size:13px;color:var(--mc-text-secondary);line-height:1.5;">
-              Under clinical safety and data privacy protocols, you cannot initiate or verify consultation with another patient without ending the current active session.
-            </p>
-            <div class="lock-actions">
-              <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $activeSession['patient_id'] ?>" class="btn btn-primary btn-sm" style="font-weight:700;">
-                <i class="bi bi-file-earmark-medical-fill"></i> Return to <?= htmlspecialchars($activeSession['full_name']) ?>'s Record
-              </a>
-              <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $activeSession['patient_id'] ?>" class="btn btn-secondary btn-sm">
-                <i class="bi bi-prescription2"></i> Write Prescription
-              </a>
-              <form method="POST" action="<?= APP_URL ?>/doctor/end-session.php" style="display:inline;margin:0;" onsubmit="return confirm('End current consultation with <?= htmlspecialchars(addslashes($activeSession['full_name'])) ?> to switch patients?');">
-                <?= csrfField() ?>
-                <input type="hidden" name="session_id" value="<?= $activeSession['id'] ?>">
-                <input type="hidden" name="redirect_to" value="/doctor/patient-search.php">
-                <button type="submit" class="btn btn-danger btn-sm" style="font-weight:700;">
-                  <i class="bi bi-x-circle-fill"></i> End Session &amp; Switch Patient
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      <?php endif; ?>
-
-      <!-- Flash -->
-      <?php if ($flash): ?>
-      <div class="alert alert-<?= $flash['type'] ?> mb-4" data-auto-dismiss="4000">
-        <i class="bi bi-<?= $flash['type'] === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill' ?>"></i>
-        <?= htmlspecialchars($flash['msg']) ?>
-      </div>
-      <?php endif; ?>
-
-      <!-- Search bar -->
-      <div class="card mb-6">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:var(--space-4);">Find Patient</h3>
-        <form method="GET" style="display:flex;gap:var(--space-3);">
-          <div class="search-bar" style="flex:1;">
-            <i class="bi bi-search"></i>
-            <input type="text" name="q" id="patient-search-input"
-              value="<?= htmlspecialchars($query) ?>"
-              placeholder="Patient ID (PT-000001) or NID last 4 digits..."
-              autocomplete="off" autofocus
-              aria-label="Patient search">
-          </div>
-          <button type="submit" class="btn btn-primary">
-            <i class="bi bi-search-heart-fill"></i> Search
+      <h3 style="margin:.25rem 0 .45rem;font-size:1.1rem">
+        Currently consulting with <?= htmlspecialchars($activeSession['full_name']) ?> (<span class="mc-mono"><?= htmlspecialchars($activeSession['patient_uid']) ?></span>)
+      </h3>
+      <p style="margin:0 0 .85rem;font-size:.88rem;color:var(--ink-2);line-height:1.5">
+        Under clinical safety and data privacy protocols, you cannot initiate or verify consultation with another patient without ending the current active session.
+      </p>
+      <div class="lock-actions">
+        <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= (int)$activeSession['patient_id'] ?>" class="mc-btn mc-btn-primary mc-btn-sm">
+          <i class="bi bi-file-earmark-medical-fill"></i> Return to <?= htmlspecialchars($activeSession['full_name']) ?>'s Record
+        </a>
+        <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= (int)$activeSession['patient_id'] ?>" class="mc-btn mc-btn-secondary mc-btn-sm">
+          <i class="bi bi-prescription2"></i> Write Prescription
+        </a>
+        <form method="POST" action="<?= APP_URL ?>/doctor/end-session.php" style="display:inline;margin:0" onsubmit="return confirm('End current consultation with <?= htmlspecialchars(addslashes($activeSession['full_name'])) ?> to switch patients?');">
+          <?= csrfField() ?>
+          <input type="hidden" name="session_id" value="<?= (int)$activeSession['id'] ?>">
+          <input type="hidden" name="redirect_to" value="/doctor/patient-search.php">
+          <button type="submit" class="mc-btn mc-btn-danger mc-btn-sm">
+            <i class="bi bi-x-circle-fill"></i> End Session &amp; Switch Patient
           </button>
         </form>
-
-        <div class="alert" style="background:var(--mc-amber-light);border:1px solid var(--mc-amber);margin-top:var(--space-4);border-radius:var(--radius-sm);">
-          <i class="bi bi-shield-fill-exclamation" style="color:#92400E;"></i>
-          <span style="font-size:13px;color:#92400E;">
-            All patient searches are audit-logged. Records are locked until the patient grants explicit consent.
-          </span>
-        </div>
       </div>
-
-      <!-- Error -->
-      <?php if ($error): ?>
-      <div class="alert alert-error mb-4" role="alert">
-        <i class="bi bi-exclamation-circle-fill"></i> <?= $error ?>
-      </div>
-      <?php endif; ?>
-
-      <!-- FOUND PATIENT -->
-      <?php if ($found): ?>
-      <?php $age = date_diff(new DateTime($found['date_of_birth']), new DateTime())->y; ?>
-
-      <div class="patient-result-card">
-        <!-- Patient header -->
-        <div class="patient-result-header">
-          <div class="d-flex align-center justify-between gap-4" style="flex-wrap:wrap;">
-            <div class="d-flex align-center gap-4">
-              <div class="sidebar-avatar" style="width:56px;height:56px;font-size:22px;background:var(--mc-blue);">
-                <?= strtoupper(substr($found['full_name'], 0, 1)) ?>
-              </div>
-              <div>
-                <div style="font-size:1.1rem;font-weight:800;"><?= htmlspecialchars($found['full_name']) ?></div>
-                <div style="font-size:13px;color:var(--mc-text-secondary);">
-                  <?= $found['patient_uid'] ?> · Age <?= $age ?> · <?= ucfirst(strtolower($found['gender'])) ?>
-                  · DOB: <?= date('d M Y', strtotime($found['date_of_birth'])) ?>
-                </div>
-                <div style="font-size:13px;margin-top:4px;">
-                  <span class="badge badge-error" style="font-size:11px;">Blood: <?= $found['blood_group'] ?></span>
-                  · NID: ●●●● <?= htmlspecialchars($found['nid_last4']) ?>
-                </div>
-              </div>
-            </div>
-
-            <!-- Access status -->
-            <div>
-              <?php if ($accessSession): ?>
-              <?php $secsLeft = max(0, strtotime($accessSession['expires_at']) - time()); ?>
-              <div class="access-timer">
-                <i class="bi bi-shield-lock-fill"></i>
-                <div>
-                  <div style="font-size:11px;font-weight:600;">Access Granted</div>
-                  <span class="timer-display" id="main-timer"><?= str_pad(floor($secsLeft/60), 2, '0', STR_PAD_LEFT) ?>:<?= str_pad($secsLeft % 60, 2, '0', STR_PAD_LEFT) ?></span>
-                  remaining
-                </div>
-              </div>
-              <?php elseif ($pendingRequest): ?>
-              <div class="access-timer" style="background:var(--mc-amber-light);border-color:var(--mc-amber);">
-                <i class="bi bi-clock-fill" style="color:var(--mc-amber);"></i>
-                <div style="font-size:12px;color:#92400E;">
-                  <div class="waiting-pulse">Waiting for patient approval...</div>
-                  <div style="font-size:11px;">Sent <?= date('h:i A', strtotime($pendingRequest['requested_at'])) ?></div>
-                </div>
-              </div>
-              <?php else: ?>
-              <span class="badge" style="background:var(--mc-red-light);color:var(--mc-red);font-size:12px;padding:6px 12px;">
-                <i class="bi bi-lock-fill"></i> Record Locked
-              </span>
-              <?php endif; ?>
-            </div>
-          </div>
-
-          <!-- Critical allergy banner -->
-          <?php if ($found['critical_allergy_count'] > 0 && $accessSession): ?>
-          <div class="allergy-alert" style="margin-top:var(--space-4);">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <strong>CRITICAL ALLERGY — <?= $found['critical_allergy_count'] ?> severe/life-threatening allergy(ies) documented.</strong>
-            Check allergy details before prescribing.
-          </div>
-          <?php endif; ?>
-        </div>
-
-        <!-- Patient body -->
-        <div class="patient-result-body">
-          <?php if ($activeSession && (int)$found['id'] !== (int)$activeSession['patient_id']): ?>
-          <!-- ACTIVE SESSION WITH ANOTHER PATIENT LOCKED -->
-          <div class="session-lock-card" style="margin:16px 0;">
-            <div class="lock-icon"><i class="bi bi-shield-lock-fill"></i></div>
-            <div class="lock-body">
-              <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge" style="background:#EF4444;color:#fff;font-weight:700;">SWITCH BLOCKED / অন্য রোগী দেখা সম্ভব নয়</span>
-              </div>
-              <h4 style="font-size:1.1rem;font-weight:800;color:var(--mc-text-dark);margin:4px 0 8px;">
-                Consultation in Progress with <?= htmlspecialchars($activeSession['full_name']) ?>
-              </h4>
-              <p style="font-size:13px;color:var(--mc-text-secondary);margin:0 0 16px;">
-                You cannot request consent or verify OTP for <strong><?= htmlspecialchars($found['full_name']) ?></strong> until your active consultation with <strong><?= htmlspecialchars($activeSession['full_name']) ?></strong> is explicitly ended.
-              </p>
-              <div class="lock-actions">
-                <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= $activeSession['patient_id'] ?>" class="btn btn-primary btn-sm">
-                  <i class="bi bi-arrow-left-circle-fill"></i> Continue with <?= htmlspecialchars($activeSession['full_name']) ?>
-                </a>
-                <form method="POST" action="<?= APP_URL ?>/doctor/end-session.php" style="display:inline;margin:0;">
-                  <?= csrfField() ?>
-                  <input type="hidden" name="session_id" value="<?= $activeSession['id'] ?>">
-                  <input type="hidden" name="redirect_to" value="/doctor/patient-search.php?q=<?= urlencode($query) ?>">
-                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('End session with <?= htmlspecialchars(addslashes($activeSession['full_name'])) ?> and switch to <?= htmlspecialchars(addslashes($found['full_name'])) ?>?');">
-                    <i class="bi bi-x-circle-fill"></i> End Session &amp; Consult <?= htmlspecialchars($found['full_name']) ?>
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <?php elseif ($accessSession): ?>
-          <!-- RECORD UNLOCKED -->
-          <div class="d-flex gap-3" style="flex-wrap:wrap;margin-bottom:var(--space-5);">
-            <a href="<?= APP_URL ?>/doctor/medical-record.php?patient=<?= $found['id'] ?>" class="btn btn-primary btn-lg" style="flex:1;">
-              <i class="bi bi-folder2-open"></i> View Full Medical Record
-            </a>
-            <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= $found['id'] ?>&session=<?= $accessSession['id'] ?>"
-               class="btn btn-success btn-lg">
-              <i class="bi bi-file-earmark-medical-fill"></i> New Prescription
-            </a>
-            <a href="<?= APP_URL ?>/doctor/consultations.php"
-               class="btn btn-secondary btn-lg">
-              <i class="bi bi-clock-history"></i> Past Consultations
-            </a>
-          </div>
-
-          <?php elseif ($pendingRequest): ?>
-          <!-- WAITING WITH INSTANT OTP FALLBACK -->
-          <div class="record-locked" style="border-color:var(--mc-amber); max-width:620px; margin:0 auto; padding:28px 24px;">
-            <div style="font-size:2.2rem;color:var(--mc-amber);margin-bottom:var(--space-3);" class="waiting-pulse">
-              <i class="bi bi-hourglass-split"></i>
-            </div>
-            <h4 style="font-weight:700;margin-bottom:8px;font-size:1.15rem;">Waiting for In-App Patient Approval</h4>
-            <p style="font-size:13px;color:var(--mc-text-secondary);margin-bottom:16px;">
-              A consent prompt was sent to <strong><?= htmlspecialchars($found['full_name']) ?></strong>.
-              They can approve it on their MedCore mobile/web portal.
-            </p>
-
-            <div style="background:#FFFBEB; border:1px dashed #F59E0B; border-radius:12px; padding:16px; margin-top:16px; text-align:left;">
-              <div style="font-size:12px; font-weight:700; color:#92400E; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                <i class="bi bi-chat-quote-fill"></i> Or Verify Patient OTP In-Chamber:
-              </div>
-              <form method="POST" style="display:flex; gap:10px; flex-wrap:wrap;">
-                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                <input type="hidden" name="verify_verbal_otp" value="1">
-                <input type="hidden" name="patient_id" value="<?= $found['id'] ?>">
-                <input type="text" name="otp_code" class="form-control" placeholder="Enter OTP (Demo: 1234)" style="flex:1; min-width:180px; font-family:var(--font-mono); font-weight:700; letter-spacing:2px; height:42px;" value="1234" required>
-                <button type="submit" class="btn btn-success" style="height:42px; font-weight:700;">
-                  <i class="bi bi-unlock-fill"></i> Verify &amp; Unlock
-                </button>
-              </form>
-              <div style="font-size:11px; color:#B45309; margin-top:6px;">
-                <i class="bi bi-info-circle"></i> Demo Mode Active: You can use code <strong>1234</strong> for testing without SMS.
-              </div>
-            </div>
-
-            <p style="font-size:11px;color:var(--mc-text-muted);margin-top:12px;margin-bottom:0;">
-              Request expires at <?= date('h:i A', strtotime($pendingRequest['expires_at'])) ?>
-            </p>
-          </div>
-
-          <?php else: ?>
-          <!-- LOCKED — DUAL ACCESS MODES (OTP vs IN-APP vs EMERGENCY) -->
-          <div style="max-width:700px; margin:0 auto;">
-            <!-- Primary Box: In-Chamber OTP -->
-            <div class="card mb-4" style="border:1px solid #E2E8F0; border-radius:16px; padding:24px; box-shadow:0 4px 16px rgba(0,0,0,0.04); text-align:left;">
-              <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:18px;">
-                <div style="width:44px; height:44px; border-radius:12px; background:var(--mc-blue-light); color:var(--mc-blue); display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;">
-                  <i class="bi bi-shield-check"></i>
-                </div>
-                <div>
-                  <h4 style="font-size:1.1rem; font-weight:800; color:var(--mc-navy); margin:0 0 4px;">Instant Chamber Consent (OTP)</h4>
-                  <div style="font-size:13px; color:var(--mc-text-secondary);">
-                    Ask patient for their 4-digit verification code to start an instant 30-minute clinical session.
-                  </div>
-                </div>
-              </div>
-
-              <form method="POST">
-                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                <input type="hidden" name="verify_verbal_otp" value="1">
-                <input type="hidden" name="patient_id" value="<?= $found['id'] ?>">
-
-                <div class="form-group mb-3">
-                  <label class="form-label" style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--mc-text-secondary);">Clinical Consultation Reason</label>
-                  <select name="access_reason" class="form-control" style="height:42px;">
-                    <option value="General Outpatient Consultation">General Outpatient Consultation</option>
-                    <option value="Prescription & Medication Review">Prescription &amp; Medication Review</option>
-                    <option value="Follow-up Consultation">Follow-up Consultation</option>
-                    <option value="Diagnostic Lab Evaluation">Diagnostic Lab Evaluation</option>
-                    <option value="Pre-operative Assessment">Pre-operative Assessment</option>
-                  </select>
-                </div>
-
-                <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-                  <div style="flex:1; min-width:200px;">
-                    <label class="form-label" style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--mc-text-secondary);">Patient Verification Code</label>
-                    <input type="text" name="otp_code" class="form-control" placeholder="Enter 4-digit code (Demo: 1234)" value="1234" style="height:46px; font-family:var(--font-mono); font-size:1.1rem; font-weight:700; letter-spacing:2px;" required>
-                  </div>
-                  <button type="submit" class="btn btn-primary" style="height:46px; padding:0 24px; font-weight:700; display:inline-flex; align-items:center; gap:8px;">
-                    <i class="bi bi-unlock-fill"></i> Unlock &amp; Open Record
-                  </button>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:6px; margin-top:10px; font-size:12px; color:var(--mc-blue); font-weight:600;">
-                  <i class="bi bi-info-circle-fill"></i> Demo Mode Active: Use demo code <code>1234</code> to open record instantly.
-                </div>
-              </form>
-            </div>
-
-            <!-- Alternative Options: In-App Request & Emergency Override -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-              <!-- Option B: In-App Request -->
-              <div class="card" style="padding:18px; border:1px solid var(--mc-border); border-radius:12px;">
-                <div style="font-weight:700; font-size:13px; color:var(--mc-navy); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-                  <i class="bi bi-phone" style="color:var(--mc-teal);"></i> Send In-App Request
-                </div>
-                <p style="font-size:12px; color:var(--mc-text-muted); margin-bottom:12px; line-height:1.4;">
-                  Patient will receive a push notification to review and tap Accept on their mobile phone.
-                </p>
-                <form method="POST">
-                  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                  <input type="hidden" name="send_request" value="1">
-                  <input type="hidden" name="patient_id" value="<?= $found['id'] ?>">
-                  <input type="hidden" name="access_reason" value="Outpatient Consultation (In-App Review)">
-                  <button type="submit" class="btn btn-outline btn-sm w-100">
-                    <i class="bi bi-send"></i> Send to Patient App
-                  </button>
-                </form>
-              </div>
-
-              <!-- Option C: Emergency Override (Break Glass) -->
-              <div class="card" style="padding:18px; border:1px solid #FECACA; background:#FEF2F2; border-radius:12px;">
-                <div style="font-weight:700; font-size:13px; color:#DC2626; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-                  <i class="bi bi-exclamation-octagon-fill"></i> Emergency Override
-                </div>
-                <p style="font-size:12px; color:#991B1B; margin-bottom:12px; line-height:1.4;">
-                  For unconscious or trauma patients in ER/ICU. Strictly logged with central audit trail.
-                </p>
-                <button type="button" class="btn btn-secondary btn-sm w-100" style="color:#DC2626; border-color:#FCA5A5; background:white; font-weight:700;" onclick="document.getElementById('emg-modal').style.display='flex'">
-                  <i class="bi bi-lightning-charge-fill"></i> Break-Glass Access
-                </button>
-              </div>
-            </div>
-
-            <!-- Emergency Modal -->
-            <div id="emg-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; padding:16px;">
-              <div style="background:white; border-radius:16px; max-width:480px; width:100%; padding:24px; box-shadow:var(--shadow-lg);">
-                <div style="display:flex; align-items:center; gap:10px; color:#DC2626; margin-bottom:12px;">
-                  <i class="bi bi-shield-exclamation" style="font-size:1.8rem;"></i>
-                  <h3 style="font-size:1.15rem; font-weight:800; margin:0;">Emergency Clinical Override</h3>
-                </div>
-                <p style="font-size:13px; color:var(--mc-text-secondary); margin-bottom:16px;">
-                  You are invoking emergency Break-Glass protocol for <strong><?= htmlspecialchars($found['full_name']) ?></strong>.
-                  State the critical clinical reason. This action will be flagged with <strong>HIGH SEVERITY</strong> in the central health audit log.
-                </p>
-                <form method="POST">
-                  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                  <input type="hidden" name="emergency_break_glass" value="1">
-                  <input type="hidden" name="patient_id" value="<?= $found['id'] ?>">
-                  <div class="form-group mb-4">
-                    <label class="form-label" style="font-size:12px; font-weight:700;">Emergency Clinical Reason</label>
-                    <textarea name="emergency_reason" class="form-control" rows="3" placeholder="e.g. Unconscious road trauma patient in ED; required immediate allergy & blood group verification." required></textarea>
-                  </div>
-                  <div style="display:flex; gap:10px; justify-content:flex-end;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('emg-modal').style.display='none'">Cancel</button>
-                    <button type="submit" class="btn btn-danger btn-sm" style="background:#DC2626; color:white; font-weight:700;">Confirm Emergency Access</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-          </div>
-          <?php endif; ?>
-
-        </div>
-      </div>
-
-      <?php endif; ?>
-
     </div>
-  </main>
+  </div>
+<?php endif; ?>
+
+<?php if ($flash): ?>
+  <div class="mc-alert <?= ($flash['type'] ?? '') === 'success' ? 'mc-alert-ok' : 'mc-alert-danger' ?>">
+    <?= htmlspecialchars($flash['msg']) ?>
+  </div>
+<?php endif; ?>
+
+<div class="lab-token-bar">
+  <label for="patient-search-input">Find patient (all searches are audit-logged · consent required before unlocking)</label>
+  <form method="GET" class="lab-token-form">
+    <input type="text" name="q" id="patient-search-input"
+           value="<?= htmlspecialchars($query) ?>"
+           style="text-transform:none;letter-spacing:normal;font-family:inherit;font-size:.95rem"
+           placeholder="Patient ID (PT-000001), phone, or NID last 4 digits..."
+           autocomplete="off" autofocus aria-label="Patient search">
+    <button type="submit" class="mc-btn mc-btn-primary"><i class="bi bi-search-heart-fill"></i> Search</button>
+  </form>
 </div>
 
-<script src="<?= APP_URL ?>/assets/js/medcore.js"></script>
-<script>
-document.getElementById('hamburger-btn')?.addEventListener('click', function() {
-  document.getElementById('sidebar').classList.toggle('open');
-  this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') !== 'true');
-});
-
-<?php if ($accessSession): ?>
-startAccessTimer('main-timer', <?= max(0, strtotime($accessSession['expires_at']) - time()) ?>, function() {
-  document.querySelector('.patient-result-header').innerHTML += '<div class="alert alert-error" style="margin-top:12px;"><i class="bi bi-lock-fill"></i> Access session expired. Please send a new consent request.</div>';
-});
+<?php if ($error): ?>
+  <div class="mc-alert mc-alert-danger" role="alert"><?= $error ?></div>
 <?php endif; ?>
+
+<?php if ($found): ?>
+  <?php $age = date_diff(new DateTime($found['date_of_birth']), new DateTime())->y; ?>
+
+  <div class="mc-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding-bottom:1rem;border-bottom:1px solid var(--line);margin-bottom:1rem">
+      <div style="display:flex;align-items:center;gap:.9rem">
+        <div class="mc-rail-avatar" style="width:52px;height:52px;font-size:1.25rem;border-radius:14px">
+          <?= strtoupper(substr($found['full_name'], 0, 1)) ?>
+        </div>
+        <div>
+          <h2 style="font-size:1.2rem;margin:0"><?= htmlspecialchars($found['full_name']) ?></h2>
+          <div style="font-size:.86rem;color:var(--muted);margin-top:.2rem">
+            <span class="mc-mono"><?= htmlspecialchars($found['patient_uid']) ?></span>
+            · Age <?= $age ?> · <?= ucfirst(strtolower($found['gender'])) ?>
+            · DOB <?= date('d M Y', strtotime($found['date_of_birth'])) ?>
+          </div>
+          <div style="display:flex;gap:.45rem;align-items:center;margin-top:.35rem;flex-wrap:wrap">
+            <span class="lab-status danger">Blood: <?= htmlspecialchars($found['blood_group'] ?: 'Unknown') ?></span>
+            <span class="lab-status">NID: ●●●● <?= htmlspecialchars($found['nid_last4']) ?></span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <?php if ($accessSession): ?>
+          <?php $secsLeft = max(0, strtotime($accessSession['expires_at']) - time()); ?>
+          <div class="lab-status ok" style="font-size:.82rem;padding:.4rem .75rem">
+            <i class="bi bi-shield-lock-fill"></i> Access granted ·
+            <span class="mc-mono" id="main-timer"><?= str_pad((string)floor($secsLeft / 60), 2, '0', STR_PAD_LEFT) ?>:<?= str_pad((string)($secsLeft % 60), 2, '0', STR_PAD_LEFT) ?></span>
+          </div>
+        <?php elseif ($pendingRequest): ?>
+          <div class="lab-status warn" style="font-size:.82rem;padding:.4rem .75rem">
+            <i class="bi bi-clock-fill"></i> Waiting approval · Sent <?= date('h:i A', strtotime($pendingRequest['requested_at'])) ?>
+          </div>
+        <?php else: ?>
+          <span class="lab-status danger" style="font-size:.82rem;padding:.4rem .75rem">
+            <i class="bi bi-lock-fill"></i> Record locked
+          </span>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <?php if ($found['critical_allergy_count'] > 0 && $accessSession): ?>
+      <div class="mc-alert mc-alert-danger">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>CRITICAL ALLERGY:</strong> <?= (int)$found['critical_allergy_count'] ?> severe/life-threatening allergy(ies) documented. Check allergy details before prescribing.
+      </div>
+    <?php endif; ?>
+
+    <?php if ($activeSession && (int)$found['id'] !== (int)$activeSession['patient_id']): ?>
+      <div class="session-lock-card" style="margin:0">
+        <div class="lock-icon"><i class="bi bi-shield-lock-fill"></i></div>
+        <div class="lock-body">
+          <span class="lab-status danger">SWITCH BLOCKED</span>
+          <h3 style="margin:.4rem 0">Consultation in progress with <?= htmlspecialchars($activeSession['full_name']) ?></h3>
+          <p style="margin:0 0 .85rem;font-size:.88rem;color:var(--ink-2)">
+            You cannot request consent or verify OTP for <strong><?= htmlspecialchars($found['full_name']) ?></strong> until your active consultation with <strong><?= htmlspecialchars($activeSession['full_name']) ?></strong> is ended.
+          </p>
+          <div class="lock-actions">
+            <a href="<?= APP_URL ?>/doctor/medical-record.php?patient_id=<?= (int)$activeSession['patient_id'] ?>" class="mc-btn mc-btn-primary mc-btn-sm">Continue with <?= htmlspecialchars($activeSession['full_name']) ?></a>
+            <form method="POST" action="<?= APP_URL ?>/doctor/end-session.php" style="display:inline;margin:0">
+              <?= csrfField() ?>
+              <input type="hidden" name="session_id" value="<?= (int)$activeSession['id'] ?>">
+              <input type="hidden" name="redirect_to" value="/doctor/patient-search.php?q=<?= urlencode($query) ?>">
+              <button type="submit" class="mc-btn mc-btn-danger mc-btn-sm" onclick="return confirm('End session with <?= htmlspecialchars(addslashes($activeSession['full_name'])) ?> and switch to <?= htmlspecialchars(addslashes($found['full_name'])) ?>?');">
+                End session &amp; switch
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    <?php elseif ($accessSession): ?>
+      <div style="display:flex;gap:.65rem;flex-wrap:wrap">
+        <a href="<?= APP_URL ?>/doctor/medical-record.php?patient=<?= (int)$found['id'] ?>" class="mc-btn mc-btn-primary mc-btn-lg" style="flex:1">
+          <i class="bi bi-folder2-open"></i> View full medical record
+        </a>
+        <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient_id=<?= (int)$found['id'] ?>&session=<?= (int)$accessSession['id'] ?>" class="mc-btn mc-btn-soft mc-btn-lg">
+          <i class="bi bi-file-earmark-medical-fill"></i> New prescription
+        </a>
+        <a href="<?= APP_URL ?>/doctor/consultations.php" class="mc-btn mc-btn-secondary mc-btn-lg">
+          <i class="bi bi-clock-history"></i> Past consultations
+        </a>
+      </div>
+
+    <?php elseif ($pendingRequest): ?>
+      <div style="max-width:620px;margin:0 auto">
+        <div class="mc-alert mc-alert-warn">
+          Waiting for in-app approval from <strong><?= htmlspecialchars($found['full_name']) ?></strong> (expires at <?= date('h:i A', strtotime($pendingRequest['expires_at'])) ?>).
+        </div>
+        <div class="mc-panel" style="background:#fffbeb;border-color:#fedf89;margin:0">
+          <h3 style="font-size:1rem;margin:0 0 .5rem">Or verify patient OTP in-chamber</h3>
+          <form method="POST" style="display:flex;gap:.6rem;flex-wrap:wrap">
+            <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+            <input type="hidden" name="verify_verbal_otp" value="1">
+            <input type="hidden" name="patient_id" value="<?= (int)$found['id'] ?>">
+            <input type="text" name="otp_code" class="mc-mono" value="1234" required
+                   style="flex:1;min-width:160px;border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-size:1rem;background:#fff"
+                   placeholder="Enter OTP (Demo: 1234)">
+            <button type="submit" class="mc-btn mc-btn-primary"><i class="bi bi-unlock-fill"></i> Verify &amp; unlock</button>
+          </form>
+          <div style="font-size:.8rem;color:var(--warn);margin-top:.5rem">Demo mode active: code <strong>1234</strong> works without SMS.</div>
+        </div>
+      </div>
+
+    <?php else: ?>
+      <div style="max-width:740px;margin:0 auto">
+        <div class="mc-panel" style="background:#fafbfc">
+          <div class="mc-panel-h"><h2>Instant chamber consent (OTP)</h2></div>
+          <p style="margin:0 0 .85rem;font-size:.88rem;color:var(--muted)">
+            Ask the patient for their 4-digit verification code to start an instant 30-minute clinical session.
+          </p>
+          <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+            <input type="hidden" name="verify_verbal_otp" value="1">
+            <input type="hidden" name="patient_id" value="<?= (int)$found['id'] ?>">
+
+            <label class="mc-field" style="margin-top:0">
+              <span>Clinical consultation reason</span>
+              <select name="access_reason">
+                <option value="General Outpatient Consultation">General Outpatient Consultation</option>
+                <option value="Prescription & Medication Review">Prescription &amp; Medication Review</option>
+                <option value="Follow-up Consultation">Follow-up Consultation</option>
+                <option value="Diagnostic Lab Evaluation">Diagnostic Lab Evaluation</option>
+                <option value="Pre-operative Assessment">Pre-operative Assessment</option>
+              </select>
+            </label>
+
+            <div style="display:flex;gap:.65rem;flex-wrap:wrap;align-items:flex-end;margin-top:.85rem">
+              <label class="mc-field" style="margin:0;flex:1;min-width:200px">
+                <span>Patient verification code</span>
+                <input type="text" name="otp_code" class="mc-mono" value="1234" required placeholder="Enter 4-digit code (Demo: 1234)">
+              </label>
+              <button type="submit" class="mc-btn mc-btn-primary mc-btn-lg"><i class="bi bi-unlock-fill"></i> Unlock &amp; open record</button>
+            </div>
+            <div style="font-size:.8rem;color:var(--accent);font-weight:700;margin-top:.6rem">
+              Demo mode active: use code <code class="mc-mono">1234</code> to open record instantly.
+            </div>
+          </form>
+        </div>
+
+        <div class="mc-grid-2">
+          <div class="mc-panel" style="margin:0">
+            <h3 style="font-size:1rem;margin:0 0 .35rem"><i class="bi bi-phone" style="color:var(--accent)"></i> Send in-app request</h3>
+            <p style="font-size:.85rem;color:var(--muted);margin:0 0 .85rem">Patient receives a notification to review and tap Accept on their portal.</p>
+            <form method="POST">
+              <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+              <input type="hidden" name="send_request" value="1">
+              <input type="hidden" name="patient_id" value="<?= (int)$found['id'] ?>">
+              <input type="hidden" name="access_reason" value="Outpatient Consultation (In-App Review)">
+              <button type="submit" class="mc-btn mc-btn-secondary mc-btn-block"><i class="bi bi-send"></i> Send to patient app</button>
+            </form>
+          </div>
+
+          <div class="mc-panel" style="margin:0;background:var(--danger-soft);border-color:#fecdca">
+            <h3 style="font-size:1rem;margin:0 0 .35rem;color:var(--danger)"><i class="bi bi-exclamation-octagon-fill"></i> Emergency override</h3>
+            <p style="font-size:.85rem;color:#991b1b;margin:0 0 .85rem">For unconscious or trauma patients in ER/ICU. Strictly audit-logged.</p>
+            <button type="button" class="mc-btn mc-btn-danger mc-btn-block" onclick="document.getElementById('emg-modal').classList.add('open')">
+              <i class="bi bi-lightning-charge-fill"></i> Break-glass access
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Modal -->
+      <div id="emg-modal" class="mc-modal-backdrop" role="dialog" aria-modal="true" aria-label="Emergency override">
+        <div class="mc-modal">
+          <div class="mc-modal-head">
+            <h3 style="color:var(--danger)"><i class="bi bi-shield-exclamation"></i> Emergency clinical override</h3>
+            <button type="button" class="mc-modal-close" onclick="document.getElementById('emg-modal').classList.remove('open')" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <p style="font-size:.9rem;color:var(--ink-2);margin:0 0 1rem">
+            You are invoking emergency Break-Glass protocol for <strong><?= htmlspecialchars($found['full_name']) ?></strong>.
+            This action is flagged with <strong>HIGH SEVERITY</strong> in the central audit log.
+          </p>
+          <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+            <input type="hidden" name="emergency_break_glass" value="1">
+            <input type="hidden" name="patient_id" value="<?= (int)$found['id'] ?>">
+            <label class="mc-field" style="margin-top:0">
+              <span>Emergency clinical reason</span>
+              <textarea name="emergency_reason" rows="3" placeholder="e.g. Unconscious road trauma patient in ED; immediate allergy & blood group check required." required></textarea>
+            </label>
+            <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+              <button type="button" class="mc-btn mc-btn-secondary" onclick="document.getElementById('emg-modal').classList.remove('open')">Cancel</button>
+              <button type="submit" class="mc-btn mc-btn-danger">Confirm emergency access</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  <?php if ($accessSession): ?>
+  if (typeof startAccessTimer === 'function') {
+    startAccessTimer('main-timer', <?= max(0, strtotime($accessSession['expires_at']) - time()) ?>, function() {
+      location.reload();
+    });
+  }
+  <?php endif; ?>
+});
 </script>
-</body>
-</html>
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>

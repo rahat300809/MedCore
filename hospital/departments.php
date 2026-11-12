@@ -40,11 +40,13 @@ $departments = $stmt->fetchAll();
 
 $portalRole = 'Hospital';
 $portalRoleBn = 'Hospital portal';
+$portalAccent = '#0b4f6c';
 $portalUser = $hospital['name'] ?? 'Hospital';
 $portalMeta = ($hospital['hospital_uid'] ?? '') . ' · Departments';
 $portalTitle = 'Departments';
 $portalSubtitle = 'ক্লিনিক্যাল বিভাগ ও ডাক্তার সংখ্যা';
 $portalNav = mc_hospital_nav('departments');
+$bodyClass = 'lab-desk';
 require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
 

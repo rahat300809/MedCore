@@ -113,7 +113,9 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($pendingOrders as $order): ?>
+          <?php foreach ($pendingOrders as $order):
+            $oCls = $order['status'] === 'COMPLETED' ? 'ok' : ($order['status'] === 'IN_PROGRESS' ? 'info' : 'warn');
+          ?>
             <tr>
               <td class="mc-mono" style="color:var(--accent)"><?= htmlspecialchars($order['lab_token']) ?></td>
               <td>
@@ -122,7 +124,7 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
               </td>
               <td>Dr. <?= htmlspecialchars(preg_replace('/^Dr\.?\s+/i', '', (string)$order['doctor_name'])) ?></td>
               <td><?= (int)$order['test_count'] ?></td>
-              <td><span class="lab-status"><?= htmlspecialchars($order['status']) ?></span></td>
+              <td><span class="lab-status <?= $oCls ?>"><?= htmlspecialchars(str_replace('_', ' ', $order['status'])) ?></span></td>
               <td><a class="mc-btn mc-btn-secondary mc-btn-sm" href="<?= APP_URL ?>/lab/search-token.php?token=<?= urlencode($order['lab_token']) ?>">Open</a></td>
             </tr>
           <?php endforeach; ?>
@@ -151,12 +153,15 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($recentUploads as $upload): ?>
+          <?php foreach ($recentUploads as $upload):
+            $rs = $upload['result_status'] ?? '';
+            $rCls = $rs === 'NORMAL' ? 'ok' : ($rs === 'CRITICAL' ? 'danger' : ($rs === 'ABNORMAL' ? 'warn' : 'info'));
+          ?>
             <tr>
               <td><strong><?= htmlspecialchars($upload['test_name']) ?></strong></td>
               <td><?= htmlspecialchars($upload['patient_name']) ?></td>
               <td class="mc-mono"><?= htmlspecialchars($upload['lab_token']) ?></td>
-              <td><span class="lab-status"><?= htmlspecialchars($upload['result_status'] ?? '—') ?></span></td>
+              <td><span class="lab-status <?= $rCls ?>"><?= htmlspecialchars(str_replace('_', ' ', $rs ?: '—')) ?></span></td>
               <td style="color:var(--muted);font-size:.85rem"><?= date('d M, g:i A', strtotime($upload['uploaded_at'])) ?></td>
             </tr>
           <?php endforeach; ?>

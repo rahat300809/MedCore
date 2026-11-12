@@ -73,10 +73,10 @@ $statuses = [
 ];
 ?>
 
-<div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:1rem">
+<div class="mc-tabs">
   <?php foreach ($statuses as $sv => $sl): ?>
     <a href="?status=<?= urlencode($sv) ?>"
-       class="mc-btn <?= $status === $sv ? 'mc-btn-primary' : 'mc-btn-secondary' ?> mc-btn-sm"><?= htmlspecialchars($sl) ?></a>
+       class="mc-tab <?= $status === $sv ? 'active' : '' ?>"><?= htmlspecialchars($sl) ?></a>
   <?php endforeach; ?>
 </div>
 
@@ -90,6 +90,7 @@ $statuses = [
     <?php foreach ($orders as $ord):
       $doc = preg_replace('/^Dr\.?\s+/i', '', (string)$ord['doctor_name']);
       $pct = $ord['total_tests'] > 0 ? round(($ord['done_tests'] / $ord['total_tests']) * 100) : 0;
+      $oCls = $ord['status'] === 'COMPLETED' ? 'ok' : ($ord['status'] === 'EXPIRED' ? 'danger' : ($ord['status'] === 'IN_PROGRESS' ? 'info' : 'warn'));
     ?>
       <a class="mc-list-item" href="<?= APP_URL ?>/lab/search-token.php?token=<?= urlencode($ord['lab_token']) ?>" style="background:#fff">
         <div style="flex:1;min-width:0">
@@ -105,7 +106,7 @@ $statuses = [
             <div style="height:100%;width:<?= (int)$pct ?>%;background:var(--accent)"></div>
           </div>
         </div>
-        <span class="mc-btn mc-btn-soft mc-btn-sm"><?= htmlspecialchars(str_replace('_', ' ', $ord['status'])) ?></span>
+        <span class="lab-status <?= $oCls ?>"><?= htmlspecialchars(str_replace('_', ' ', $ord['status'])) ?></span>
       </a>
     <?php endforeach; ?>
   </div>

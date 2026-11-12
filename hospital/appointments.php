@@ -125,6 +125,7 @@ foreach ($appointments as $apt) {
 require_once __DIR__ . '/../app/views/portal/navs.php';
 $portalRole = 'Hospital';
 $portalRoleBn = 'Hospital portal';
+$portalAccent = '#0b4f6c';
 $portalUser = $hospital['name'] ?? ($_SESSION['hospital_name'] ?? 'Hospital');
 $portalMeta = ($hospital['hospital_uid'] ?? '') . ' · Reception';
 $portalTitle = 'Reception desk';

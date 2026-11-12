@@ -4,6 +4,7 @@ require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/services/AuditService.php';
 require_once __DIR__ . '/includes/session_bar.php';
+require_once __DIR__ . '/../app/views/portal/navs.php';
 
 requireDoctorHospitalContext();
 
@@ -146,7 +147,7 @@ $stmtTodayQueue = $db->prepare("
     FROM appointments a
     JOIN patients p ON a.patient_id = p.id
     WHERE a.doctor_id = ? AND a.hospital_id = ? AND a.appointment_date = ?
-    ORDER BY 
+    ORDER BY
         CASE WHEN a.priority = 'EMERGENCY' THEN 1 WHEN a.priority = 'URGENT' THEN 2 ELSE 3 END ASC,
         a.serial_number ASC
     LIMIT 6
@@ -155,7 +156,7 @@ $stmtTodayQueue->execute([$doctorId, $hospitalId, $todayDateStr]);
 $todayQueue = $stmtTodayQueue->fetchAll();
 
 $stmtCountQueue = $db->prepare("
-    SELECT COUNT(*) FROM appointments 
+    SELECT COUNT(*) FROM appointments
     WHERE doctor_id = ? AND hospital_id = ? AND appointment_date = ? AND status IN ('CONFIRMED','WAITING','IN_CONSULTATION')
 ");
 $stmtCountQueue->execute([$doctorId, $hospitalId, $todayDateStr]);
@@ -169,580 +170,292 @@ AuditService::log('DASHBOARD_VIEW', [
 ]);
 
 $csrf = generateCsrfToken();
+
+ob_start();
+renderActivePatientSessionBar($activePatientSession, 'dashboard');
+$portalTopBanner = ob_get_clean();
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Doctor Dashboard — MedCore Clinical Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-  <style>
-    .hospital-switch-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: var(--radius-md);
-      font-size: 12px;
-      font-weight: 600;
-      background: var(--mc-blue-light);
-      color: var(--mc-blue);
-      border: 1px solid rgba(37,99,235,0.2);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .hospital-switch-btn:hover {
-      background: var(--mc-blue);
-      color: white;
-    }
-    .affil-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--mc-border);
-      background: var(--mc-white);
-      transition: var(--transition);
-    }
-    .affil-card.active {
-      border-color: var(--mc-blue);
-      background: var(--mc-blue-light);
-    }
-  </style>
-</head>
-<body>
-<div class="portal-layout">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Doctor portal navigation">
-    <div class="sidebar-brand">
-      <div class="logo-icon" style="width:32px;height:32px;font-size:14px;">M</div>
-      <div>
-        <div class="brand-name">MedCore</div>
-        <div class="brand-tagline" style="color:var(--mc-teal);">Clinical Portal</div>
-      </div>
-    </div>
-
-    <!-- Hospital context badge -->
-    <div style="padding:var(--space-3) var(--space-5);background:var(--mc-blue-50);border-bottom:1px solid var(--mc-border);">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:10px;color:var(--mc-text-muted);text-transform:uppercase;letter-spacing:1px;">Active Hospital</span>
-        <?php if (count($affiliatedHospitals) > 1): ?>
-          <a href="javascript:void(0)" onclick="openHospitalModal()" style="font-size:11px; font-weight:700; color:var(--mc-blue); text-decoration:none;">
-            Switch (<?= count($affiliatedHospitals) ?>)
-          </a>
-        <?php endif; ?>
-      </div>
-      <div style="font-size:13px;font-weight:700;color:var(--mc-blue);margin-top:2px;">
-        <i class="bi bi-building-fill-check"></i>
-        <?= htmlspecialchars($doctor['hospital_name']) ?>
-      </div>
-      <div style="font-size:11px; color:var(--mc-text-muted); margin-top:1px;">
-        <?= htmlspecialchars($doctor['affiliation_designation'] ?? 'Consultant') ?> · <?= htmlspecialchars($doctor['employment_type'] ?? 'FULL_TIME') ?>
-      </div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a href="<?= APP_URL ?>/doctor/dashboard.php" class="active" aria-current="page">
-        <i class="bi bi-grid-1x2-fill"></i> Dashboard
-      </a>
-
-      <div class="sidebar-section-title">Patient Care</div>
-      <a href="<?= APP_URL ?>/doctor/queue.php">
-        <i class="bi bi-people-fill"></i> Live Patient Queue
-        <?php if (!empty($waitingQueueCount)): ?>
-          <span class="nav-badge" style="background:#0F766E; color:#fff;"><?= $waitingQueueCount ?></span>
-        <?php endif; ?>
-      </a>
-      <a href="<?= APP_URL ?>/doctor/patient-search.php">
-        <i class="bi bi-search-heart-fill"></i> Patient Search (ICE / NID)
-      </a>
-      <a href="<?= APP_URL ?>/doctor/consultations.php">
-        <i class="bi bi-stethoscope"></i> My Consultations
-      </a>
-      <a href="<?= APP_URL ?>/doctor/prescriptions.php">
-        <i class="bi bi-file-earmark-medical-fill"></i> My Prescriptions
-      </a>
-      <a href="<?= APP_URL ?>/doctor/reports.php">
-        <i class="bi bi-graph-up-arrow"></i> Practice Analytics &amp; Reports
-      </a>
-
-      <div class="sidebar-section-title">Access & Multi-Hospital</div>
-      <a href="<?= APP_URL ?>/doctor/request-affiliation.php">
-        <i class="bi bi-building-add"></i> Request Hospital Affiliation
-      </a>
-      <a href="javascript:void(0)" onclick="openHospitalModal()">
-        <i class="bi bi-hospital"></i> Switch Hospital (<?= count($affiliatedHospitals) ?>)
-      </a>
-
-      <div class="sidebar-section-title">Account</div>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" data-confirm="End your clinical session?">
-        <i class="bi bi-box-arrow-right"></i> End Session
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="sidebar-avatar" style="background:var(--mc-teal);">
-          <?= strtoupper(substr($doctor['full_name'], 4, 1) ?: substr($doctor['full_name'], 0, 1)) ?>
-        </div>
-        <div class="sidebar-user-info">
-          <div class="name"><?= htmlspecialchars($doctor['full_name']) ?></div>
-          <div class="role"><?= htmlspecialchars($doctor['specialization'] ?? 'Physician') ?></div>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="portal-main">
-    <?php renderActivePatientSessionBar($activePatientSession, 'dashboard'); ?>
-
-    <header class="portal-topbar">
-      <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar" aria-expanded="false">
-        <i class="bi bi-list"></i>
+<div class="mc-rail-context">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:.4rem">
+    <span class="mc-rail-context-label">Active hospital</span>
+    <?php if (count($affiliatedHospitals) > 1): ?>
+      <button type="button" onclick="openHospitalModal()" style="background:none;border:0;padding:0;font-size:.75rem;font-weight:800;color:var(--accent);cursor:pointer">
+        Switch (<?= count($affiliatedHospitals) ?>)
       </button>
+    <?php endif; ?>
+  </div>
+  <div class="mc-rail-context-val"><i class="bi bi-building-fill-check"></i> <?= htmlspecialchars($doctor['hospital_name'] ?? '') ?></div>
+  <div style="font-size:.75rem;color:var(--muted);margin-top:.15rem">
+    <?= htmlspecialchars($doctor['affiliation_designation'] ?? 'Consultant') ?> · <?= htmlspecialchars($doctor['employment_type'] ?? 'FULL_TIME') ?>
+  </div>
+</div>
+<?php
+$portalRailContext = ob_get_clean();
 
-      <div style="flex:1;">
-        <h2 style="font-size:16px;font-weight:700;margin:0;">
-          <?= htmlspecialchars($doctor['full_name']) ?>
-          <span class="verified-badge" style="margin-left:8px;vertical-align:middle;">
-            <i class="bi bi-patch-check-fill"></i> BMDC Verified
-          </span>
-        </h2>
-        <div style="font-size:12px;color:var(--mc-text-muted);">
-          <?= htmlspecialchars($doctor['department_name'] ?? $doctor['specialization'] ?? '') ?>
-          · <strong style="color:var(--mc-blue);"><?= htmlspecialchars($doctor['hospital_name']) ?></strong>
-          · <?= date('D, d M Y') ?>
+$portalRole = 'Doctor';
+$portalRoleBn = 'Clinical portal';
+$portalAccent = '#0f766e';
+$portalUser = $doctor['full_name'] ?? ($_SESSION['name'] ?? 'Doctor');
+$portalMeta = ($doctor['department_name'] ?? $doctor['specialization'] ?? 'Physician') . ' · BMDC Verified';
+$portalTitle = 'Chamber overview';
+$portalSubtitle = ($doctor['hospital_name'] ?? '') . ' · ' . date('D, d M Y');
+$portalNav = mc_doctor_nav('dashboard', $waitingQueueCount);
+$portalTopAction = (count($affiliatedHospitals) > 1
+    ? '<button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="openHospitalModal()"><i class="bi bi-arrow-left-right"></i> Switch hospital</button>'
+    : '')
+    . '<a class="mc-btn mc-btn-primary mc-btn-sm" href="' . APP_URL . '/doctor/patient-search.php"><i class="bi bi-search-heart-fill"></i> Find patient</a>';
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
+?>
+
+<?php if (isset($_GET['switched'])): ?>
+  <div class="mc-alert mc-alert-ok">Switched practice location to <strong><?= htmlspecialchars($doctor['hospital_name']) ?></strong>.</div>
+<?php endif; ?>
+
+<?php if ($activePatientSession && !empty($activeClinicalSummary)): ?>
+  <div style="margin-bottom:1rem">
+    <?php renderExecutiveClinicalSummary($activeClinicalSummary, true); ?>
+  </div>
+<?php else: ?>
+  <div class="mc-panel" style="background:linear-gradient(135deg,#0b2538 0%,#0f766e 100%);color:#fff;border:0">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+      <div>
+        <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#a7f3d0">
+          <i class="bi bi-person-bounding-box"></i> Chamber ready
         </div>
-      </div>
-
-      <!-- Multi-hospital switcher button in topbar -->
-      <?php if (count($affiliatedHospitals) > 1): ?>
-        <button type="button" class="hospital-switch-btn" onclick="openHospitalModal()">
-          <i class="bi bi-arrow-left-right"></i>
-          <span>Switch Hospital (<?= count($affiliatedHospitals) ?>)</span>
-        </button>
-      <?php endif; ?>
-
-      <!-- Active session indicator -->
-      <?php if (!empty($activeSessions)): ?>
-      <div class="access-timer">
-        <i class="bi bi-shield-lock-fill"></i>
-        <span><?= count($activeSessions) ?> active session<?= count($activeSessions) > 1 ? 's' : '' ?></span>
-      </div>
-      <?php endif; ?>
-
-      <a href="<?= APP_URL ?>/doctor/patient-search.php" class="btn btn-primary btn-sm">
-        <i class="bi bi-search-heart-fill"></i> Find Patient
-      </a>
-    </header>
-
-    <div class="portal-content">
-
-      <?php if (isset($_GET['switched'])): ?>
-      <div class="alert alert-success mb-4" data-auto-dismiss="5000">
-        <i class="bi bi-check-circle-fill"></i> Switched practice location to <strong><?= htmlspecialchars($doctor['hospital_name']) ?></strong>.
-      </div>
-      <?php endif; ?>
-
-      <!-- ACTIVE PATIENT EXECUTIVE CLINICAL SUMMARY AT LOGIN / CONSULTATION -->
-      <?php if ($activePatientSession && !empty($activeClinicalSummary)): ?>
-        <div style="margin-bottom: var(--space-6);">
-          <?php renderExecutiveClinicalSummary($activeClinicalSummary, true); ?>
-        </div>
-      <?php endif; ?>
-
-      <!-- CHAMBER READY SHORTCUT IF NO PATIENT ACTIVE -->
-      <?php if (!$activePatientSession): ?>
-        <div class="card mb-4" style="background:linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%); color:#fff; border:none; padding:20px 24px; border-radius:16px; box-shadow:0 8px 24px rgba(30,64,175,0.2);">
-          <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:16px;">
-            <div>
-              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.85;">
-                <i class="bi bi-person-bounding-box"></i> Chamber Ready
-              </div>
-              <h3 style="font-size:1.25rem; font-weight:800; margin:4px 0; color:#fff;">
-                Ready for Next Patient Consultation
-              </h3>
-              <div style="font-size:13px; opacity:0.9;">
-                Search patient by UID (e.g. PT-000001), phone number, or NID to instantly unlock medical records &amp; summary.
-              </div>
-            </div>
-            <div class="d-flex gap-2">
-              <a href="<?= APP_URL ?>/doctor/queue.php" class="btn" style="background:#0F766E; color:#fff; font-weight:700; padding:10px 18px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                <i class="bi bi-people-fill"></i> View Live Queue (<?= $waitingQueueCount ?>)
-              </a>
-              <a href="<?= APP_URL ?>/doctor/patient-search.php" class="btn" style="background:#fff; color:#1E40AF; font-weight:700; padding:10px 18px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                <i class="bi bi-search-heart-fill"></i> Find Patient
-              </a>
-            </div>
-          </div>
-        </div>
-      <?php endif; ?>
-
-      <!-- TODAY'S PATIENT QUEUE SNAPSHOT CARD -->
-      <div class="card mb-4" style="border: 1px solid #CBD5E1;">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:#F8FAFC;">
-          <div>
-            <h3 class="card-title" style="font-size:1rem; margin:0; color:#0F172A;">
-              <i class="bi bi-list-ol text-primary"></i> Today's Consultation Queue (আজকের রোগী সিরিয়াল)
-            </h3>
-            <span style="font-size:11.5px; color:#64748B;">Live queue for Dr. <?= htmlspecialchars($doctor['full_name']) ?> &bull; <?= count($todayQueue) ?> patient(s)</span>
-          </div>
-          <div class="d-flex gap-2 align-items-center">
-            <span class="badge" style="background:#0F766E; color:#fff;"><?= $waitingQueueCount ?> Waiting</span>
-            <a href="<?= APP_URL ?>/doctor/queue.php" class="btn btn-outline btn-sm">
-              Open Full Queue &amp; Emergency &rarr;
-            </a>
-          </div>
-        </div>
-        <div class="card-body p-0">
-          <?php if (empty($todayQueue)): ?>
-            <div class="text-center py-4 text-muted">
-              <p class="mb-1" style="font-size:13px;">No patients queued for today yet.</p>
-              <a href="<?= APP_URL ?>/doctor/queue.php" class="btn btn-outline btn-sm" style="font-size:11px;">Add Walk-In / Emergency Patient</a>
-            </div>
-          <?php else: ?>
-            <div class="table-responsive">
-              <table class="data-table mb-0">
-                <thead>
-                  <tr>
-                    <th style="width:60px;">Serial</th>
-                    <th>Patient Name</th>
-                    <th>MedCore ID</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th style="text-align:right;">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php foreach ($todayQueue as $q): ?>
-                    <tr style="<?= $q['priority'] === 'EMERGENCY' ? 'background:#FEF2F2;' : '' ?>">
-                      <td>
-                        <strong style="font-size:1.1rem; color:<?= $q['priority'] === 'EMERGENCY' ? '#DC2626' : '#0F766E' ?>;">
-                          #<?= str_pad($q['serial_number'], 2, '0', STR_PAD_LEFT) ?>
-                        </strong>
-                      </td>
-                      <td>
-                        <strong><?= htmlspecialchars($q['patient_name']) ?></strong>
-                        <?php if ($q['priority'] === 'EMERGENCY'): ?>
-                          <span class="badge" style="background:#FEE2E2; color:#991B1B; font-size:9px; margin-left:4px;">🚨 STAT</span>
-                        <?php endif; ?>
-                      </td>
-                      <td><code><?= htmlspecialchars($q['patient_uid']) ?></code></td>
-                      <td>
-                        <span class="badge" style="font-size:10px; <?= $q['priority'] === 'EMERGENCY' ? 'background:#FEE2E2;color:#991B1B;' : ($q['priority'] === 'URGENT' ? 'background:#FEF3C7;color:#92400E;' : 'background:#F1F5F9;color:#334155;') ?>">
-                          <?= htmlspecialchars($q['priority']) ?>
-                        </span>
-                      </td>
-                      <td>
-                        <span class="badge" style="font-size:10px; <?= $q['status'] === 'COMPLETED' ? 'background:#DCFCE7;color:#166534;' : ($q['status'] === 'IN_CONSULTATION' ? 'background:#E0F2FE;color:#0369A1;' : 'background:#FEF3C7;color:#92400E;') ?>">
-                          <?= htmlspecialchars($q['status']) ?>
-                        </span>
-                      </td>
-                      <td style="text-align:right;">
-                        <a href="<?= APP_URL ?>/doctor/queue.php" class="btn btn-sm btn-primary" style="background:#0F766E; border-color:#0F766E; font-size:11px; padding:3px 10px;">
-                          <i class="bi bi-stethoscope"></i> Call Patient
-                        </a>
-                      </td>
-                    </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
-
-      <!-- ACTIVE ACCESS SESSIONS BANNER -->
-      <?php if (!empty($activeSessions)): ?>
-      <div style="margin-bottom:var(--space-6);">
-        <?php foreach ($activeSessions as $s): ?>
-        <?php $mins = max(0, (int)ceil($s['seconds_remaining'] / 60)); ?>
-        <div class="alert" style="background:var(--mc-blue-50);border:1px solid rgba(26,115,232,0.3);margin-bottom:var(--space-3);">
-          <i class="bi bi-shield-lock-fill text-blue" style="font-size:1.2rem;flex-shrink:0;"></i>
-          <div style="flex:1;">
-            <strong>Active Medical Record Session</strong> —
-            <?= htmlspecialchars($s['patient_name']) ?> (<?= $s['patient_uid'] ?>)
-          </div>
-          <div class="access-timer" style="<?= $mins <= 5 ? 'background:var(--mc-red-light);border-color:var(--mc-red);' : '' ?>">
-            <i class="bi bi-clock-fill"></i>
-            <span class="timer-display" id="timer-<?= $s['id'] ?>"><?= str_pad($mins, 2, '0', STR_PAD_LEFT) ?>:00</span>
-          </div>
-          <a href="<?= APP_URL ?>/doctor/medical-record.php?patient=<?= $s['patient_id'] ?>" class="btn btn-primary btn-sm">
-            <i class="bi bi-folder2-open"></i> Open Record
-          </a>
-          <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient=<?= $s['patient_id'] ?>" class="btn btn-sm" style="background:#10B981; color:white; font-weight:600;">
-            <i class="bi bi-prescription2"></i> Issue Rx
-          </a>
-        </div>
-        <?php endforeach; ?>
-      </div>
-      <?php endif; ?>
-
-      <!-- QUICK PATIENT SEARCH BAR -->
-      <div class="card mb-6" style="padding:16px 20px; background:white; border:1px solid var(--mc-border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm);">
-        <form method="GET" action="<?= APP_URL ?>/doctor/patient-search.php" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:0;">
-          <div style="flex:1; min-width:240px; position:relative;">
-            <i class="bi bi-search" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--mc-text-muted);"></i>
-            <input type="text" name="q" class="form-control" placeholder="Quick Patient Lookup: Enter Phone Number (017...), Patient UID (PT-000001), or NID..." style="padding-left:38px; height:44px; font-size:14px;" required>
-          </div>
-          <button type="submit" class="btn btn-primary" style="height:44px; padding:0 20px; font-weight:700;">
-            <i class="bi bi-search-heart-fill"></i> Find Patient
-          </button>
-        </form>
-      </div>
-
-      <!-- STATS -->
-      <div class="grid-4 mb-8">
-        <div class="stat-card">
-          <div class="stat-icon stat-icon-blue"><i class="bi bi-calendar-check-fill"></i></div>
-          <div class="stat-value"><?= $stats['today_consultations'] ?></div>
-          <div class="stat-label">Today's Consultations</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon stat-icon-teal"><i class="bi bi-stethoscope"></i></div>
-          <div class="stat-value"><?= $stats['total_consultations'] ?></div>
-          <div class="stat-label">Total at This Hospital</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon stat-icon-green"><i class="bi bi-file-earmark-medical-fill"></i></div>
-          <div class="stat-value"><?= $stats['active_prescriptions'] ?></div>
-          <div class="stat-label">Active Prescriptions</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon stat-icon-amber"><i class="bi bi-building-fill-check"></i></div>
-          <div class="stat-value"><?= count($affiliatedHospitals) ?></div>
-          <div class="stat-label">Affiliated Hospitals</div>
-        </div>
-      </div>
-
-      <!-- MULTI-HOSPITAL AFFILIATIONS SUMMARY BAR -->
-      <div class="card mb-6" style="padding: 16px 20px; border: 1px solid var(--mc-border); background: linear-gradient(to right, #F8FAFC, #FFFFFF);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div>
-            <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">
-              <i class="bi bi-diagram-3-fill text-blue"></i> My Hospital Practice Network
-            </h3>
-            <div style="font-size: 12px; color: var(--mc-text-muted);">
-              You are authorized to practice across these verified medical centers
-            </div>
-          </div>
-          <span class="badge" style="background: #EFF6FF; color: #1E40AF; font-weight: 700;">
-            <?= count($affiliatedHospitals) ?> Active Hospital<?= count($affiliatedHospitals) > 1 ? 's' : '' ?>
-          </span>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
-          <?php foreach ($affiliatedHospitals as $aff): ?>
-          <?php $isCurrent = ($aff['hospital_id'] == $hospitalId); ?>
-          <div class="affil-card <?= $isCurrent ? 'active' : '' ?>">
-            <div>
-              <div style="font-weight: 700; font-size: 13px; color: var(--mc-text);">
-                <?= htmlspecialchars($aff['hospital_name']) ?>
-                <?php if ($isCurrent): ?>
-                  <span class="badge badge-verified" style="font-size: 10px; margin-left: 4px;">CURRENT</span>
-                <?php endif; ?>
-              </div>
-              <div style="font-size: 11px; color: var(--mc-text-muted);">
-                <?= htmlspecialchars($aff['department_name'] ?? 'General') ?>
-                · <?= htmlspecialchars($aff['employment_type']) ?>
-              </div>
-            </div>
-
-            <?php if (!$isCurrent): ?>
-              <form method="POST" style="margin: 0;">
-                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                <input type="hidden" name="switch_hospital_id" value="<?= $aff['hospital_id'] ?>">
-                <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 4px 10px;">
-                  Switch Here
-                </button>
-              </form>
-            <?php else: ?>
-              <span style="font-size: 12px; color: var(--mc-blue); font-weight: 700;"><i class="bi bi-check2-circle"></i> In Session</span>
-            <?php endif; ?>
-          </div>
-          <?php endforeach; ?>
-        </div>
-      </div>
-
-      <!-- QUICK PATIENT LOOKUP -->
-      <div class="card mb-6">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:var(--space-4);">
-          <i class="bi bi-search-heart-fill text-blue"></i> Quick Patient Lookup
-        </h3>
-        <form action="<?= APP_URL ?>/doctor/patient-search.php" method="GET" style="display:flex;gap:var(--space-3);">
-          <div class="search-bar" style="flex:1;">
-            <i class="bi bi-search"></i>
-            <input type="text" name="q" placeholder="Search by Patient ID (PT-000001) or NID..." autocomplete="off">
-          </div>
-          <button type="submit" class="btn btn-primary">
-            <i class="bi bi-search"></i> Search
-          </button>
-        </form>
-        <p style="font-size:12px;color:var(--mc-text-muted);margin-top:var(--space-3);">
-          <i class="bi bi-shield-lock-fill" style="color:var(--mc-green);"></i>
-          All searches are audit-logged. Patient records require explicit consent before access.
+        <h2 style="font-size:1.28rem;margin:.3rem 0;color:#fff">Ready for next patient consultation</h2>
+        <p style="margin:0;opacity:.88;font-size:.9rem;max-width:36rem">
+          Search by Patient UID (e.g. PT-000001), phone number, or NID to unlock records &amp; clinical summary.
         </p>
       </div>
-
-      <div class="grid-2">
-
-        <!-- Recent Consultations -->
-        <div class="card">
-          <div class="d-flex align-center justify-between mb-4">
-            <h3 style="font-size:1rem;font-weight:700;">Today's Patient Queue &amp; Consultations</h3>
-            <a href="<?= APP_URL ?>/doctor/consultations.php" style="font-size:13px;">View All</a>
-          </div>
-
-          <?php if (empty($recentConsultations)): ?>
-          <div class="empty-state" style="padding:var(--space-6) 0;">
-            <div class="empty-state-icon"><i class="bi bi-calendar2-heart"></i></div>
-            <p>No consultations at <?= htmlspecialchars($doctor['hospital_name']) ?> yet.</p>
-          </div>
-          <?php else: ?>
-          <?php foreach ($recentConsultations as $cons): ?>
-          <?php $age = date_diff(new DateTime($cons['date_of_birth']), new DateTime())->y; ?>
-          <div style="padding:10px 0;border-bottom:1px solid var(--mc-border);">
-            <div class="d-flex align-center gap-3">
-              <div class="sidebar-avatar" style="width:36px;height:36px;font-size:13px;background:var(--mc-bg-alt);color:var(--mc-text);">
-                <?= strtoupper(substr($cons['patient_name'], 0, 1)) ?>
-              </div>
-              <div style="flex:1;">
-                <div style="font-size:13px;font-weight:700;"><?= htmlspecialchars($cons['patient_name']) ?></div>
-                <div style="font-size:11px;color:var(--mc-text-muted);">
-                  <?= $cons['patient_uid'] ?> · Age <?= $age ?> · <?= ucfirst(strtolower($cons['gender'])) ?>
-                  <?php if ($cons['critical_allergy_count'] > 0): ?>
-                    · <span style="color:var(--mc-red);font-weight:700;"><i class="bi bi-exclamation-triangle-fill"></i> Allergy</span>
-                  <?php endif; ?>
-                </div>
-                <div style="font-size:11px;color:var(--mc-text-muted);"><?= date('d M, h:i A', strtotime($cons['consultation_date'])) ?></div>
-              </div>
-              <a href="<?= APP_URL ?>/doctor/patient-search.php?q=<?= urlencode($cons['patient_uid']) ?>"
-                 class="btn btn-secondary btn-sm">
-                <i class="bi bi-folder2-open"></i>
-              </a>
-            </div>
-          </div>
-          <?php endforeach; ?>
-          <?php endif; ?>
-
-          <a href="<?= APP_URL ?>/doctor/patient-search.php" class="btn btn-secondary w-100" style="margin-top:var(--space-4);">
-            <i class="bi bi-search-heart-fill"></i> Find New Patient
-          </a>
-        </div>
-
-        <!-- Recent Prescriptions -->
-        <div class="card">
-          <div class="d-flex align-center justify-between mb-4">
-            <h3 style="font-size:1rem;font-weight:700;">Recent Prescriptions</h3>
-            <a href="<?= APP_URL ?>/doctor/prescriptions.php" style="font-size:13px;">View All</a>
-          </div>
-
-          <?php if (empty($recentPrescriptions)): ?>
-          <div class="empty-state" style="padding:var(--space-6) 0;">
-            <div class="empty-state-icon"><i class="bi bi-file-earmark-medical"></i></div>
-            <p>No prescriptions issued yet.</p>
-          </div>
-          <?php else: ?>
-          <?php foreach ($recentPrescriptions as $rx): ?>
-          <div style="padding:10px 0;border-bottom:1px solid var(--mc-border);">
-            <div class="d-flex align-center justify-between gap-3">
-              <div>
-                <div style="font-size:13px;font-weight:700;font-family:var(--font-mono);"><?= htmlspecialchars($rx['prescription_uid']) ?></div>
-                <div style="font-size:12px;color:var(--mc-text-muted);">
-                  <?= htmlspecialchars($rx['patient_name']) ?> · <?= $rx['med_count'] ?> med(s)
-                </div>
-                <div style="font-size:11px;color:var(--mc-text-muted);"><?= date('d M Y, h:i A', strtotime($rx['created_at'])) ?></div>
-              </div>
-              <span class="badge badge-<?= $rx['status'] === 'ACTIVE' ? 'success' : 'neutral' ?>">
-                <?= $rx['status'] ?>
-              </span>
-            </div>
-          </div>
-          <?php endforeach; ?>
-          <?php endif; ?>
-        </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <a href="<?= APP_URL ?>/doctor/queue.php" class="mc-btn mc-btn-secondary mc-btn-sm">
+          <i class="bi bi-people-fill"></i> Live queue (<?= $waitingQueueCount ?>)
+        </a>
+        <a href="<?= APP_URL ?>/doctor/patient-search.php" class="mc-btn mc-btn-soft mc-btn-sm">
+          <i class="bi bi-search-heart-fill"></i> Find patient
+        </a>
       </div>
-
     </div>
-  </main>
+  </div>
+<?php endif; ?>
+
+<div class="mc-stats">
+  <div class="mc-stat"><div class="l">Today consults</div><div class="v"><?= (int)($stats['today_consultations'] ?? 0) ?></div></div>
+  <div class="mc-stat"><div class="l">Hospital total</div><div class="v"><?= (int)($stats['total_consultations'] ?? 0) ?></div></div>
+  <div class="mc-stat"><div class="l">Active Rx</div><div class="v"><?= (int)($stats['active_prescriptions'] ?? 0) ?></div></div>
+  <div class="mc-stat"><div class="l">Hospitals</div><div class="v"><?= count($affiliatedHospitals) ?></div></div>
+</div>
+
+<?php if (!empty($activeSessions)): ?>
+  <div class="mc-panel">
+    <div class="mc-panel-h"><h2>Active record sessions</h2></div>
+    <div class="mc-list">
+      <?php foreach ($activeSessions as $s): ?>
+        <?php $mins = max(0, (int)ceil($s['seconds_remaining'] / 60)); ?>
+        <div class="mc-list-item" style="background:#fff">
+          <div>
+            <strong><?= htmlspecialchars($s['patient_name']) ?></strong>
+            <div style="font-size:.84rem;color:var(--muted)">
+              <span class="mc-mono"><?= htmlspecialchars($s['patient_uid']) ?></span>
+              · Time left: <strong id="timer-<?= (int)$s['id'] ?>"><?= str_pad((string)$mins, 2, '0', STR_PAD_LEFT) ?>:00</strong>
+            </div>
+          </div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <a href="<?= APP_URL ?>/doctor/medical-record.php?patient=<?= (int)$s['patient_id'] ?>" class="mc-btn mc-btn-secondary mc-btn-sm">Open record</a>
+            <a href="<?= APP_URL ?>/doctor/create-prescription.php?patient=<?= (int)$s['patient_id'] ?>" class="mc-btn mc-btn-primary mc-btn-sm">Issue Rx</a>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>
+
+<div class="lab-token-bar">
+  <label for="quick-patient-q">Quick patient lookup (all searches are audit-logged)</label>
+  <form method="GET" action="<?= APP_URL ?>/doctor/patient-search.php" class="lab-token-form">
+    <input id="quick-patient-q" type="text" name="q" required autocomplete="off"
+           style="text-transform:none;letter-spacing:normal;font-family:inherit;font-size:.95rem"
+           placeholder="Enter Phone (017...), Patient UID (PT-000001), or NID...">
+    <button type="submit" class="mc-btn mc-btn-primary"><i class="bi bi-search"></i> Find patient</button>
+  </form>
+</div>
+
+<div class="mc-panel">
+  <div class="mc-panel-h">
+    <h2>Today's consultation queue (আজকের রোগী সিরিয়াল)</h2>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <span class="lab-status info"><?= $waitingQueueCount ?> waiting</span>
+      <a href="<?= APP_URL ?>/doctor/queue.php" class="mc-btn mc-btn-secondary mc-btn-sm">Open full queue</a>
+    </div>
+  </div>
+  <?php if (empty($todayQueue)): ?>
+    <p style="margin:0;color:var(--muted)">No patients queued for today yet. <a href="<?= APP_URL ?>/doctor/queue.php" style="color:var(--accent);font-weight:700">Add walk-in / emergency</a></p>
+  <?php else: ?>
+    <div style="overflow-x:auto">
+      <table class="lab-table">
+        <thead>
+          <tr>
+            <th>Serial</th>
+            <th>Patient</th>
+            <th>ID</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($todayQueue as $q):
+            $pCls = $q['priority'] === 'EMERGENCY' ? 'danger' : ($q['priority'] === 'URGENT' ? 'warn' : '');
+            $sCls = $q['status'] === 'COMPLETED' ? 'ok' : ($q['status'] === 'IN_CONSULTATION' ? 'info' : 'warn');
+          ?>
+            <tr>
+              <td class="mc-mono" style="color:<?= $q['priority'] === 'EMERGENCY' ? '#b42318' : 'var(--accent)' ?>">#<?= str_pad((string)$q['serial_number'], 2, '0', STR_PAD_LEFT) ?></td>
+              <td><strong><?= htmlspecialchars($q['patient_name']) ?></strong></td>
+              <td class="mc-mono"><?= htmlspecialchars($q['patient_uid']) ?></td>
+              <td><span class="lab-status <?= $pCls ?>"><?= htmlspecialchars($q['priority']) ?></span></td>
+              <td><span class="lab-status <?= $sCls ?>"><?= htmlspecialchars(str_replace('_', ' ', $q['status'])) ?></span></td>
+              <td style="text-align:right">
+                <a href="<?= APP_URL ?>/doctor/queue.php" class="mc-btn mc-btn-primary mc-btn-sm">Call patient</a>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  <?php endif; ?>
+</div>
+
+<div class="mc-panel">
+  <div class="mc-panel-h">
+    <h2>My hospital practice network</h2>
+    <a href="<?= APP_URL ?>/doctor/request-affiliation.php" style="font-weight:800;color:var(--accent);font-size:.88rem">Request affiliation</a>
+  </div>
+  <div class="mc-grid-3">
+    <?php foreach ($affiliatedHospitals as $aff): ?>
+      <?php $isCurrent = ($aff['hospital_id'] == $hospitalId); ?>
+      <div class="mc-list-item" style="background:<?= $isCurrent ? 'var(--accent-soft)' : '#fff' ?>;border-color:<?= $isCurrent ? 'var(--accent)' : 'var(--line)' ?>">
+        <div>
+          <strong><?= htmlspecialchars($aff['hospital_name']) ?></strong>
+          <div style="font-size:.82rem;color:var(--muted)">
+            <?= htmlspecialchars($aff['department_name'] ?? 'General') ?> · <?= htmlspecialchars($aff['employment_type']) ?>
+          </div>
+        </div>
+        <?php if (!$isCurrent): ?>
+          <form method="POST" style="margin:0">
+            <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+            <input type="hidden" name="switch_hospital_id" value="<?= (int)$aff['hospital_id'] ?>">
+            <button type="submit" class="mc-btn mc-btn-secondary mc-btn-sm">Switch</button>
+          </form>
+        <?php else: ?>
+          <span class="lab-status ok">In session</span>
+        <?php endif; ?>
+      </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+
+<div class="mc-grid-2">
+  <div class="mc-panel">
+    <div class="mc-panel-h">
+      <h2>Recent consultations</h2>
+      <a href="<?= APP_URL ?>/doctor/consultations.php" style="font-weight:800;color:var(--accent);font-size:.88rem">View all</a>
+    </div>
+    <?php if (empty($recentConsultations)): ?>
+      <p style="margin:0;color:var(--muted)">No consultations at <?= htmlspecialchars($doctor['hospital_name']) ?> yet.</p>
+    <?php else: ?>
+      <div class="mc-list">
+        <?php foreach ($recentConsultations as $cons): ?>
+          <?php $age = date_diff(new DateTime($cons['date_of_birth']), new DateTime())->y; ?>
+          <div class="mc-list-item" style="background:#fff">
+            <div>
+              <strong><?= htmlspecialchars($cons['patient_name']) ?></strong>
+              <div style="font-size:.82rem;color:var(--muted)">
+                <?= htmlspecialchars($cons['patient_uid']) ?> · Age <?= $age ?> · <?= ucfirst(strtolower($cons['gender'])) ?>
+                <?php if ($cons['critical_allergy_count'] > 0): ?>
+                  · <span style="color:var(--danger);font-weight:800">Allergy</span>
+                <?php endif; ?>
+              </div>
+              <div style="font-size:.78rem;color:var(--muted)"><?= date('d M, h:i A', strtotime($cons['consultation_date'])) ?></div>
+            </div>
+            <a href="<?= APP_URL ?>/doctor/patient-search.php?q=<?= urlencode($cons['patient_uid']) ?>" class="mc-btn mc-btn-secondary mc-btn-sm">Open</a>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+  </div>
+
+  <div class="mc-panel">
+    <div class="mc-panel-h">
+      <h2>Recent prescriptions</h2>
+      <a href="<?= APP_URL ?>/doctor/prescriptions.php" style="font-weight:800;color:var(--accent);font-size:.88rem">View all</a>
+    </div>
+    <?php if (empty($recentPrescriptions)): ?>
+      <p style="margin:0;color:var(--muted)">No prescriptions issued yet.</p>
+    <?php else: ?>
+      <div class="mc-list">
+        <?php foreach ($recentPrescriptions as $rx): ?>
+          <a class="mc-list-item" href="<?= APP_URL ?>/doctor/prescriptions.php?rx=<?= urlencode($rx['prescription_uid']) ?>" style="background:#fff">
+            <div>
+              <div class="mc-mono" style="color:var(--accent);font-size:.8rem"><?= htmlspecialchars($rx['prescription_uid']) ?></div>
+              <strong><?= htmlspecialchars($rx['patient_name']) ?></strong>
+              <div style="font-size:.82rem;color:var(--muted)"><?= (int)$rx['med_count'] ?> med(s) · <?= date('d M Y, h:i A', strtotime($rx['created_at'])) ?></div>
+            </div>
+            <span class="lab-status <?= $rx['status'] === 'ACTIVE' ? 'ok' : '' ?>"><?= htmlspecialchars($rx['status']) ?></span>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+  </div>
 </div>
 
 <!-- HOSPITAL SWITCH MODAL -->
-<div id="hospital-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px;">
-  <div style="background:white; border-radius:var(--radius-xl); max-width:480px; width:100%; padding:24px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2);">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <h3 style="font-size:1.2rem; font-weight:800; color:#0F172A; margin:0;">
-        <i class="bi bi-hospital text-blue"></i> Switch Clinical Hospital
-      </h3>
-      <button type="button" onclick="closeHospitalModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--mc-text-muted);">
+<div id="hospital-modal" class="mc-modal-backdrop" role="dialog" aria-modal="true" aria-label="Switch hospital">
+  <div class="mc-modal">
+    <div class="mc-modal-head">
+      <h3><i class="bi bi-hospital" style="color:var(--accent)"></i> Switch Clinical Hospital</h3>
+      <button type="button" class="mc-modal-close" onclick="closeHospitalModal()" aria-label="Close">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
-
-    <p style="font-size:13px; color:var(--mc-text-secondary); margin:0 0 16px 0;">
-      Select the hospital location where you are conducting patient consultations right now:
-    </p>
-
-    <div style="display:flex; flex-direction:column; gap:10px;">
+    <p style="font-size:.9rem;color:var(--muted);margin:0 0 1rem">Select the hospital where you are conducting consultations right now:</p>
+    <div class="mc-list">
       <?php foreach ($affiliatedHospitals as $aff): ?>
-      <?php $isCurrent = ($aff['hospital_id'] == $hospitalId); ?>
-      <form method="POST" style="margin:0;">
-        <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-        <input type="hidden" name="switch_hospital_id" value="<?= $aff['hospital_id'] ?>">
-        <button type="submit" class="affil-card w-100 <?= $isCurrent ? 'active' : '' ?>" style="text-align:left; cursor:pointer; width:100%; border:1.5px solid <?= $isCurrent ? 'var(--mc-blue)' : 'var(--mc-border)' ?>;">
-          <div>
-            <div style="font-weight:700; font-size:14px; color:var(--mc-text);">
-              <?= htmlspecialchars($aff['hospital_name']) ?>
+        <?php $isCurrent = ($aff['hospital_id'] == $hospitalId); ?>
+        <form method="POST" style="margin:0">
+          <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+          <input type="hidden" name="switch_hospital_id" value="<?= (int)$aff['hospital_id'] ?>">
+          <button type="submit" class="mc-list-item" style="width:100%;text-align:left;cursor:pointer;background:<?= $isCurrent ? 'var(--accent-soft)' : '#fff' ?>;border-color:<?= $isCurrent ? 'var(--accent)' : 'var(--line)' ?>">
+            <div>
+              <strong><?= htmlspecialchars($aff['hospital_name']) ?></strong>
+              <div style="font-size:.82rem;color:var(--muted)">
+                <?= htmlspecialchars($aff['department_name'] ?? 'General') ?>
+                · <?= htmlspecialchars($aff['employment_type']) ?>
+                · <?= htmlspecialchars($aff['hospital_city'] ?? '') ?>
+              </div>
             </div>
-            <div style="font-size:12px; color:var(--mc-text-muted);">
-              <?= htmlspecialchars($aff['department_name'] ?? 'General') ?>
-              · <?= htmlspecialchars($aff['employment_type']) ?>
-              · <?= htmlspecialchars($aff['hospital_city'] ?? '') ?>
-            </div>
-          </div>
-          <?php if ($isCurrent): ?>
-            <span class="badge badge-verified" style="font-size:11px;"><i class="bi bi-check-lg"></i> Active</span>
-          <?php else: ?>
-            <span class="btn btn-secondary btn-sm" style="font-size:11px;">Switch →</span>
-          <?php endif; ?>
-        </button>
-      </form>
+            <?php if ($isCurrent): ?>
+              <span class="lab-status ok">Active</span>
+            <?php else: ?>
+              <span class="mc-btn mc-btn-secondary mc-btn-sm">Switch →</span>
+            <?php endif; ?>
+          </button>
+        </form>
       <?php endforeach; ?>
     </div>
   </div>
 </div>
 
-<script src="<?= APP_URL ?>/assets/js/medcore.js"></script>
 <script>
-// Sidebar toggle
-document.getElementById('hamburger-btn')?.addEventListener('click', function() {
-  const sidebar = document.getElementById('sidebar');
-  const expanded = this.getAttribute('aria-expanded') === 'true';
-  this.setAttribute('aria-expanded', !expanded);
-  sidebar.classList.toggle('open');
+function openHospitalModal(){ document.getElementById('hospital-modal')?.classList.add('open'); }
+function closeHospitalModal(){ document.getElementById('hospital-modal')?.classList.remove('open'); }
+document.addEventListener('DOMContentLoaded', function() {
+  <?php foreach ($activeSessions as $s): ?>
+  if (typeof startAccessTimer === 'function') {
+    startAccessTimer('timer-<?= (int)$s['id'] ?>', <?= max(0, (int)$s['seconds_remaining']) ?>, function() { location.reload(); });
+  }
+  <?php endforeach; ?>
 });
-
-function openHospitalModal() {
-  document.getElementById('hospital-modal').style.display = 'flex';
-}
-
-function closeHospitalModal() {
-  document.getElementById('hospital-modal').style.display = 'none';
-}
-
-// Access session countdown timers
-<?php foreach ($activeSessions as $s): ?>
-startAccessTimer('timer-<?= $s['id'] ?>', <?= max(0, (int)$s['seconds_remaining']) ?>, function() {
-  location.reload();
-});
-<?php endforeach; ?>
 </script>
-</body>
-</html>
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>

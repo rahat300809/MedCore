@@ -141,207 +141,94 @@ $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
 $csrf = generateCsrfToken();
+
+require_once __DIR__ . '/../app/views/portal/navs.php';
+$portalRole = 'Patient';
+$portalRoleBn = 'Patient portal';
+$portalAccent = '#0f766e';
+$portalUser = $_SESSION['name'] ?? 'Patient';
+$portalMeta = ($_SESSION['patient_uid'] ?? '') . ' · Notifications';
+$portalTitle = 'Notifications & activity';
+$portalSubtitle = 'ডাক্তার রিকোয়েস্ট ও রিপোর্ট আপডেট (' . $unreadCount . ' unread)';
+$portalNav = mc_patient_nav('notifications');
+$portalTopAction = $unreadCount > 0
+    ? '<form method="POST" style="margin:0"><input type="hidden" name="csrf_token" value="' . htmlspecialchars($csrf) . '"><input type="hidden" name="action" value="mark_all_read"><button type="submit" class="mc-btn mc-btn-secondary mc-btn-sm"><i class="bi bi-check2-all"></i> Mark all read</button></form>'
+    : '<a class="mc-btn mc-btn-secondary mc-btn-sm" href="' . APP_URL . '/patient/dashboard.php">Dashboard</a>';
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notifications — MedCore Patient Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-</head>
-<body>
 
-<div class="portal-layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="logo-icon" style="width:32px;height:32px;font-size:14px;">M</div>
-      <div>
-        <div class="brand-name">MedCore</div>
-        <div class="brand-tagline">Patient Portal</div>
-      </div>
+<?php if ($flash): ?>
+  <div class="mc-alert <?= ($flash['type'] ?? '') === 'success' ? 'mc-alert-ok' : (($flash['type'] ?? '') === 'info' ? 'mc-alert-info' : 'mc-alert-danger') ?>">
+    <?= htmlspecialchars($flash['msg']) ?>
+  </div>
+<?php endif; ?>
+
+<div class="mc-panel">
+  <div class="mc-panel-h">
+    <h2>Recent notifications</h2>
+    <span class="lab-status <?= $unreadCount > 0 ? 'info' : '' ?>"><?= $unreadCount ?> unread</span>
+  </div>
+
+  <?php if (empty($notifications)): ?>
+    <div style="text-align:center;padding:2.2rem 1rem">
+      <p style="margin:0;color:var(--muted)">You have no notifications yet. Doctor requests and lab alerts will appear here.</p>
     </div>
-
-    <nav class="sidebar-nav">
-      <a href="<?= APP_URL ?>/patient/dashboard.php">
-        <i class="bi bi-grid-1x2-fill"></i> Dashboard
-      </a>
-      <div class="sidebar-section-title">My Health</div>
-      <a href="<?= APP_URL ?>/patient/medical-history.php"><i class="bi bi-clipboard2-heart-fill"></i> Medical History</a>
-      <a href="<?= APP_URL ?>/patient/timeline.php"><i class="bi bi-calendar2-heart-fill"></i> Health Timeline</a>
-      <a href="<?= APP_URL ?>/patient/medications.php"><i class="bi bi-capsule-pill"></i> Medications</a>
-      <a href="<?= APP_URL ?>/patient/allergies.php"><i class="bi bi-shield-exclamation"></i> Allergies</a>
-      <a href="<?= APP_URL ?>/patient/lab-reports.php"><i class="bi bi-file-earmark-bar-graph-fill"></i> Lab Reports</a>
-      <div class="sidebar-section-title">Consultations</div>
-      <a href="<?= APP_URL ?>/patient/prescriptions.php"><i class="bi bi-file-earmark-medical-fill"></i> Prescriptions</a>
-      <div class="sidebar-section-title">Privacy &amp; Access</div>
-      <a href="<?= APP_URL ?>/patient/consent-requests.php"><i class="bi bi-person-check-fill"></i> Consent Requests</a>
-      <a href="<?= APP_URL ?>/patient/access-history.php"><i class="bi bi-clock-history"></i> Access History</a>
-      <a href="<?= APP_URL ?>/patient/notifications.php" class="active" aria-current="page">
-        <i class="bi bi-bell-fill"></i> Notifications
-        <?php if ($unreadCount > 0): ?>
-          <span class="nav-badge"><?= $unreadCount ?></span>
-        <?php endif; ?>
-      </a>
-      <div class="sidebar-section-title">Account</div>
-      <a href="<?= APP_URL ?>/patient/profile.php"><i class="bi bi-person-circle"></i> My Profile</a>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" data-confirm="Log out?"><i class="bi bi-box-arrow-right"></i> Log Out</a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="sidebar-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'P', 0, 1)) ?></div>
-        <div class="sidebar-user-info">
-          <div class="name"><?= htmlspecialchars($_SESSION['name'] ?? '') ?></div>
-          <div class="role"><?= htmlspecialchars($_SESSION['patient_uid'] ?? '') ?></div>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="portal-main">
-    <header class="portal-topbar">
-      <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar"><i class="bi bi-list"></i></button>
-      <div style="flex:1;">
-        <h2 style="font-size:16px;font-weight:700;margin:0;">Notifications &amp; Activity</h2>
-        <div style="font-size:12px;color:var(--mc-text-muted);">Stay updated with doctor requests and health record activities</div>
-      </div>
-      <?php if ($unreadCount > 0): ?>
-      <form method="POST" style="margin:0;">
-        <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-        <input type="hidden" name="action" value="mark_all_read">
-        <button type="submit" class="btn btn-secondary btn-sm">
-          <i class="bi bi-check2-all"></i> Mark All as Read
-        </button>
-      </form>
-      <?php endif; ?>
-    </header>
-
-    <div class="portal-content">
-      <?php if ($flash): ?>
-      <div class="alert alert-<?= $flash['type'] ?> mb-6" data-auto-dismiss="5000">
-        <i class="bi bi-<?= $flash['type'] === 'success' ? 'check-circle-fill' : 'info-circle-fill' ?>"></i>
-        <?= htmlspecialchars($flash['msg']) ?>
-      </div>
-      <?php endif; ?>
-
-      <div class="card">
-        <div class="d-flex align-center justify-between gap-3 mb-4" style="flex-wrap:wrap;">
-          <div>
-            <h3 style="font-size:1.1rem;font-weight:700;margin:0;">Recent Notifications</h3>
-            <div style="font-size:12px;color:var(--mc-text-muted);">
-              <?= $unreadCount ?> unread notification<?= $unreadCount !== 1 ? 's' : '' ?>
+  <?php else: ?>
+    <div class="mc-list">
+      <?php foreach ($notifications as $n):
+        $isPendingRequest = ($n['type'] === 'ACCESS_REQUEST' && $n['request_status'] === 'PENDING' && (empty($n['request_expires_at']) || strtotime($n['request_expires_at']) > time()));
+      ?>
+        <div class="mc-list-item" style="align-items:flex-start;flex-wrap:wrap;gap:.85rem;background:<?= $isPendingRequest ? '#fffbeb' : ($n['is_read'] ? '#fff' : '#eff8ff') ?>;border-color:<?= $isPendingRequest ? '#fedf89' : 'var(--line)' ?>">
+          <div style="flex:1;min-width:240px">
+            <div style="display:flex;align-items:center;gap:.45rem;flex-wrap:wrap">
+              <strong><?= htmlspecialchars($n['title']) ?></strong>
+              <?php if (!$n['is_read']): ?><span class="lab-status info">NEW</span><?php endif; ?>
+              <?php if ($isPendingRequest): ?><span class="lab-status warn">WAITING APPROVAL</span><?php endif; ?>
+            </div>
+            <div style="font-size:.88rem;color:var(--ink-2);margin-top:.3rem"><?= htmlspecialchars($n['message']) ?></div>
+            <?php if (!empty($n['doctor_notes'])): ?>
+              <div style="font-size:.82rem;background:#fff;padding:.45rem .7rem;border-radius:8px;margin-top:.45rem;border-left:3px solid var(--accent)">
+                <strong>Doctor's reason:</strong> <?= htmlspecialchars($n['doctor_notes']) ?>
+              </div>
+            <?php endif; ?>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:.35rem">
+              <?= date('d M Y, h:i A', strtotime($n['created_at'])) ?>
             </div>
           </div>
-          <a href="<?= APP_URL ?>/patient/dashboard.php" class="btn btn-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-          </a>
-        </div>
 
-        <?php if (empty($notifications)): ?>
-        <div class="empty-state" style="padding:var(--space-8) 0;">
-          <div class="empty-state-icon"><i class="bi bi-bell-slash"></i></div>
-          <p>You have no notifications yet.<br>All doctor requests and prescription alerts will appear here.</p>
-        </div>
-        <?php else: ?>
-        <div style="display:flex;flex-direction:column;gap:var(--space-3);">
-          <?php foreach ($notifications as $n): ?>
-          <?php
-          $isPendingRequest = ($n['type'] === 'ACCESS_REQUEST' && $n['request_status'] === 'PENDING' && (empty($n['request_expires_at']) || strtotime($n['request_expires_at']) > time()));
-          ?>
-          <div style="padding:var(--space-4);border-radius:var(--radius-md);border:1px solid <?= $isPendingRequest ? '#F59E0B' : 'var(--mc-border)' ?>;background:<?= $isPendingRequest ? '#FFFBEB' : ($n['is_read'] ? 'white' : '#F0F9FF') ?>;box-shadow:0 2px 6px rgba(0,0,0,0.03);">
-            <div class="d-flex align-start justify-between gap-4 flex-wrap">
-              <div class="d-flex align-start gap-3" style="flex:1;min-width:280px;">
-                <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;<?= $isPendingRequest ? 'background:#FEF3C7;color:#D97706;' : ($n['is_read'] ? 'background:#F1F5F9;color:#64748B;' : 'background:#E0F2FE;color:#0284C7;') ?>">
-                  <i class="bi <?= $n['type'] === 'ACCESS_REQUEST' ? 'bi-stethoscope' : ($n['type'] === 'PRESCRIPTION' ? 'bi-file-earmark-medical' : 'bi-bell') ?>"></i>
-                </div>
-                <div>
-                  <div class="d-flex align-center gap-2 flex-wrap">
-                    <strong style="font-size:14px;color:var(--mc-navy);"><?= htmlspecialchars($n['title']) ?></strong>
-                    <?php if (!$n['is_read']): ?>
-                    <span class="badge badge-primary" style="font-size:10px;">NEW</span>
-                    <?php endif; ?>
-                    <?php if ($isPendingRequest): ?>
-                    <span class="badge badge-warning" style="font-size:10px;">WAITING APPROVAL</span>
-                    <?php endif; ?>
-                  </div>
-                  <div style="font-size:13px;color:var(--mc-text-secondary);margin-top:4px;">
-                    <?= htmlspecialchars($n['message']) ?>
-                  </div>
+          <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+            <?php if ($isPendingRequest && !empty($n['reference_id'])): ?>
+              <form method="POST" style="display:inline;margin:0">
+                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                <input type="hidden" name="request_id" value="<?= (int)$n['reference_id'] ?>">
+                <input type="hidden" name="notification_id" value="<?= (int)$n['id'] ?>">
+                <input type="hidden" name="action" value="approve">
+                <button type="submit" class="mc-btn mc-btn-primary mc-btn-sm"><i class="bi bi-check-circle-fill"></i> Accept (30m)</button>
+              </form>
+              <form method="POST" style="display:inline;margin:0" onsubmit="return confirm('Decline this doctor access request?');">
+                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                <input type="hidden" name="request_id" value="<?= (int)$n['reference_id'] ?>">
+                <input type="hidden" name="notification_id" value="<?= (int)$n['id'] ?>">
+                <input type="hidden" name="action" value="deny">
+                <button type="submit" class="mc-btn mc-btn-danger mc-btn-sm">Decline</button>
+              </form>
+            <?php elseif (!empty($n['action_url'])): ?>
+              <a href="<?= htmlspecialchars($n['action_url']) ?>" class="mc-btn mc-btn-secondary mc-btn-sm">View →</a>
+            <?php endif; ?>
 
-                  <?php if (!empty($n['doctor_notes'])): ?>
-                  <div style="font-size:12px;background:white;padding:6px 10px;border-radius:var(--radius-sm);margin-top:6px;border-left:3px solid var(--mc-teal);">
-                    <strong>Doctor's Stated Reason:</strong> <?= htmlspecialchars($n['doctor_notes']) ?>
-                  </div>
-                  <?php endif; ?>
-
-                  <div style="font-size:11px;color:var(--mc-text-muted);margin-top:6px;">
-                    <?= date('d M Y, h:i A', strtotime($n['created_at'])) ?>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Actions -->
-              <div class="d-flex align-center gap-2" style="flex-shrink:0;">
-                <?php if ($isPendingRequest && !empty($n['reference_id'])): ?>
-                <form method="POST" style="display:inline;">
-                  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                  <input type="hidden" name="request_id" value="<?= $n['reference_id'] ?>">
-                  <input type="hidden" name="notification_id" value="<?= $n['id'] ?>">
-                  <input type="hidden" name="action" value="approve">
-                  <button type="submit" class="btn btn-success btn-sm" style="font-weight:700;box-shadow:0 2px 6px rgba(16,185,129,0.3);">
-                    <i class="bi bi-check-circle-fill"></i> Accept (30m)
-                  </button>
-                </form>
-                <form method="POST" style="display:inline;" onsubmit="return confirm('Decline this doctor access request?');">
-                  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                  <input type="hidden" name="request_id" value="<?= $n['reference_id'] ?>">
-                  <input type="hidden" name="notification_id" value="<?= $n['id'] ?>">
-                  <input type="hidden" name="action" value="deny">
-                  <button type="submit" class="btn btn-secondary btn-sm" style="color:var(--mc-red);border-color:#FCA5A5;background:#FEF2F2;">
-                    <i class="bi bi-x-circle"></i> Decline
-                  </button>
-                </form>
-                <?php elseif (!empty($n['action_url'])): ?>
-                <a href="<?= htmlspecialchars($n['action_url']) ?>" class="btn btn-secondary btn-sm">
-                  View <i class="bi bi-chevron-right"></i>
-                </a>
-                <?php endif; ?>
-
-                <?php if (!$n['is_read']): ?>
-                <form method="POST" style="display:inline;">
-                  <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                  <input type="hidden" name="notification_id" value="<?= $n['id'] ?>">
-                  <input type="hidden" name="action" value="mark_read">
-                  <button type="submit" class="btn btn-secondary btn-sm" title="Mark as read">
-                    <i class="bi bi-check-lg"></i>
-                  </button>
-                </form>
-                <?php endif; ?>
-              </div>
-
-            </div>
+            <?php if (!$n['is_read']): ?>
+              <form method="POST" style="display:inline;margin:0">
+                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                <input type="hidden" name="notification_id" value="<?= (int)$n['id'] ?>">
+                <input type="hidden" name="action" value="mark_read">
+                <button type="submit" class="mc-btn mc-btn-ghost mc-btn-sm" title="Mark as read"><i class="bi bi-check-lg"></i></button>
+              </form>
+            <?php endif; ?>
           </div>
-          <?php endforeach; ?>
         </div>
-        <?php endif; ?>
-      </div>
-
+      <?php endforeach; ?>
     </div>
-  </main>
+  <?php endif; ?>
 </div>
 
-<script src="<?= APP_URL ?>/assets/js/medcore.js"></script>
-<script>
-document.getElementById('hamburger-btn')?.addEventListener('click', function() {
-  document.getElementById('sidebar').classList.toggle('open');
-  this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') !== 'true');
-});
-</script>
-</body>
-</html>
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>

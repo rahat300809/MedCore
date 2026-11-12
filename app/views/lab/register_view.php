@@ -24,7 +24,7 @@ require dirname(__DIR__) . '/layout/head.php';
         <input type="hidden" name="register" value="1">
 
         <p style="margin:1.1rem 0 .35rem;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">Laboratory</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="mc-form-grid">
           <label class="mc-field" style="margin-top:0">
             <span>Lab name *</span>
             <input type="text" name="lab_name" required value="<?= htmlspecialchars($_POST['lab_name'] ?? '') ?>">
@@ -58,7 +58,7 @@ require dirname(__DIR__) . '/layout/head.php';
           <span>Email *</span>
           <input type="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
         </label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="mc-form-grid" style="margin-top:1rem">
           <label class="mc-field" style="margin-top:0">
             <span>Password *</span>
             <input type="password" name="password" required minlength="8">

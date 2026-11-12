@@ -50,11 +50,13 @@ $doctorLabel = static function (?string $name): string {
 require_once __DIR__ . '/../app/views/portal/navs.php';
 $portalRole = 'Hospital';
 $portalRoleBn = 'Hospital portal';
+$portalAccent = '#0b4f6c';
 $portalUser = $hospital['name'] ?? 'Hospital';
 $portalMeta = ($hospital['hospital_uid'] ?? '') . ' · Consultations';
 $portalTitle = 'Consultations';
 $portalSubtitle = 'হাসপাতালের পরামর্শ রেকর্ড';
-$portalNav = mc_hospital_nav('dashboard');
+$portalNav = mc_hospital_nav('consultations');
+$bodyClass = 'lab-desk';
 require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
 

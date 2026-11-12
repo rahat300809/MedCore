@@ -147,410 +147,215 @@ $stmt->execute($params);
 $doctors = $stmt->fetchAll();
 
 $csrf = generateCsrfToken();
+require_once __DIR__ . '/../app/views/portal/navs.php';
+$portalRole = 'Admin';
+$portalRoleBn = 'Central Administration';
+$portalAccent = '#1e40af';
+$portalUser = $_SESSION['name'] ?? 'System Admin';
+$portalMeta = $_SESSION['email'] ?? 'admin@medcore.local';
+$portalTitle = 'Doctor Credential Review & Registry';
+$portalSubtitle = 'BMDC verification authority and nationwide licensing registry';
+$portalNav = mc_admin_nav('doctors', (int)$countPending);
+$portalTopAction = '<a href="' . APP_URL . '/admin/doctor-create.php" class="mc-btn mc-btn-primary mc-btn-sm"><i class="bi bi-person-plus-fill"></i> Add &amp; Verify Doctor</a>';
+$bodyClass = 'lab-desk';
+require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Doctor Verification & Management — MedCore Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/medcore.css">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/portal.css">
-  <style>
-    :root {
-      --admin-dark: #0F172A;
-      --admin-primary: #1E40AF;
-    }
-    .filter-tabs {
-      display: flex;
-      gap: 6px;
-      border-bottom: 1px solid var(--mc-border);
-      padding-bottom: 0;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .filter-tab {
-      padding: 10px 18px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--mc-text-secondary);
-      text-decoration: none;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: var(--transition);
-    }
-    .filter-tab:hover { color: var(--mc-blue); }
-    .filter-tab.active {
-      color: var(--admin-primary);
-      border-bottom-color: var(--admin-primary);
-      font-weight: 700;
-    }
-    .badge-pending { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
-    .badge-verified { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
-    .badge-rejected { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
-    .badge-suspended { background: #F3F4F6; color: #4B5563; border: 1px solid #E5E7EB; }
 
-    .action-btn-group {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-  </style>
-</head>
-<body>
+<?php if ($flashSuccess): ?>
+  <div class="mc-alert mc-alert-ok" data-auto-dismiss="7000">
+    <i class="bi bi-check-circle-fill"></i> <?= $flashSuccess ?>
+  </div>
+<?php endif; ?>
 
-<div class="portal-layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar" style="background: var(--admin-dark);">
-    <div class="sidebar-brand" style="border-color: rgba(255,255,255,0.1);">
-      <div class="brand-icon" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">M</div>
-      <div>
-        <div class="brand-name" style="color:white;">MedCore</div>
-        <div class="brand-sub" style="color: #94A3B8; font-size:11px;">Central Administration</div>
-      </div>
+<?php if ($flashError): ?>
+  <div class="mc-alert mc-alert-danger" data-auto-dismiss="5000">
+    <i class="bi bi-exclamation-triangle-fill"></i> <?= htmlspecialchars($flashError) ?>
+  </div>
+<?php endif; ?>
+
+<section class="mc-panel" style="margin-bottom:1rem;">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:.75rem;">
+    <div class="mc-tabs" style="margin-bottom:0;">
+      <a href="<?= APP_URL ?>/admin/doctors.php?tab=all<?= $search ? '&q=' . urlencode($search) : '' ?>" class="mc-tab <?= $currentTab === 'all' ? 'active' : '' ?>">
+        All <span class="mc-tab-count"><?= $countAll ?></span>
+      </a>
+      <a href="<?= APP_URL ?>/admin/doctors.php?tab=pending<?= $search ? '&q=' . urlencode($search) : '' ?>" class="mc-tab <?= $currentTab === 'pending' ? 'active' : '' ?>">
+        Pending <span class="mc-tab-count"><?= $countPending ?></span>
+      </a>
+      <a href="<?= APP_URL ?>/admin/doctors.php?tab=verified<?= $search ? '&q=' . urlencode($search) : '' ?>" class="mc-tab <?= $currentTab === 'verified' ? 'active' : '' ?>">
+        Verified <span class="mc-tab-count"><?= $countVerified ?></span>
+      </a>
+      <a href="<?= APP_URL ?>/admin/doctors.php?tab=rejected<?= $search ? '&q=' . urlencode($search) : '' ?>" class="mc-tab <?= $currentTab === 'rejected' ? 'active' : '' ?>">
+        Rejected <span class="mc-tab-count"><?= $countRejected ?></span>
+      </a>
+      <a href="<?= APP_URL ?>/admin/doctors.php?tab=suspended<?= $search ? '&q=' . urlencode($search) : '' ?>" class="mc-tab <?= $currentTab === 'suspended' ? 'active' : '' ?>">
+        Suspended <span class="mc-tab-count"><?= $countSuspended ?></span>
+      </a>
     </div>
 
-    <nav class="sidebar-nav">
-      <div class="nav-section-title" style="color: #64748B;">Central Oversight</div>
-      <a href="<?= APP_URL ?>/admin/dashboard.php" class="nav-item">
-        <i class="bi bi-grid-1x2-fill"></i> System Dashboard
-      </a>
-      <a href="<?= APP_URL ?>/admin/doctors.php" class="nav-item active">
-        <i class="bi bi-person-badge-fill"></i> Doctor Verification
-        <?php if ($countPending > 0): ?>
-          <span class="badge badge-pending" style="margin-left:auto; font-size:11px; padding:2px 6px;">
-            <?= $countPending ?>
-          </span>
+    <form method="GET" class="lab-token-form" style="flex:1;max-width:380px;">
+      <input type="hidden" name="tab" value="<?= htmlspecialchars($currentTab) ?>">
+      <input type="text" name="q" placeholder="Search BMDC Reg, Name, UID..." value="<?= htmlspecialchars($search) ?>">
+      <?php if ($search): ?>
+        <a href="<?= APP_URL ?>/admin/doctors.php?tab=<?= htmlspecialchars($currentTab) ?>" class="mc-btn mc-btn-secondary mc-btn-sm" title="Clear search"><i class="bi bi-x-lg"></i></a>
+      <?php endif; ?>
+      <button type="submit" class="mc-btn mc-btn-secondary mc-btn-sm">Search</button>
+    </form>
+  </div>
+  <div style="font-size:.82rem;color:var(--muted);">
+    <i class="bi bi-info-circle"></i>
+    <strong>Governance Rule:</strong> Approving a doctor here marks them <code>VERIFIED</code> nationwide so hospitals can affiliate them independently.
+  </div>
+</section>
+
+<section class="mc-panel">
+  <div style="overflow-x:auto;">
+    <table class="lab-table">
+      <thead>
+        <tr>
+          <th>Doctor</th>
+          <th>BMDC / Reg ID</th>
+          <th>Specialization</th>
+          <th>Experience</th>
+          <th>Affiliations</th>
+          <th>Status</th>
+          <th>Dates</th>
+          <th style="text-align:right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if (empty($doctors)): ?>
+          <tr>
+            <td colspan="8" style="text-align:center;padding:2.5rem 1rem;color:var(--muted);">
+              <i class="bi bi-person-x" style="font-size:1.8rem;display:block;margin-bottom:.5rem;"></i>
+              <strong>No doctors found</strong><br>
+              <?= $search ? 'No results matching "' . htmlspecialchars($search) . '".' : 'There are no doctors in this category.' ?>
+            </td>
+          </tr>
         <?php endif; ?>
-      </a>
-      <a href="<?= APP_URL ?>/admin/hospitals.php" class="nav-item">
-        <i class="bi bi-building-fill-check"></i> Hospital Network
-      </a>
-      <a href="<?= APP_URL ?>/admin/affiliations.php" class="nav-item">
-        <i class="bi bi-diagram-3-fill"></i> Hospital Affiliations
-      </a>
 
-      <div class="nav-section-title" style="color: #64748B; margin-top: 16px;">National Registry</div>
-      <a href="<?= APP_URL ?>/admin/patients.php" class="nav-item">
-        <i class="bi bi-people-fill"></i> Patient Registry
-      </a>
-      <a href="<?= APP_URL ?>/admin/audit-logs.php" class="nav-item">
-        <i class="bi bi-shield-check"></i> Audit & Compliance
-      </a>
-    </nav>
-
-    <div class="sidebar-footer" style="border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div class="user-avatar" style="background: #3B82F6; color:white; width:36px; height:36px; font-size:13px;">
-          SA
-        </div>
-        <div style="overflow:hidden;">
-          <div style="font-weight:700; font-size:13px; color:white;"><?= htmlspecialchars($_SESSION['name'] ?? 'System Admin') ?></div>
-          <div style="font-size:11px; color:#94A3B8;"><?= htmlspecialchars($_SESSION['email'] ?? 'admin@medcore.local') ?></div>
-        </div>
-      </div>
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="btn btn-secondary btn-sm w-100" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: white;">
-        <i class="bi bi-box-arrow-right"></i> Sign Out
-      </a>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="portal-content">
-    <!-- Top Nav -->
-    <header class="top-nav">
-      <div class="top-nav-left">
-        <button class="mobile-sidebar-toggle btn btn-sm btn-ghost d-md-none" onclick="toggleSidebar()">
-          <i class="bi bi-list"></i>
-        </button>
-        <div>
-          <span class="eyebrow" style="color: var(--admin-primary); font-size: 11px; font-weight: 700;">DOCTOR VERIFICATION AUTHORITY</span>
-          <h1 class="page-title" style="font-size: 1.3rem;">Doctor Credential Review & Global Registry</h1>
-        </div>
-      </div>
-      <div class="top-nav-right">
-        <a href="<?= APP_URL ?>/admin/doctor-create.php" class="btn btn-primary btn-sm" style="background: var(--admin-primary); border: none;">
-          <i class="bi bi-person-plus-fill"></i> Add & Verify Doctor
-        </a>
-      </div>
-    </header>
-
-    <div class="portal-body" style="padding: var(--space-6);">
-
-      <?php if ($flashSuccess): ?>
-      <div class="alert alert-success mb-4" data-auto-dismiss="7000">
-        <i class="bi bi-check-circle-fill"></i> <?= $flashSuccess ?>
-      </div>
-      <?php endif; ?>
-
-      <?php if ($flashError): ?>
-      <div class="alert alert-error mb-4" data-auto-dismiss="5000">
-        <i class="bi bi-exclamation-triangle-fill"></i> <?= htmlspecialchars($flashError) ?>
-      </div>
-      <?php endif; ?>
-
-      <!-- Search & Tab Bar -->
-      <div style="background: var(--mc-white); border: 1px solid var(--mc-border); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 12px;">
-          <!-- FILTER TABS -->
-          <div class="filter-tabs" style="margin-bottom:0; border-bottom:none;">
-            <a href="<?= APP_URL ?>/admin/doctors.php?tab=all<?= $search ? '&q=' . urlencode($search) : '' ?>"
-               class="filter-tab <?= $currentTab === 'all' ? 'active' : '' ?>">
-              All Registered (<?= $countAll ?>)
-            </a>
-            <a href="<?= APP_URL ?>/admin/doctors.php?tab=pending<?= $search ? '&q=' . urlencode($search) : '' ?>"
-               class="filter-tab <?= $currentTab === 'pending' ? 'active' : '' ?>">
-              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#F59E0B;"></span>
-              Pending Approval (<?= $countPending ?>)
-            </a>
-            <a href="<?= APP_URL ?>/admin/doctors.php?tab=verified<?= $search ? '&q=' . urlencode($search) : '' ?>"
-               class="filter-tab <?= $currentTab === 'verified' ? 'active' : '' ?>">
-              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10B981;"></span>
-              Verified (<?= $countVerified ?>)
-            </a>
-            <a href="<?= APP_URL ?>/admin/doctors.php?tab=rejected<?= $search ? '&q=' . urlencode($search) : '' ?>"
-               class="filter-tab <?= $currentTab === 'rejected' ? 'active' : '' ?>">
-              Rejected (<?= $countRejected ?>)
-            </a>
-            <a href="<?= APP_URL ?>/admin/doctors.php?tab=suspended<?= $search ? '&q=' . urlencode($search) : '' ?>"
-               class="filter-tab <?= $currentTab === 'suspended' ? 'active' : '' ?>">
-              Suspended (<?= $countSuspended ?>)
-            </a>
-          </div>
-
-          <!-- SEARCH FORM -->
-          <form method="GET" style="display: flex; gap: 8px; min-width: 320px;">
-            <input type="hidden" name="tab" value="<?= htmlspecialchars($currentTab) ?>">
-            <div class="search-bar" style="flex: 1;">
-              <i class="bi bi-search"></i>
-              <input type="text" name="q" placeholder="Search by BMDC Reg, Name, UID..." value="<?= htmlspecialchars($search) ?>">
-            </div>
-            <?php if ($search): ?>
-              <a href="<?= APP_URL ?>/admin/doctors.php?tab=<?= htmlspecialchars($currentTab) ?>" class="btn btn-secondary btn-sm" title="Clear search">
-                <i class="bi bi-x-lg"></i>
+        <?php foreach ($doctors as $doc): ?>
+          <tr>
+            <td>
+              <a href="<?= APP_URL ?>/admin/doctor-detail.php?id=<?= $doc['id'] ?>" style="font-weight:700;color:var(--ink);">
+                <?= htmlspecialchars($doc['full_name']) ?>
               </a>
-            <?php endif; ?>
-            <button type="submit" class="btn btn-secondary btn-sm">Search</button>
-          </form>
-        </div>
-
-        <div style="font-size: 12px; color: var(--mc-text-muted);">
-          <i class="bi bi-info-circle"></i>
-          <strong>Governance Rule:</strong> When you approve a doctor here, their status changes to <code>VERIFIED</code> nationwide. Any hospital admin can then add them to their hospital's departments without needing central approval for each hospital.
-        </div>
-      </div>
-
-      <!-- DOCTORS TABLE -->
-      <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--mc-border);">
-        <div class="table-responsive">
-          <table class="data-table" style="font-size: 13px;">
-            <thead>
-              <tr>
-                <th>Doctor</th>
-                <th>BMDC / Reg ID</th>
-                <th>Specialization & Qualification</th>
-                <th>Experience</th>
-                <th>Hospital Affiliations</th>
-                <th>Global Status</th>
-                <th>Registered / Verified</th>
-                <th style="text-align: right;">Central Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php if (empty($doctors)): ?>
-              <tr>
-                <td colspan="8" style="text-align: center; padding: 48px 20px;">
-                  <div style="font-size: 32px; color: var(--mc-text-muted); margin-bottom: 8px;"><i class="bi bi-person-x"></i></div>
-                  <div style="font-weight: 700; font-size: 15px;">No doctors found</div>
-                  <div style="font-size: 13px; color: var(--mc-text-muted);">
-                    <?= $search ? 'No results matching "' . htmlspecialchars($search) . '". Try a different search query.' : 'There are no doctors in this category.' ?>
-                  </div>
-                </td>
-              </tr>
+              <div class="mc-mono" style="font-size:.75rem;color:var(--muted);">
+                <?= htmlspecialchars($doc['doctor_uid']) ?> · <?= htmlspecialchars($doc['email']) ?>
+              </div>
+            </td>
+            <td class="mc-mono" style="color:#1e40af;"><?= htmlspecialchars($doc['medical_registration_id']) ?></td>
+            <td>
+              <div style="font-weight:600;"><?= htmlspecialchars($doc['specialization'] ?? 'General Practitioner') ?></div>
+              <div style="font-size:.76rem;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                <?= htmlspecialchars($doc['qualification'] ?? '-') ?>
+              </div>
+            </td>
+            <td><?= (int)$doc['experience_years'] ?> yrs</td>
+            <td>
+              <?php if ($doc['active_hospital_count'] > 0): ?>
+                <span class="lab-status info"><i class="bi bi-hospital"></i> <?= $doc['active_hospital_count'] ?> Hospital<?= $doc['active_hospital_count'] > 1 ? 's' : '' ?></span>
+                <div style="font-size:.75rem;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.2rem;" title="<?= htmlspecialchars($doc['affiliated_hospitals_list'] ?? '') ?>">
+                  <?= htmlspecialchars($doc['affiliated_hospitals_list'] ?? '') ?>
+                </div>
+              <?php else: ?>
+                <span style="font-size:.8rem;color:var(--muted);">None yet</span>
               <?php endif; ?>
-
-              <?php foreach ($doctors as $doc): ?>
-              <tr>
-                <!-- Doctor Profile -->
-                <td>
-                  <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #EFF6FF; color: #1E40AF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0;">
-                      <?= strtoupper(substr($doc['full_name'], 4, 1) ?: substr($doc['full_name'], 0, 1)) ?>
-                    </div>
-                    <div>
-                      <a href="<?= APP_URL ?>/admin/doctor-detail.php?id=<?= $doc['id'] ?>" style="font-weight: 700; color: var(--mc-text); text-decoration: none;">
-                        <?= htmlspecialchars($doc['full_name']) ?>
-                      </a>
-                      <div style="font-size: 11px; color: var(--mc-text-muted); font-family: var(--font-mono);">
-                        <?= htmlspecialchars($doc['doctor_uid']) ?> · <?= htmlspecialchars($doc['email']) ?>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                <!-- Medical Reg ID -->
-                <td>
-                  <strong style="color: #1E40AF; font-family: var(--font-mono); font-size: 13px;">
-                    <?= htmlspecialchars($doc['medical_registration_id']) ?>
-                  </strong>
-                </td>
-
-                <!-- Specialization -->
-                <td>
-                  <div style="font-weight: 600;"><?= htmlspecialchars($doc['specialization'] ?? 'General Practitioner') ?></div>
-                  <div style="font-size: 11px; color: var(--mc-text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    <?= htmlspecialchars($doc['qualification'] ?? '-') ?>
-                  </div>
-                </td>
-
-                <!-- Experience -->
-                <td>
-                  <?= (int)$doc['experience_years'] ?> yrs
-                </td>
-
-                <!-- Affiliations -->
-                <td>
-                  <?php if ($doc['active_hospital_count'] > 0): ?>
-                    <span class="badge" style="background: #EFF6FF; color: #1E40AF; font-weight: 700;">
-                      <i class="bi bi-hospital"></i> <?= $doc['active_hospital_count'] ?> Hospital<?= $doc['active_hospital_count'] > 1 ? 's' : '' ?>
-                    </span>
-                    <div style="font-size: 11px; color: var(--mc-text-muted); margin-top: 2px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($doc['affiliated_hospitals_list'] ?? '') ?>">
-                      <?= htmlspecialchars($doc['affiliated_hospitals_list'] ?? '') ?>
-                    </div>
-                  <?php else: ?>
-                    <span style="font-size: 12px; color: var(--mc-text-muted);">None yet</span>
-                  <?php endif; ?>
-                </td>
-
-                <!-- Global Status -->
-                <td>
-                  <?php if ($doc['verification_status'] === 'VERIFIED'): ?>
-                    <span class="badge badge-verified"><i class="bi bi-patch-check-fill"></i> VERIFIED</span>
-                  <?php elseif ($doc['verification_status'] === 'PENDING'): ?>
-                    <span class="badge badge-pending"><i class="bi bi-hourglass-split"></i> PENDING</span>
-                  <?php elseif ($doc['verification_status'] === 'REJECTED'): ?>
-                    <span class="badge badge-rejected"><i class="bi bi-x-circle-fill"></i> REJECTED</span>
-                  <?php else: ?>
-                    <span class="badge badge-suspended"><i class="bi bi-pause-circle-fill"></i> SUSPENDED</span>
-                  <?php endif; ?>
-                </td>
-
-                <!-- Dates -->
-                <td style="font-size: 11px; color: var(--mc-text-muted);">
-                  <div>Reg: <?= date('M d, Y', strtotime($doc['registered_at'])) ?></div>
-                  <?php if ($doc['verified_at']): ?>
-                    <div style="color: #166534;">Ver: <?= date('M d, Y', strtotime($doc['verified_at'])) ?></div>
-                  <?php endif; ?>
-                </td>
-
-                <!-- Actions -->
-                <td style="text-align: right;">
-                  <div class="action-btn-group" style="justify-content: flex-end;">
-                    
-                    <?php if ($doc['verification_status'] === 'PENDING'): ?>
-                      <!-- Direct Approve -->
-                      <form method="POST" style="display:inline;" onsubmit="return confirm('Approve Dr. <?= addslashes($doc['full_name']) ?> globally? Hospitals will be able to affiliate this doctor.');">
-                        <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                        <input type="hidden" name="doctor_id" value="<?= $doc['id'] ?>">
-                        <input type="hidden" name="action" value="approve">
-                        <button type="submit" class="btn btn-primary btn-sm" style="background: #166534; border-color: #166534; font-weight: 700; padding: 4px 10px; font-size: 12px;">
-                          <i class="bi bi-check-lg"></i> Approve
-                        </button>
-                      </form>
-
-                      <!-- Reject Button -->
-                      <button type="button" class="btn btn-danger btn-sm" style="padding: 4px 10px; font-size: 12px;" onclick="openRejectModal(<?= $doc['id'] ?>, '<?= addslashes($doc['full_name']) ?>')">
-                        <i class="bi bi-x-lg"></i> Reject
-                      </button>
-
-                    <?php elseif ($doc['verification_status'] === 'VERIFIED'): ?>
-                      <!-- Suspend -->
-                      <form method="POST" style="display:inline;" onsubmit="return confirm('Suspend Dr. <?= addslashes($doc['full_name']) ?> from practicing across all hospitals?');">
-                        <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                        <input type="hidden" name="doctor_id" value="<?= $doc['id'] ?>">
-                        <input type="hidden" name="action" value="suspend">
-                        <button type="submit" class="btn btn-secondary btn-sm" style="color: #991B1B; padding: 4px 8px; font-size: 12px;" title="Suspend Doctor">
-                          <i class="bi bi-pause-circle"></i> Suspend
-                        </button>
-                      </form>
-
-                    <?php elseif ($doc['verification_status'] === 'SUSPENDED' || $doc['verification_status'] === 'REJECTED'): ?>
-                      <!-- Reactivate / Approve -->
-                      <form method="POST" style="display:inline;" onsubmit="return confirm('Reactivate & Verify Dr. <?= addslashes($doc['full_name']) ?>?');">
-                        <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                        <input type="hidden" name="doctor_id" value="<?= $doc['id'] ?>">
-                        <input type="hidden" name="action" value="reactivate">
-                        <button type="submit" class="btn btn-primary btn-sm" style="background: #166534; border-color: #166534; padding: 4px 8px; font-size: 12px;">
-                          <i class="bi bi-arrow-repeat"></i> Reactivate
-                        </button>
-                      </form>
-                    <?php endif; ?>
-
-                    <a href="<?= APP_URL ?>/admin/doctor-detail.php?id=<?= $doc['id'] ?>" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 12px;" title="View Dossier">
-                      <i class="bi bi-eye"></i>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
-  </main>
-</div>
+            </td>
+            <td>
+              <?php if ($doc['verification_status'] === 'VERIFIED'): ?>
+                <span class="lab-status ok"><i class="bi bi-patch-check-fill"></i> VERIFIED</span>
+              <?php elseif ($doc['verification_status'] === 'PENDING'): ?>
+                <span class="lab-status warn"><i class="bi bi-hourglass-split"></i> PENDING</span>
+              <?php elseif ($doc['verification_status'] === 'REJECTED'): ?>
+                <span class="lab-status danger"><i class="bi bi-x-circle-fill"></i> REJECTED</span>
+              <?php else: ?>
+                <span class="lab-status"><i class="bi bi-pause-circle-fill"></i> SUSPENDED</span>
+              <?php endif; ?>
+            </td>
+            <td style="font-size:.75rem;color:var(--muted);">
+              <div>Reg: <?= date('M d, Y', strtotime($doc['registered_at'])) ?></div>
+              <?php if ($doc['verified_at']): ?>
+                <div style="color:#027a48;">Ver: <?= date('M d, Y', strtotime($doc['verified_at'])) ?></div>
+              <?php endif; ?>
+            </td>
+            <td style="text-align:right;white-space:nowrap;">
+              <div style="display:inline-flex;gap:.35rem;align-items:center;">
+                <?php if ($doc['verification_status'] === 'PENDING'): ?>
+                  <form method="POST" style="display:inline;" onsubmit="return confirm('Approve Dr. <?= addslashes($doc['full_name']) ?> globally? Hospitals will be able to affiliate this doctor.');">
+                    <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                    <input type="hidden" name="doctor_id" value="<?= $doc['id'] ?>">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="mc-btn mc-btn-primary mc-btn-sm" style="background:#027a48;"><i class="bi bi-check-lg"></i> Approve</button>
+                  </form>
+                  <button type="button" class="mc-btn mc-btn-danger mc-btn-sm" onclick="openRejectModal(<?= $doc['id'] ?>, '<?= addslashes($doc['full_name']) ?>')">
+                    <i class="bi bi-x-lg"></i> Reject
+                  </button>
+                <?php elseif ($doc['verification_status'] === 'VERIFIED'): ?>
+                  <form method="POST" style="display:inline;" onsubmit="return confirm('Suspend Dr. <?= addslashes($doc['full_name']) ?> from practicing across all hospitals?');">
+                    <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                    <input type="hidden" name="doctor_id" value="<?= $doc['id'] ?>">
+                    <input type="hidden" name="action" value="suspend">
+                    <button type="submit" class="mc-btn mc-btn-secondary mc-btn-sm" style="color:var(--danger);"><i class="bi bi-pause-circle"></i> Suspend</button>
+                  </form>
+                <?php elseif ($doc['verification_status'] === 'SUSPENDED' || $doc['verification_status'] === 'REJECTED'): ?>
+                  <form method="POST" style="display:inline;" onsubmit="return confirm('Reactivate & Verify Dr. <?= addslashes($doc['full_name']) ?>?');">
+                    <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                    <input type="hidden" name="doctor_id" value="<?= $doc['id'] ?>">
+                    <input type="hidden" name="action" value="reactivate">
+                    <button type="submit" class="mc-btn mc-btn-primary mc-btn-sm" style="background:#027a48;"><i class="bi bi-arrow-repeat"></i> Reactivate</button>
+                  </form>
+                <?php endif; ?>
+                <a href="<?= APP_URL ?>/admin/doctor-detail.php?id=<?= $doc['id'] ?>" class="mc-btn mc-btn-secondary mc-btn-sm" title="View Dossier"><i class="bi bi-eye"></i></a>
+              </div>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</section>
 
 <!-- REJECTION REASON MODAL -->
-<div id="reject-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
-  <div style="background: white; border-radius: var(--radius-xl); max-width: 480px; width: 100%; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
-    <h3 style="font-size: 1.2rem; font-weight: 800; color: #991B1B; margin: 0 0 8px 0;">
-      <i class="bi bi-x-circle-fill"></i> Reject Doctor Application
-    </h3>
-    <p style="font-size: 13px; color: var(--mc-text-secondary); margin: 0 0 16px 0;">
+<div id="reject-modal" class="mc-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+  <div class="mc-modal">
+    <div class="mc-modal-head">
+      <h3 id="rejectModalTitle" style="color:var(--danger);"><i class="bi bi-x-circle-fill"></i> Reject Doctor Application</h3>
+      <button type="button" class="mc-modal-close" onclick="closeRejectModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <p style="font-size:.88rem;color:var(--muted);margin:.5rem 0 1rem;">
       Provide a formal regulatory reason for rejecting <strong id="modal-doctor-name"></strong>.
     </p>
-
     <form method="POST" id="modal-reject-form">
       <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
       <input type="hidden" name="doctor_id" id="modal-doctor-id">
       <input type="hidden" name="action" value="reject">
 
-      <div class="form-group mb-4">
-        <label class="form-label" for="rejection_reason">Rejection Reason</label>
-        <textarea name="rejection_reason" id="rejection_reason" class="form-control" rows="3" required
+      <label class="mc-field" style="margin-top:0;">
+        <span>Rejection Reason</span>
+        <textarea name="rejection_reason" id="rejection_reason" rows="3" required
           placeholder="e.g. BMDC Registration number could not be authenticated against the national medical database."></textarea>
-      </div>
+      </label>
 
-      <div style="display: flex; gap: 10px; justify-content: flex-end;">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="closeRejectModal()">Cancel</button>
-        <button type="submit" class="btn btn-danger btn-sm" style="font-weight: 700;">Confirm Rejection</button>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem;">
+        <button type="button" class="mc-btn mc-btn-secondary mc-btn-sm" onclick="closeRejectModal()">Cancel</button>
+        <button type="submit" class="mc-btn mc-btn-danger mc-btn-sm">Confirm Rejection</button>
       </div>
     </form>
   </div>
 </div>
 
 <script>
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-}
-
 function openRejectModal(docId, docName) {
   document.getElementById('modal-doctor-id').value = docId;
   document.getElementById('modal-doctor-name').textContent = docName;
-  const modal = document.getElementById('reject-modal');
-  modal.style.display = 'flex';
+  document.getElementById('reject-modal').classList.add('open');
 }
-
 function closeRejectModal() {
-  document.getElementById('reject-modal').style.display = 'none';
+  document.getElementById('reject-modal').classList.remove('open');
 }
+document.getElementById('reject-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeRejectModal();
+});
 </script>
-</body>
-</html>
+<?php require __DIR__ . '/../app/views/layout/portal_shell_end.php'; ?>

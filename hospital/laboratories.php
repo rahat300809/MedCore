@@ -99,11 +99,13 @@ $labs = $stmtLabs->fetchAll();
 require_once __DIR__ . '/../app/views/portal/navs.php';
 $portalRole = 'Hospital';
 $portalRoleBn = 'Hospital portal';
+$portalAccent = '#0b4f6c';
 $portalUser = $hospital['name'] ?? 'Hospital';
 $portalMeta = ($hospital['hospital_uid'] ?? '') . ' · Labs';
 $portalTitle = 'Laboratories';
 $portalSubtitle = 'অনুমোদিত ডায়াগনস্টিক নেটওয়ার্ক';
 $portalNav = mc_hospital_nav('labs');
+$bodyClass = 'lab-desk';
 require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
 
