@@ -33,7 +33,7 @@ $portals = [
         'bg_soft' => '#eff6ff',
         'email' => 'rahat@example.com',
         'role_tag' => 'Citizen Access',
-        'features' => 'Lifelong Health UID (PT-000001), Digital Prescriptions, Lab Report Vault, 30-Min Consent OTP Grant',
+        'features' => 'Lifelong Health UID (PT-000001), Sidekick AI Advocate, Digital Rx Vault, 30-Min Consent OTP Grant',
         'btn_class' => 'mc-btn-primary'
     ],
     [
@@ -46,7 +46,7 @@ $portals = [
         'bg_soft' => '#ecfdf8',
         'email' => 'dr.rahman@medcore.local',
         'role_tag' => 'BMDC Verified',
-        'features' => 'OTP Consent EMR Unlock, 30-Min Active Countdown, Digital Rx Builder, OPD Queue Management',
+        'features' => 'OTP Consent EMR Unlock, Code Blue ACLS Assistant, Digital Rx Builder, Live OPD Queue',
         'btn_class' => 'mc-btn-primary'
     ],
     [
@@ -59,7 +59,7 @@ $portals = [
         'bg_soft' => '#eff6ff',
         'email' => 'admin@abc-hospital.com',
         'role_tag' => 'DGHS Accredited',
-        'features' => 'Fast-track OPD Registration, Doctor Duty Rosters, OPD Queue Token Issue, Ward & Bed Management',
+        'features' => 'Fast-track OPD Registration, Code Blue ER Co-Pilot, Doctor Rosters, Queue Dispatch & Beds',
         'btn_class' => 'mc-btn-primary'
     ],
     [

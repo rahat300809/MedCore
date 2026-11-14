@@ -253,6 +253,82 @@ require __DIR__ . '/../app/views/layout/public_header.php';
   </div>
 </section>
 
+<!-- 3.1 CLINICAL AI INNOVATIONS (CODE BLUE & PATIENT ADVOCATE) -->
+<section class="mc-section" style="background:#071927;color:#fff;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08)">
+  <div class="mc-wrap">
+    <div class="mc-section-head">
+      <p class="mc-kicker" style="color:#5eead4"><i class="bi bi-stars"></i> Next-Gen Clinical AI</p>
+      <h2 style="color:#fff">Breakthrough Emergency & Patient AI</h2>
+      <p style="color:#94a3b8">হাসপাতাল জরুরি বিভাগে কার্ডিয়াক অ্যারেস্ট রিসাসিটেশন টিম অ্যাসিস্ট্যান্ট এবং রোগীদের জন্য রিয়েল-টাইম অ্যাডভোকেট।</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem;margin-top:1.5rem">
+      <!-- Innovation 1: Code Blue Assistant -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:1.75rem;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <span class="mc-pill" style="background:#7f1d1d;color:#fecaca;border:1px solid #b91c1c;font-size:0.75rem">
+              <i class="bi bi-lightning-charge-fill"></i> AHA ACLS 2026
+            </span>
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(220,38,38,0.15);color:#f87171;display:grid;place-items:center;font-size:1.4rem">
+              <i class="bi bi-activity"></i>
+            </div>
+          </div>
+          <h3 style="font-size:1.3rem;font-weight:800;color:#fff;margin:0 0 0.35rem">Cardiac Arrest Code Blue Assistant</h3>
+          <div style="font-size:0.86rem;color:#5eead4;font-weight:600;margin-bottom:0.75rem">কার্ডিয়াক অ্যারেস্ট রিসাসিটেশন টিম এআই</div>
+          <p style="font-size:0.88rem;line-height:1.6;color:#cbd5e1;margin:0 0 1.25rem">
+            হাসপাতালে কার্ডিয়াক অ্যারেস্টে ৮-১৫ জনের টিম কাজ করে। কে কখন কোন ওষুধ দিল, কখন CPR হলো, কখন শক দেওয়া হলো তা স্বয়ংক্রিয় ভয়েস-টু-টেক্সট দিয়ে রেকর্ড করে এবং ২-মিনিট পর পর পালস চেকের কথা মনে করিয়ে দেয়।
+          </p>
+          <ul style="list-style:none;padding:0;margin:0 0 1.5rem;display:grid;gap:0.45rem;font-size:0.82rem;color:#94a3b8">
+            <li><i class="bi bi-check2-circle" style="color:#34d399"></i> AudioToText Voice Transcription (hands-free)</li>
+            <li><i class="bi bi-check2-circle" style="color:#34d399"></i> 2-Min CPR Cycle Countdown & 110 BPM Metronome</li>
+            <li><i class="bi bi-check2-circle" style="color:#34d399"></i> Epinephrine Interval & 200J Shock Tracker</li>
+            <li><i class="bi bi-check2-circle" style="color:#34d399"></i> Automated AHA ACLS Official Run Sheet Generator</li>
+          </ul>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <a class="mc-btn mc-btn-primary mc-btn-sm" href="<?= APP_URL ?>/hospital/code-blue.php" style="background:#dc2626;border-color:transparent">
+            <i class="bi bi-lightning-charge-fill"></i> Launch Code Blue ER
+          </a>
+          <a class="mc-btn mc-btn-ghost-light mc-btn-sm" href="<?= APP_URL ?>/doctor/code-blue.php">
+            Doctor Desk Access
+          </a>
+        </div>
+      </div>
+
+      <!-- Innovation 2: Patient Advocate Sidekick -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:1.75rem;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <span class="mc-pill" style="background:#064e3b;color:#a7f3d0;border:1px solid #059669;font-size:0.75rem">
+              <i class="bi bi-shield-heart-fill"></i> Patient Advocate
+            </span>
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(15,118,110,0.15);color:#5eead4;display:grid;place-items:center;font-size:1.4rem">
+              <i class="bi bi-translate"></i>
+            </div>
+          </div>
+          <h3 style="font-size:1.3rem;font-weight:800;color:#fff;margin:0 0 0.35rem">Sidekick — Real-Time Patient Advocate</h3>
+          <div style="font-size:0.86rem;color:#38bdf8;font-weight:600;margin-bottom:0.75rem">রিয়েল-টাইম পেশেন্ট ভয়েস অ্যাডভোকেট</div>
+          <p style="font-size:0.88rem;line-height:1.6;color:#cbd5e1;margin:0 0 1.25rem">
+            ডাক্তার দেখানোর সময় রোগীরা জরুরি তথ্য ভুলে যান। সাইডকিক কথোপকথন শুনে জটিল মেডিকেল পরিভাষা সহজ বাংলায় বুঝিয়ে দেয়, ডাক্তারকে কী প্রশ্ন করা উচিত তা সাজেস্ট করে এবং অ্যাপয়েন্টমেন্ট শেষে সম্পূর্ণ সামারি প্রদান করে।
+          </p>
+          <ul style="list-style:none;padding:0;margin:0 0 1.5rem;display:grid;gap:0.45rem;font-size:0.82rem;color:#94a3b8">
+            <li><i class="bi bi-check2-circle" style="color:#38bdf8"></i> Live Doctor-Patient Speech Recognition</li>
+            <li><i class="bi bi-check2-circle" style="color:#38bdf8"></i> Instant Medical Jargon Buster (বাংলা ও ইংরেজি অর্থ)</li>
+            <li><i class="bi bi-check2-circle" style="color:#38bdf8"></i> Proactive "Ask Your Doctor" Questions Generator</li>
+            <li><i class="bi bi-check2-circle" style="color:#38bdf8"></i> Post-Visit Prescription & Next Steps Summary</li>
+          </ul>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <a class="mc-btn mc-btn-primary mc-btn-sm" href="<?= APP_URL ?>/patient/sidekick.php">
+            <i class="bi bi-shield-heart-fill"></i> Open Patient Sidekick
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- 4. CLINICAL WORKFLOW ARCHITECTURE (4 PILLARS) -->
 <section class="mc-section" style="background:#ffffff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
   <div class="mc-wrap">

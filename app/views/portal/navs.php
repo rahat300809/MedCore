@@ -5,6 +5,7 @@ function mc_patient_nav(string $active = ''): array {
     $uid = $_SESSION['patient_uid'] ?? 'PT-000001';
     $items = [
         ['key' => 'dashboard', 'href' => APP_URL . '/patient/dashboard.php', 'label' => 'ড্যাশবোর্ড', 'hint' => 'সব এক নজরে', 'icon' => 'bi-grid-1x2-fill'],
+        ['key' => 'sidekick', 'href' => APP_URL . '/patient/sidekick.php', 'label' => 'Sidekick AI', 'hint' => 'পেশেন্ট অ্যাডভোকেট', 'icon' => 'bi-shield-heart-fill'],
         ['key' => 'prescriptions', 'href' => APP_URL . '/patient/prescriptions.php', 'label' => 'প্রেসক্রিপশন', 'hint' => 'ওষুধের তালিকা', 'icon' => 'bi-file-earmark-medical-fill'],
         ['key' => 'medications', 'href' => APP_URL . '/patient/medications.php', 'label' => 'ওষুধ', 'hint' => 'কখন কী খাবেন', 'icon' => 'bi-capsule'],
         ['key' => 'labs', 'href' => APP_URL . '/patient/lab-reports.php', 'label' => 'ল্যাব রিপোর্ট', 'hint' => 'টোকেন ও রেজাল্ট', 'icon' => 'bi-eyedropper'],
@@ -24,6 +25,7 @@ function mc_patient_nav(string $active = ''): array {
 function mc_doctor_nav(string $active = '', int $waitingCount = 0): array {
     $items = [
         ['key' => 'dashboard', 'href' => APP_URL . '/doctor/dashboard.php', 'label' => 'ড্যাশবোর্ড', 'hint' => 'চেম্বার সারাংশ', 'icon' => 'bi-grid-1x2-fill'],
+        ['key' => 'code_blue', 'href' => APP_URL . '/doctor/code-blue.php', 'label' => 'Code Blue ACLS', 'hint' => 'কার্ডিয়াক অ্যারেস্ট AI', 'icon' => 'bi-lightning-charge-fill'],
         ['key' => 'queue', 'href' => APP_URL . '/doctor/queue.php', 'label' => 'লাইভ কিউ', 'hint' => 'রোগী ডাকুন', 'icon' => 'bi-people-fill', 'badge' => $waitingCount > 0 ? $waitingCount : null],
         ['key' => 'search', 'href' => APP_URL . '/doctor/patient-search.php', 'label' => 'রোগী খুঁজুন', 'hint' => 'UID / Phone / NID', 'icon' => 'bi-search'],
         ['key' => 'consultations', 'href' => APP_URL . '/doctor/consultations.php', 'label' => 'কনসালটেশন', 'hint' => 'রোগী ইতিহাস', 'icon' => 'bi-stethoscope'],
@@ -40,6 +42,7 @@ function mc_doctor_nav(string $active = '', int $waitingCount = 0): array {
 function mc_hospital_nav(string $active = '', int $pendingAffils = 0): array {
     $items = [
         ['key' => 'dashboard', 'href' => APP_URL . '/hospital/dashboard.php', 'label' => 'ড্যাশবোর্ড', 'hint' => 'OPD সারাংশ', 'icon' => 'bi-grid-1x2-fill'],
+        ['key' => 'code_blue', 'href' => APP_URL . '/hospital/code-blue.php', 'label' => 'Code Blue ER', 'hint' => 'কার্ডিয়াক অ্যারেস্ট AI', 'icon' => 'bi-lightning-charge-fill'],
         ['key' => 'appointments', 'href' => APP_URL . '/hospital/appointments.php', 'label' => 'রিসেপশন', 'hint' => 'চেক-ইন ও কিউ', 'icon' => 'bi-calendar2-check'],
         ['key' => 'doctors', 'href' => APP_URL . '/hospital/doctors.php', 'label' => 'ডাক্তার রোস্টার', 'hint' => 'অ্যাফিলিয়েটেড ডাক্তার', 'icon' => 'bi-person-badge-fill', 'badge' => $pendingAffils > 0 ? $pendingAffils : null],
         ['key' => 'affiliations', 'href' => APP_URL . '/hospital/affiliations.php', 'label' => 'অ্যাফিলিয়েশন', 'hint' => 'অনুমোদন ও ইতিহাস', 'icon' => 'bi-clock-history'],

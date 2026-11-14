@@ -40,6 +40,8 @@
     <a href="<?= APP_URL ?>/for-doctors.php"><i class="bi bi-stethoscope"></i> For Doctors</a>
     <a href="<?= APP_URL ?>/for-hospitals.php"><i class="bi bi-hospital"></i> For Hospitals</a>
     <a href="<?= APP_URL ?>/for-labs.php"><i class="bi bi-eyedropper"></i> For Diagnostic Labs</a>
+    <a href="<?= APP_URL ?>/hospital/code-blue.php" style="color:#ef4444;font-weight:700"><i class="bi bi-lightning-charge-fill"></i> Code Blue ACLS AI</a>
+    <a href="<?= APP_URL ?>/patient/sidekick.php" style="color:#0f766e;font-weight:700"><i class="bi bi-shield-heart-fill"></i> Sidekick Advocate AI</a>
     <a href="<?= APP_URL ?>/book-doctor.php"><i class="bi bi-calendar2-check"></i> Book Doctor Serial</a>
     <a href="<?= APP_URL ?>/admin/login.php"><i class="bi bi-shield-lock"></i> Central Admin Console</a>
     <a href="<?= APP_URL ?>/emergency.php" style="color:var(--danger);font-weight:700"><i class="bi bi-lightning-charge-fill"></i> Emergency ICE</a>
