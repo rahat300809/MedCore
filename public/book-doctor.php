@@ -256,9 +256,9 @@ require_once __DIR__ . '/../app/views/media.php';
       --mc-teal-dark: #115e59;
     }
     body.booking-page {
-      background: #eef3f6 !important;
-      color: #0b1f2a !important;
-      font-family: 'Hind Siliguri', 'Instrument Sans', sans-serif !important;
+      background: #f8fafc !important;
+      color: #0f172a !important;
+      font-family: 'Plus Jakarta Sans', 'Hind Siliguri', 'Inter', system-ui, sans-serif !important;
     }
     .booking-hero {
       background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F766E 100%);

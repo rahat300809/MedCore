@@ -3,19 +3,19 @@
    Prevents old/new visual mix when pages still load this file.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap');
 
 :root {
-  --mc-bg: #f3f5f7;
-  --mc-bg-alt: #eef2f6;
+  --mc-bg: #f8fafc;
+  --mc-bg-alt: #f1f5f9;
   --mc-surface: #ffffff;
   --mc-white: #ffffff;
-  --mc-text: #101828;
+  --mc-text: #0f172a;
   --mc-text-dark: #0f172a;
-  --mc-navy: #0b1f2a;
-  --mc-text-secondary: #344054;
-  --mc-text-muted: #667085;
-  --mc-border: #e4e7ec;
+  --mc-navy: #071927;
+  --mc-text-secondary: #334155;
+  --mc-text-muted: #64748b;
+  --mc-border: #e2e8f0;
   --mc-blue: #0369a1;
   --mc-blue-50: #eff8ff;
   --mc-blue-light: #e0f2fe;

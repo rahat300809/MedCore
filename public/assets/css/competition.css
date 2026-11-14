@@ -4,25 +4,25 @@
    ============================================================ */
 
 :root {
-  --bg: #f3f5f7;
+  --bg: #f8fafc;
   --surface: #ffffff;
-  --ink: #101828;
-  --ink-2: #344054;
-  --muted: #667085;
-  --line: #e4e7ec;
+  --ink: #0f172a;
+  --ink-2: #334155;
+  --muted: #64748b;
+  --line: #e2e8f0;
   --accent: #0f766e;
-  --accent-2: #0e7490;
+  --accent-2: #0284c7;
   --accent-soft: #ecfdf8;
-  --danger: #b42318;
-  --danger-soft: #fef3f2;
-  --warn: #b54708;
-  --warn-soft: #fffaeb;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --warn: #d97706;
+  --warn-soft: #fffbeb;
   --radius: 14px;
   --radius-lg: 20px;
-  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.06);
-  --shadow-lg: 0 4px 8px rgba(16,24,40,.04), 0 20px 40px rgba(16,24,40,.08);
-  --font-d: "Instrument Sans", "Hind Siliguri", system-ui, sans-serif;
-  --font-b: "Hind Siliguri", "Instrument Sans", system-ui, sans-serif;
+  --shadow: 0 1px 3px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+  --shadow-lg: 0 4px 6px -1px rgba(15,23,42,.05), 0 20px 40px -15px rgba(15,23,42,.12);
+  --font-d: "Plus Jakarta Sans", "Inter", "Hind Siliguri", system-ui, sans-serif;
+  --font-b: "Plus Jakarta Sans", "Hind Siliguri", "Inter", system-ui, sans-serif;
   --ease: cubic-bezier(.22,1,.36,1);
 }
 
@@ -330,9 +330,9 @@ img { max-width: 100%; display: block; }
 .mc-auth-bg img { width: 100%; height: 100%; object-fit: cover; filter: blur(2px) saturate(.9); transform: scale(1.04); }
 .mc-auth-bg::after { content:""; position:absolute; inset:0; background: rgba(16,24,40,.55); }
 .mc-auth-card {
-  position: relative; z-index: 1; width: min(400px, 100%);
-  background: #fff; border: 1px solid #e4e7ec;
-  border-radius: 16px; box-shadow: 0 18px 40px rgba(8,18,28,.28); padding: 1.5rem 1.4rem 1.6rem;
+  position: relative; z-index: 1; width: min(420px, 100%);
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 20px; box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.25); padding: 1.75rem 1.6rem 1.85rem;
 }
 .mc-auth-card h1 { font-size: 1.45rem; margin-top: .35rem; letter-spacing: -.02em; }
 .mc-auth-card .sub { color: var(--muted); font-size: .9rem; margin-top: .35rem; line-height: 1.45; }
@@ -1402,4 +1402,159 @@ img { max-width: 100%; display: block; }
   font-size: 0.8rem;
 }
 .mc-copy-btn:hover { background: #ecfdf8; }
+
+/* ============================================================
+   MEDCORE IMMERSIVE INTERNATIONAL CLINICAL UPGRADES
+   (Mayo Clinic / Cleveland Clinic / Epic Systems Standard)
+   ============================================================ */
+
+/* Enhanced Sticky Nav Glassmorphism */
+.mc-nav {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+.mc-brand-mark {
+  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.28);
+}
+
+/* Deep Atmospheric Hero */
+.mc-hero-intl {
+  background: linear-gradient(135deg, #05131f 0%, #071927 35%, #0b253a 70%, #0d3b4c 100%);
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.mc-hero-intl::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 12% 25%, rgba(20, 184, 166, 0.3) 0%, transparent 45%),
+    radial-gradient(circle at 88% 75%, rgba(2, 132, 199, 0.22) 0%, transparent 50%),
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+  pointer-events: none;
+}
+.mc-hero-title {
+  font-family: var(--font-d);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+}
+.mc-hero-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Search Triage Console */
+.mc-search-triage {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 18px;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.35);
+}
+.mc-search-triage-field {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+.mc-search-triage-field:focus-within {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+  background: #ffffff;
+}
+
+/* Trust Metrics Bar */
+.mc-trust-strip {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+}
+.mc-trust-item {
+  padding: 0.5rem 0.25rem;
+}
+.mc-trust-label strong {
+  font-family: var(--font-d);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+/* 5 Portal Cards Refinements */
+.mc-portal-card-intl {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  background: #ffffff;
+}
+.mc-portal-card-intl:hover {
+  transform: translateY(-5px);
+  border-color: var(--portal-accent, #0f766e);
+  box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.12);
+}
+.mc-portal-card-intl.patient-card:hover { box-shadow: 0 20px 40px -12px rgba(2, 132, 199, 0.22); }
+.mc-portal-card-intl.doctor-card:hover { box-shadow: 0 20px 40px -12px rgba(15, 118, 110, 0.25); }
+.mc-portal-card-intl.hospital-card:hover { box-shadow: 0 20px 40px -12px rgba(29, 78, 216, 0.22); }
+.mc-portal-card-intl.lab-card:hover { box-shadow: 0 20px 40px -12px rgba(124, 58, 237, 0.22); }
+.mc-portal-card-intl.admin-card:hover { box-shadow: 0 20px 40px -12px rgba(11, 37, 58, 0.28); }
+
+/* Clinical Pillars */
+.mc-pillar-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s ease;
+}
+.mc-pillar-card:hover {
+  transform: translateY(-3px);
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+}
+
+/* Specialties Cards */
+.mc-specialty-item {
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+}
+.mc-specialty-item:hover {
+  transform: translateY(-3px);
+  border-color: #0f766e;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.1);
+}
+
+/* Emergency ICE Banner */
+.mc-ice-banner {
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 50%, #b91c1c 100%);
+  border-radius: 22px;
+  box-shadow: 0 20px 45px -10px rgba(185, 28, 28, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Portal Rail Improvements */
+.mc-rail {
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+}
+.mc-rail nav a {
+  font-family: var(--font-b);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.mc-rail nav a.active {
+  background: #ecfdf8;
+  color: #0f766e;
+  border-color: #a7f3d0;
+  font-weight: 700;
+}
+
 
