@@ -176,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Read & Filter Available Doctors
 // -------------------------------------------------------------
 $search       = trim($_GET['q'] ?? '');
-$category     = trim($_GET['category'] ?? 'all');
+$category     = trim($_GET['category'] ?? ($_GET['department'] ?? 'all'));
 $hospitalFilter = (int)($_GET['hospital'] ?? 0);
 $sortBy       = trim($_GET['sort'] ?? 'rating');
 
@@ -204,8 +204,9 @@ if ($search !== '') {
 }
 
 if ($category !== '' && $category !== 'all') {
-    $whereClauses[] = "d.specialization = ?";
+    $whereClauses[] = "(d.specialization = ? OR d.specialization LIKE ?)";
     $params[] = $category;
+    $params[] = "%{$category}%";
 }
 
 if ($hospitalFilter > 0) {

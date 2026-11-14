@@ -9,6 +9,7 @@ if (!defined('MC_MEDIA_LOADED')) {
     define('MC_IMG_HOSPITAL', $mcMediaBase . '/hospital.jpg');
     define('MC_IMG_LAB', $mcMediaBase . '/lab.jpg');
     define('MC_IMG_EMERGENCY', $mcMediaBase . '/emergency.jpg');
+    define('MC_IMG_ADMIN', $mcMediaBase . '/hospital.jpg');
     define('MC_IMG_BOOKING', $mcMediaBase . '/doctor.jpg');
     define('MC_IMG_LOGIN', $mcMediaBase . '/hospital.jpg');
 }
