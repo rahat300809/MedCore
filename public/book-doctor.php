@@ -260,95 +260,223 @@ require_once __DIR__ . '/../app/views/media.php';
       color: #0f172a !important;
       font-family: 'Plus Jakarta Sans', 'Hind Siliguri', 'Inter', system-ui, sans-serif !important;
     }
+    /* Professional Light 3D Booking Hero */
     .booking-hero {
-      background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F766E 100%);
-      color: #fff;
-      padding: 50px 0 45px;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 42%, #e0f2fe 100%);
+      border-bottom: 1.5px solid #e2e8f0;
+      color: #0f172a;
+      padding: 60px 0 54px;
       position: relative;
       overflow: hidden;
+      box-shadow: inset 0 -1px 0 rgba(15, 23, 42, 0.04);
     }
     .booking-hero::before {
       content: '';
       position: absolute;
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(14,165,233,0.18) 0%, transparent 70%);
-      top: -150px; right: -100px;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(15, 118, 110, 0.09) 0%, rgba(2, 132, 199, 0.05) 50%, transparent 70%);
+      top: -180px; right: -80px;
       pointer-events: none;
     }
     .hero-badge-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.22);
-      backdrop-filter: blur(10px);
-      padding: 6px 14px;
+      background: #ecfdf8;
+      border: 1.5px solid #a7f3d0;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.1), inset 0 1px 0 #ffffff;
+      padding: 7px 16px;
       border-radius: 999px;
       font-size: 12px;
-      font-weight: 700;
-      color: #5EEAD4;
+      font-weight: 800;
+      color: #0f766e;
       margin-bottom: 16px;
       text-transform: uppercase;
       letter-spacing: 0.8px;
     }
+    .booking-hero h1 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: clamp(2rem, 3.8vw, 3rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+    .booking-hero h1 span.gradient-teal {
+      background: linear-gradient(135deg, #0f766e 0%, #0284c7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .booking-hero p {
+      font-size: 1.08rem;
+      color: #475569;
+      max-width: 680px;
+      margin-bottom: 0;
+      line-height: 1.6;
+    }
+
+    /* 3D Elevated Filter Bar */
     .filter-card-bar {
       background: #ffffff;
-      border: 1px solid #E2E8F0;
-      border-radius: 16px;
-      padding: 20px 24px;
-      margin-top: -28px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 24px 28px;
+      margin-top: -34px;
       position: relative;
       z-index: 10;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06);
+      box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(0, 0, 0, 0.03), inset 0 1px 0 #ffffff;
     }
+    .filter-form-grid {
+      display: grid;
+      grid-template-columns: 2.2fr 1.6fr 1.2fr;
+      gap: 18px;
+      align-items: flex-end;
+    }
+    @media (max-width: 900px) {
+      .filter-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .filter-field-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+    .filter-field-col label {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+    .filter-input-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .filter-input-wrap i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #0f766e;
+      font-size: 1.1rem;
+      pointer-events: none;
+    }
+    .filter-input {
+      width: 100%;
+      height: 48px;
+      padding: 10px 14px 10px 44px;
+      border-radius: 12px;
+      border: 1.5px solid #cbd5e1;
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: 0.95rem;
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.02);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-sizing: border-box;
+    }
+    .filter-input:focus {
+      outline: none;
+      background: #ffffff;
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.14), 0 2px 6px rgba(15, 118, 110, 0.08);
+    }
+    .filter-select {
+      width: 100%;
+      height: 48px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #cbd5e1;
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.02);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-sizing: border-box;
+    }
+    .filter-select:focus {
+      outline: none;
+      background: #ffffff;
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.14);
+    }
+
+    /* 3D Tactile Specialty Pills */
     .cat-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 14px;
+      padding: 8px 16px;
       border-radius: 999px;
       font-size: 13px;
-      font-weight: 600;
-      background: #F1F5F9;
+      font-weight: 700;
+      background: #ffffff;
       color: #475569;
       text-decoration: none;
-      transition: all 0.2s;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
-      border: 1px solid transparent;
     }
     .cat-pill:hover {
-      background: #E2E8F0;
-      color: #0F172A;
+      background: #f8fafc;
+      color: #0f766e;
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
     }
     .cat-pill.active {
-      background: #0F766E;
+      background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
       color: #ffffff;
-      font-weight: 700;
-      box-shadow: 0 2px 8px rgba(15,118,110,0.25);
+      border-color: #0f766e;
+      font-weight: 800;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
     }
-    /* Doctor Card */
+
+    /* Doctor Cards Responsive Grid */
+    .doctor-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 24px;
+    }
+    @media (max-width: 640px) {
+      .doctor-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 3D Doctor Card */
     .doc-card {
       background: #ffffff;
-      border: 1px solid #E2E8F0;
-      border-radius: 18px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 22px;
       padding: 24px;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 0 #ffffff;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
       height: 100%;
       position: relative;
       overflow: hidden;
+      box-sizing: border-box;
     }
     .doc-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 16px 32px -8px rgba(15,23,42,0.1);
-      border-color: #0F766E;
+      transform: translateY(-8px);
+      border-color: #0f766e;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.16), 0 8px 16px -4px rgba(15, 118, 110, 0.1);
     }
     .doc-avatar {
       width: 64px;
       height: 64px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #0F766E, #0284C7);
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0f766e, #0284c7);
       color: #ffffff;
       display: flex;
       align-items: center;
@@ -357,6 +485,7 @@ require_once __DIR__ . '/../app/views/media.php';
       font-weight: 800;
       flex-shrink: 0;
       position: relative;
+      box-shadow: 0 6px 14px rgba(15, 118, 110, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
     }
     .online-indicator {
       position: absolute;
@@ -372,61 +501,68 @@ require_once __DIR__ . '/../app/views/media.php';
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      background: #FEF3C7;
-      border: 1px solid #FDE68A;
-      color: #92400E;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      color: #92400e;
       padding: 3px 8px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 11px;
       font-weight: 800;
     }
     .top-badge {
-      background: #ECFDF5;
-      color: #065F46;
-      border: 1px solid #A7F3D0;
-      font-size: 10px;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      font-size: 10.5px;
       font-weight: 800;
-      padding: 2px 7px;
+      padding: 3px 9px;
       border-radius: 999px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     .info-strip {
-      background: #F8FAFC;
-      border: 1px solid #F1F5F9;
-      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
       padding: 10px 14px;
       font-size: 12px;
       margin: 14px 0;
     }
     .btn-book-doc {
-      background: linear-gradient(135deg, #0F766E, #0D9488);
+      background: linear-gradient(180deg, #0f766e 0%, #0d9488 100%);
       color: #ffffff;
-      font-weight: 700;
-      padding: 10px 18px;
-      border-radius: 10px;
+      font-weight: 800;
+      padding: 12px 20px;
+      border-radius: 12px;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: 8px;
       border: none;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       width: 100%;
-      font-size: 14px;
+      font-size: 14.5px;
+      box-shadow: 0 4px 0 #0a544e, 0 10px 20px -3px rgba(15, 118, 110, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
     }
     .btn-book-doc:hover {
-      background: linear-gradient(135deg, #0D9488, #115E59);
+      background: linear-gradient(180deg, #11877e 0%, #0f766e 100%);
+      box-shadow: 0 6px 0 #0a544e, 0 14px 24px -3px rgba(15, 118, 110, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      transform: translateY(-2px);
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(15,118,110,0.3);
     }
-    /* Modal Styles */
+    .btn-book-doc:active {
+      box-shadow: 0 1px 0 #0a544e, 0 4px 10px rgba(15, 118, 110, 0.3);
+      transform: translateY(2px);
+    }
+
+    /* Modal 3D Styling */
     .booking-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15,23,42,0.65);
-      backdrop-filter: blur(6px);
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(8px);
       z-index: 1000;
       display: none;
       align-items: center;
@@ -435,13 +571,70 @@ require_once __DIR__ . '/../app/views/media.php';
     }
     .booking-modal-box {
       background: #ffffff;
-      border-radius: 20px;
-      max-width: 600px;
+      border-radius: 24px;
+      max-width: 620px;
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.3), inset 0 1px 0 #ffffff;
       position: relative;
+      border: 1.5px solid #e2e8f0;
+    }
+    .modal-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 580px) {
+      .modal-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+    .modal-form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 5px;
+    }
+    .modal-input, .modal-select {
+      display: block;
+      width: 100%;
+      height: 44px;
+      padding: 8px 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font: inherit;
+      background: #ffffff;
+      color: #0f172a;
+      box-sizing: border-box;
+      transition: all 0.15s ease;
+    }
+    .modal-input:focus, .modal-select:focus {
+      outline: none;
+      border-color: #0f766e;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+    }
+    .modal-input-sm {
+      height: 40px;
+      font-size: 13px;
+    }
+    .modal-textarea {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font: inherit;
+      background: #ffffff;
+      color: #0f172a;
+      box-sizing: border-box;
+      transition: all 0.15s ease;
+    }
+    .modal-textarea:focus {
+      outline: none;
+      border-color: #0f766e;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
     }
   </style>
 
@@ -451,11 +644,11 @@ require_once __DIR__ . '/../app/views/media.php';
     <div class="hero-badge-pill">
       <i class="bi bi-stars"></i> Instant Digital Queue &amp; Token System
     </div>
-    <h1 style="font-family:'Plus Jakarta Sans', sans-serif; font-size:clamp(1.8rem, 3.5vw, 2.75rem); font-weight:900; line-height:1.2; margin-bottom:12px;">
+    <h1>
       Find Top Specialist Doctors &amp;<br>
-      <span style="color:#2DD4BF;">Book Your Consultation Serial Instantly</span>
+      <span class="gradient-teal">Book Your Consultation Serial Instantly</span>
     </h1>
-    <p style="font-size:1.05rem; color:#CBD5E1; max-width:680px; margin-bottom:20px; line-height:1.6;">
+    <p>
       Choose from verified specialists across accredited hospitals in Bangladesh. Browse real patient ratings, transparent fees, and get guaranteed same-day queue tokens.
     </p>
   </div>
@@ -466,21 +659,21 @@ require_once __DIR__ . '/../app/views/media.php';
 
   <!-- Filter Card -->
   <div class="filter-card-bar">
-    <form method="GET" class="row g-3 align-items-center">
+    <form method="GET" class="filter-form-grid" id="doctor-search-form">
       <!-- Search Input -->
-      <div class="col-md-5">
-        <label class="form-label" style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">Search Doctor / Specialty / Hospital</label>
-        <div style="position:relative;">
-          <i class="bi bi-search" style="position:absolute; left:14px; top:12px; color:#94A3B8;"></i>
-          <input type="text" name="q" class="form-control" placeholder="e.g. Dr. Farhana, Medicine, Cardiology, ABC..."
-                 value="<?= htmlspecialchars($search) ?>" style="padding-left:38px; border-radius:10px;">
+      <div class="filter-field-col">
+        <label for="search-input">Search Doctor / Specialty / Hospital</label>
+        <div class="filter-input-wrap">
+          <i class="bi bi-search"></i>
+          <input type="text" id="search-input" name="q" class="filter-input" placeholder="e.g. Dr. Farhana, Medicine, Cardiology, ABC..."
+                 value="<?= htmlspecialchars($search) ?>">
         </div>
       </div>
 
       <!-- Hospital Filter -->
-      <div class="col-md-4">
-        <label class="form-label" style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">Hospital / Chamber</label>
-        <select name="hospital" class="form-control" style="border-radius:10px;" onchange="this.form.submit()">
+      <div class="filter-field-col">
+        <label for="hospital-select">Hospital / Chamber</label>
+        <select id="hospital-select" name="hospital" class="filter-select" onchange="this.form.submit()">
           <option value="0">🏥 All Accredited Hospitals</option>
           <?php foreach ($allHospitals as $hosp): ?>
             <option value="<?= $hosp['id'] ?>" <?= $hospitalFilter == $hosp['id'] ? 'selected' : '' ?>>
@@ -491,9 +684,9 @@ require_once __DIR__ . '/../app/views/media.php';
       </div>
 
       <!-- Sort By -->
-      <div class="col-md-3">
-        <label class="form-label" style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">Sort By</label>
-        <select name="sort" class="form-control" style="border-radius:10px;" onchange="this.form.submit()">
+      <div class="filter-field-col">
+        <label for="sort-select">Sort By</label>
+        <select id="sort-select" name="sort" class="filter-select" onchange="this.form.submit()">
           <option value="rating" <?= $sortBy === 'rating' ? 'selected' : '' ?>>⭐ Top Rated (সর্বোচ্চ রেটিং)</option>
           <option value="experience" <?= $sortBy === 'experience' ? 'selected' : '' ?>>🎓 Experience (বেশি অভিজ্ঞ)</option>
           <option value="fee_low" <?= $sortBy === 'fee_low' ? 'selected' : '' ?>>৳ Fee (কম থেকে বেশি)</option>
@@ -544,94 +737,92 @@ require_once __DIR__ . '/../app/views/media.php';
       <a href="<?= APP_URL ?>/book-doctor.php" class="btn btn-sm btn-primary" style="background:#0F766E; border-color:#0F766E;">View All Doctors</a>
     </div>
   <?php else: ?>
-    <div class="row g-4">
+    <div class="doctor-cards-grid">
       <?php foreach ($doctors as $doc): ?>
-        <div class="col-md-6 col-lg-4">
-          <div class="doc-card">
-            <!-- Top strip: Avatar + Name + Rating -->
-            <div style="display:flex; gap:16px; align-items:flex-start;">
-              <div class="doc-avatar">
-                <?= strtoupper(substr($doc['full_name'], 4, 1) ?: substr($doc['full_name'], 0, 1)) ?>
-                <span class="online-indicator" title="Available for booking"></span>
-              </div>
-              <div style="flex:1; min-width:0;">
-                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                  <h3 style="font-size:1.1rem; font-weight:800; color:#0F172A; margin:0;">
-                    <?= htmlspecialchars($doc['full_name']) ?>
-                  </h3>
-                  <?php if (!empty($doc['is_top_rated'])): ?>
-                    <span class="top-badge"><i class="bi bi-patch-check-fill"></i> Top Rated</span>
-                  <?php endif; ?>
-                </div>
-
-                <div style="font-size:12px; font-weight:700; color:#0F766E; margin-top:3px;">
-                  <?= htmlspecialchars($doc['specialization'] ?: 'General Physician') ?>
-                </div>
-                <div style="font-size:11.5px; color:#64748B;">
-                  <?= htmlspecialchars($doc['qualification'] ?: 'MBBS') ?>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
-                  <span class="rating-badge">
-                    <i class="bi bi-star-fill text-warning"></i> <?= number_format($doc['rating_score'] ?? 4.8, 1) ?>
-                  </span>
-                  <span style="font-size:11px; color:#64748B;">(<?= $doc['rating_count'] ?? 50 ?> reviews)</span>
-                  <span style="font-size:11px; color:#94A3B8;">&bull;</span>
-                  <span style="font-size:11px; font-weight:600; color:#334155;"><?= $doc['experience_years'] ?? 5 ?>+ yrs exp</span>
-                </div>
-              </div>
+        <div class="doc-card">
+          <!-- Top strip: Avatar + Name + Rating -->
+          <div style="display:flex; gap:16px; align-items:flex-start;">
+            <div class="doc-avatar">
+              <?= strtoupper(substr($doc['full_name'], 4, 1) ?: substr($doc['full_name'], 0, 1)) ?>
+              <span class="online-indicator" title="Available for booking"></span>
             </div>
-
-            <!-- Hospital Affiliation -->
-            <div class="info-strip">
-              <div style="display:flex; align-items:center; gap:6px; color:#1E293B; font-weight:700; font-size:12.5px;">
-                <i class="bi bi-building text-primary"></i> <?= htmlspecialchars($doc['hospital_name']) ?>
-              </div>
-              <div style="font-size:11.5px; color:#64748B; margin-top:2px;">
-                <?= htmlspecialchars($doc['hospital_designation'] ?: ($doc['designation'] ?: 'Consultant')) ?>
-                <?php if ($doc['department_name']): ?>
-                  &bull; <?= htmlspecialchars($doc['department_name']) ?>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <h3 style="font-size:1.15rem; font-weight:800; color:#0F172A; margin:0; letter-spacing:-0.01em;">
+                  <?= htmlspecialchars($doc['full_name']) ?>
+                </h3>
+                <?php if (!empty($doc['is_top_rated'])): ?>
+                  <span class="top-badge"><i class="bi bi-patch-check-fill"></i> Top Rated</span>
                 <?php endif; ?>
               </div>
-            </div>
 
-            <!-- Timing & Fee -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-size:12px; padding:0 4px;">
-              <div>
-                <span style="color:#64748B; display:block; font-size:10.5px; text-transform:uppercase; font-weight:700;">Visiting Hours</span>
-                <strong style="color:#0F172A;"><?= htmlspecialchars($doc['available_time'] ?? '05:00 PM - 09:00 PM') ?></strong>
-                <div style="font-size:11px; color:#10B981;"><i class="bi bi-calendar2-check"></i> <?= htmlspecialchars($doc['available_days'] ?? 'Sat - Thu') ?></div>
+              <div style="font-size:12.5px; font-weight:800; color:#0F766E; margin-top:3px;">
+                <?= htmlspecialchars($doc['specialization'] ?: 'General Physician') ?>
               </div>
-              <div style="text-align:right;">
-                <span style="color:#64748B; display:block; font-size:10.5px; text-transform:uppercase; font-weight:700;">Consultation Fee</span>
-                <span style="font-size:1.25rem; font-weight:900; color:#0F766E;">৳<?= number_format($doc['consultation_fee'] ?? 800) ?></span>
+              <div style="font-size:11.5px; color:#64748B; font-weight:600;">
+                <?= htmlspecialchars($doc['qualification'] ?: 'MBBS') ?>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+                <span class="rating-badge">
+                  <i class="bi bi-star-fill text-warning"></i> <?= number_format($doc['rating_score'] ?? 4.8, 1) ?>
+                </span>
+                <span style="font-size:11px; color:#64748B;">(<?= $doc['rating_count'] ?? 50 ?> reviews)</span>
+                <span style="font-size:11px; color:#94A3B8;">&bull;</span>
+                <span style="font-size:11px; font-weight:700; color:#334155;"><?= $doc['experience_years'] ?? 5 ?>+ yrs exp</span>
               </div>
             </div>
+          </div>
 
-            <!-- Features -->
-            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px; font-size:11px;">
-              <span class="badge" style="background:#EFF6FF; color:#1E40AF; padding:4px 8px;">⚡ Digital Serial</span>
-              <span class="badge" style="background:#F0FDF4; color:#166534; padding:4px 8px;">🛡️ BMDC Verified</span>
-              <span class="badge" style="background:#FAF5FF; color:#6B21A8; padding:4px 8px;">📋 Auto EMR Sync</span>
+          <!-- Hospital Affiliation -->
+          <div class="info-strip">
+            <div style="display:flex; align-items:center; gap:6px; color:#1E293B; font-weight:700; font-size:12.5px;">
+              <i class="bi bi-building" style="color:#0284c7"></i> <?= htmlspecialchars($doc['hospital_name']) ?>
             </div>
+            <div style="font-size:11.5px; color:#64748B; margin-top:2px;">
+              <?= htmlspecialchars($doc['hospital_designation'] ?: ($doc['designation'] ?: 'Consultant')) ?>
+              <?php if ($doc['department_name']): ?>
+                &bull; <?= htmlspecialchars($doc['department_name']) ?>
+              <?php endif; ?>
+            </div>
+          </div>
 
-            <!-- CTA Button -->
-            <div style="margin-top:auto;">
-              <button type="button" class="btn-book-doc"
-                      onclick="openBookingModal(<?= htmlspecialchars(json_encode([
-                          'id' => $doc['id'],
-                          'name' => $doc['full_name'],
-                          'specialization' => $doc['specialization'],
-                          'qualification' => $doc['qualification'],
-                          'hospital_id' => $doc['hospital_id'],
-                          'hospital_name' => $doc['hospital_name'],
-                          'department_id' => $doc['department_id'],
-                          'fee' => $doc['consultation_fee'] ?? 800,
-                          'time' => $doc['available_time'] ?? '05:00 PM - 09:00 PM'
-                      ])) ?>)">
-                <i class="bi bi-calendar-plus-fill"></i> Book Appointment (সিরিয়াল নিন)
-              </button>
+          <!-- Timing & Fee -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-size:12px; padding:0 4px;">
+            <div>
+              <span style="color:#64748B; display:block; font-size:10.5px; text-transform:uppercase; font-weight:800; letter-spacing:0.5px;">Visiting Hours</span>
+              <strong style="color:#0F172A; font-size:12.5px;"><?= htmlspecialchars($doc['available_time'] ?? '05:00 PM - 09:00 PM') ?></strong>
+              <div style="font-size:11px; color:#10B981; font-weight:700;"><i class="bi bi-calendar2-check"></i> <?= htmlspecialchars($doc['available_days'] ?? 'Sat - Thu') ?></div>
             </div>
+            <div style="text-align:right;">
+              <span style="color:#64748B; display:block; font-size:10.5px; text-transform:uppercase; font-weight:800; letter-spacing:0.5px;">Consultation Fee</span>
+              <span style="font-size:1.35rem; font-weight:900; color:#0F766E;">৳<?= number_format($doc['consultation_fee'] ?? 800) ?></span>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px; font-size:11px;">
+            <span class="badge" style="background:#EFF6FF; color:#1E40AF; padding:4px 8px; border-radius:6px; font-weight:700;">⚡ Digital Serial</span>
+            <span class="badge" style="background:#F0FDF4; color:#166534; padding:4px 8px; border-radius:6px; font-weight:700;">🛡️ BMDC Verified</span>
+            <span class="badge" style="background:#FAF5FF; color:#6B21A8; padding:4px 8px; border-radius:6px; font-weight:700;">📋 Auto EMR Sync</span>
+          </div>
+
+          <!-- CTA Button -->
+          <div style="margin-top:auto;">
+            <button type="button" class="btn-book-doc"
+                    onclick="openBookingModal(<?= htmlspecialchars(json_encode([
+                        'id' => $doc['id'],
+                        'name' => $doc['full_name'],
+                        'specialization' => $doc['specialization'],
+                        'qualification' => $doc['qualification'],
+                        'hospital_id' => $doc['hospital_id'],
+                        'hospital_name' => $doc['hospital_name'],
+                        'department_id' => $doc['department_id'],
+                        'fee' => $doc['consultation_fee'] ?? 800,
+                        'time' => $doc['available_time'] ?? '05:00 PM - 09:00 PM'
+                    ])) ?>)">
+              <i class="bi bi-calendar-plus-fill"></i> Book Appointment (সিরিয়াল নিন)
+            </button>
           </div>
         </div>
       <?php endforeach; ?>
@@ -647,15 +838,15 @@ require_once __DIR__ . '/../app/views/media.php';
   <div class="booking-modal-box" id="booking-modal-box">
     
     <!-- Modal Header -->
-    <div style="background:linear-gradient(135deg, #0F766E, #0D9488); color:#fff; padding:20px 24px; border-radius:20px 20px 0 0; display:flex; justify-content:space-between; align-items:center;">
+    <div style="background:linear-gradient(135deg, #0F766E, #0D9488); color:#fff; padding:20px 24px; border-radius:24px 24px 0 0; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 12px rgba(15,118,110,0.2);">
       <div style="display:flex; align-items:center; gap:12px;">
         <span style="font-size:24px;">🩺</span>
         <div>
           <h3 style="font-size:1.15rem; font-weight:800; margin:0;" id="m-doctor-name">Doctor Appointment</h3>
-          <div style="font-size:12px; color:#CCFBF1;" id="m-doctor-spec">Consultation Booking</div>
+          <div style="font-size:12px; color:#CCFBF1; font-weight:600;" id="m-doctor-spec">Consultation Booking</div>
         </div>
       </div>
-      <button type="button" onclick="closeBookingModal()" style="background:rgba(255,255,255,0.2); border:none; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+      <button type="button" onclick="closeBookingModal()" style="background:rgba(255,255,255,0.2); border:none; color:#fff; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem;">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -664,14 +855,14 @@ require_once __DIR__ . '/../app/views/media.php';
     <div id="booking-form-wrap" style="padding:24px;">
       
       <!-- Doctor Snapshot -->
-      <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px 16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:12px 16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
         <div>
-          <div style="font-size:11px; text-transform:uppercase; color:#64748B; font-weight:700;">Chamber / Hospital</div>
-          <strong style="color:#0F172A; font-size:13px;" id="m-hospital-name">ABC General Hospital</strong>
+          <div style="font-size:11px; text-transform:uppercase; color:#64748B; font-weight:800; letter-spacing:0.5px;">Chamber / Hospital</div>
+          <strong style="color:#0F172A; font-size:13.5px;" id="m-hospital-name">ABC General Hospital</strong>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:11px; text-transform:uppercase; color:#64748B; font-weight:700;">Consultation Fee</div>
-          <strong style="color:#0F766E; font-size:15px;" id="m-fee">৳800</strong>
+          <div style="font-size:11px; text-transform:uppercase; color:#64748B; font-weight:800; letter-spacing:0.5px;">Fee Payable</div>
+          <strong style="color:#0F766E; font-size:1.15rem;" id="m-fee">৳800</strong>
         </div>
       </div>
 
@@ -682,15 +873,15 @@ require_once __DIR__ . '/../app/views/media.php';
         <input type="hidden" name="department_id" id="f-department-id">
 
         <!-- Appointment Date & Slot -->
-        <div class="row g-3 mb-3">
-          <div class="col-md-6">
-            <label class="form-label" style="font-size:12px; font-weight:700; color:#334155;">Select Date (তারিখ) <span class="text-danger">*</span></label>
-            <input type="date" name="appointment_date" class="form-control" id="f-appointment-date"
-                   value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>" required style="border-radius:10px;">
+        <div class="modal-grid-2" style="margin-bottom:16px;">
+          <div>
+            <label class="modal-form-label">Select Date (তারিখ) <span style="color:#ef4444">*</span></label>
+            <input type="date" name="appointment_date" class="modal-input" id="f-appointment-date"
+                   value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>" required>
           </div>
-          <div class="col-md-6">
-            <label class="form-label" style="font-size:12px; font-weight:700; color:#334155;">Time Slot (শিফট)</label>
-            <select name="time_slot" class="form-control" style="border-radius:10px;">
+          <div>
+            <label class="modal-form-label">Time Slot (শিফট)</label>
+            <select name="time_slot" class="modal-select">
               <option value="Evening (05:00 PM - 08:30 PM)">Evening (05:00 PM - 08:30 PM)</option>
               <option value="Morning (10:00 AM - 01:00 PM)">Morning (10:00 AM - 01:00 PM)</option>
               <option value="Afternoon (02:00 PM - 04:30 PM)">Afternoon (02:00 PM - 04:30 PM)</option>
@@ -699,17 +890,17 @@ require_once __DIR__ . '/../app/views/media.php';
         </div>
 
         <!-- Priority / Emergency Option -->
-        <div class="mb-3">
-          <label class="form-label" style="font-size:12px; font-weight:700; color:#334155;">Consultation Priority (রোগীর ধরন)</label>
+        <div style="margin-bottom:16px;">
+          <label class="modal-form-label">Consultation Priority (রোগীর ধরন)</label>
           <div style="display:flex; gap:12px;">
-            <label style="flex:1; border:1.5px solid #CBD5E1; border-radius:10px; padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:8px;" id="priority-routine-lbl">
+            <label style="flex:1; border:1.5px solid #CBD5E1; border-radius:12px; padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:8px;" id="priority-routine-lbl">
               <input type="radio" name="priority" value="ROUTINE" checked onchange="updatePriorityUI()">
               <div>
                 <strong style="font-size:13px; color:#0F172A; display:block;">Normal Serial</strong>
                 <span style="font-size:11px; color:#64748B;">Regular Consultation</span>
               </div>
             </label>
-            <label style="flex:1; border:1.5px solid #FCA5A5; border-radius:10px; padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#FEF2F2;" id="priority-emergency-lbl">
+            <label style="flex:1; border:1.5px solid #FCA5A5; border-radius:12px; padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#FEF2F2;" id="priority-emergency-lbl">
               <input type="radio" name="priority" value="EMERGENCY" onchange="updatePriorityUI()">
               <div>
                 <strong style="font-size:13px; color:#DC2626; display:block;">🚨 Emergency / STAT</strong>
@@ -720,24 +911,24 @@ require_once __DIR__ . '/../app/views/media.php';
         </div>
 
         <!-- Problem / Symptoms -->
-        <div class="mb-3">
-          <label class="form-label" style="font-size:12px; font-weight:700; color:#334155;">Chief Problem / Symptoms (সমস্যা বা লক্ষণ)</label>
-          <textarea name="problem_description" rows="2" class="form-control" placeholder="e.g. Severe headache and high fever for 2 days, or regular diabetic follow-up" style="border-radius:10px;"></textarea>
+        <div style="margin-bottom:16px;">
+          <label class="modal-form-label">Chief Problem / Symptoms (সমস্যা বা লক্ষণ)</label>
+          <textarea name="problem_description" rows="2" class="modal-textarea" placeholder="e.g. Severe headache and high fever for 2 days, or regular diabetic follow-up"></textarea>
         </div>
 
         <!-- PATIENT AUTHENTICATION SECTION -->
         <?php if ($isPatientLoggedIn): ?>
-          <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:12px; padding:12px 16px; margin-bottom:20px;">
+          <div style="background:#F0FDF4; border:1.5px solid #BBF7D0; border-radius:14px; padding:12px 16px; margin-bottom:20px;">
             <div style="display:flex; align-items:center; gap:10px;">
               <i class="bi bi-check-circle-fill text-success" style="font-size:18px;"></i>
               <div>
-                <div style="font-size:12px; color:#166534; font-weight:700;">Logged in as: <?= htmlspecialchars($_SESSION['name'] ?? 'Patient') ?></div>
+                <div style="font-size:12px; color:#166534; font-weight:800;">Logged in as: <?= htmlspecialchars($_SESSION['name'] ?? 'Patient') ?></div>
                 <div style="font-size:11px; color:#15803D;">MedCore Patient ID: <strong><?= htmlspecialchars($_SESSION['patient_uid'] ?? '') ?></strong> &bull; Token will automatically link to your records.</div>
               </div>
             </div>
           </div>
         <?php else: ?>
-          <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:14px; padding:16px; margin-bottom:20px;">
+          <div style="background:#EFF6FF; border:1.5px solid #BFDBFE; border-radius:14px; padding:16px; margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
               <span style="font-size:12px; font-weight:800; color:#1E40AF; text-transform:uppercase; letter-spacing:0.5px;">
                 <i class="bi bi-person-lock"></i> Patient Login Required
@@ -750,27 +941,26 @@ require_once __DIR__ . '/../app/views/media.php';
               To attach this serial ticket to your verified MedCore Health Record, enter your Patient credentials:
             </p>
 
-            <div class="row g-2">
-              <div class="col-md-6">
-                <input type="text" name="login_identifier" id="f-login-id" class="form-control form-control-sm"
-                       placeholder="Email or Patient UID (e.g. rahat@example.com)" required style="border-radius:8px;">
+            <div class="modal-grid-2" style="margin-bottom:10px;">
+              <div>
+                <input type="text" name="login_identifier" id="f-login-id" class="modal-input modal-input-sm"
+                       placeholder="Email or Patient UID (e.g. rahat@example.com)" required>
               </div>
-              <div class="col-md-6">
-                <input type="password" name="login_password" id="f-login-pass" class="form-control form-control-sm"
-                       placeholder="Password (e.g. Demo123!)" required style="border-radius:8px;">
+              <div>
+                <input type="password" name="login_password" id="f-login-pass" class="modal-input modal-input-sm"
+                       placeholder="Password (e.g. Demo123!)" required>
               </div>
             </div>
             <div style="font-size:11px; color:#64748B; margin-top:8px;">
-              Don't have an account? <a href="<?= APP_URL ?>/patient/register.php" target="_blank" style="color:#0284C7; font-weight:600;">Create free account</a>
+              Don't have an account? <a href="<?= APP_URL ?>/patient/register.php" target="_blank" style="color:#0284C7; font-weight:700;">Create free account</a>
             </div>
           </div>
         <?php endif; ?>
 
-        <div id="booking-error-box" style="display:none; margin-bottom:15px;" class="alert alert-danger py-2" role="alert"></div>
+        <div id="booking-error-box" style="display:none; margin-bottom:15px; padding:10px 14px; border-radius:10px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; font-size:13px; font-weight:600;" role="alert"></div>
 
         <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary w-100 btn-lg" id="btn-confirm-booking"
-                style="background:linear-gradient(135deg, #0F766E, #0D9488); border:none; border-radius:12px; font-weight:800; padding:12px;">
+        <button type="submit" class="btn-book-doc" id="btn-confirm-booking" style="font-size:15px; padding:14px 20px;">
           <i class="bi bi-ticket-perforated-fill"></i> Confirm Serial &amp; Generate Token (বুকিং নিশ্চিত করুন)
         </button>
       </form>

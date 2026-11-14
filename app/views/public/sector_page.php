@@ -65,13 +65,13 @@ require __DIR__ . '/../layout/public_header.php';
 <!-- 3. CLINICAL CTA BANNER -->
 <section class="mc-section" style="padding-top:0">
   <div class="mc-wrap">
-    <div style="background:linear-gradient(135deg,#071927 0%,#0b253a 100%);color:#fff;border-radius:20px;padding:clamp(1.8rem,4vw,2.5rem);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem;box-shadow:0 16px 36px rgba(11,37,58,0.18)">
+    <div style="background:linear-gradient(135deg,#ffffff 0%,#f0fdfa 50%,#e0f2fe 100%);color:#0f172a;border:1.5px solid #a7f3d0;border-radius:24px;padding:clamp(1.8rem,4vw,2.5rem);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem;box-shadow:0 16px 36px -6px rgba(15,118,110,0.12),inset 0 1px 0 #ffffff">
       <div style="max-width:580px">
-        <span class="mc-pill" style="background:rgba(255,255,255,0.1);color:#7dd3fc;border:1px solid rgba(255,255,255,0.2);font-size:0.75rem;margin-bottom:0.5rem">
-          <i class="bi bi-shield-check"></i> 100% Consent & Privacy Protection
+        <span class="mc-pill" style="background:#ecfdf8;color:#065f46;border:1.5px solid #a7f3d0;font-size:0.78rem;font-weight:800;margin-bottom:0.65rem">
+          <i class="bi bi-shield-check" style="color:#0f766e"></i> 100% Consent & Privacy Protection
         </span>
-        <h2 style="font-size:clamp(1.4rem,3vw,1.8rem);color:#fff;margin:0.25rem 0 0.5rem">পোর্টালে এখনই প্রবেশ করুন</h2>
-        <p style="font-size:0.92rem;color:rgba(255,255,255,0.8);margin:0;line-height:1.55">
+        <h2 style="font-size:clamp(1.4rem,3vw,1.85rem);font-weight:800;color:#0f172a;margin:0.35rem 0 0.5rem">পোর্টালে এখনই প্রবেশ করুন</h2>
+        <p style="font-size:0.95rem;color:#475569;margin:0;line-height:1.6">
           লগইনের পর সরাসরি আপনার ড্যাশবোর্ডে গিয়ে প্রেসক্রিপশন, রিপোর্ট বা রোগীর স্বাস্থ্য তথ্য অ্যাক্সেস করুন।
         </p>
       </div>
