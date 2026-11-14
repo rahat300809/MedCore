@@ -13,8 +13,8 @@ require __DIR__ . '/head.php';
       <a class="mc-brand" href="<?= APP_URL ?>/">
         <span class="mc-brand-mark"><i class="bi bi-heart-pulse-fill"></i></span>
         <span>
-          <span class="mc-brand-name" style="font-size:1.05rem;color:#ffffff">Med<span style="color:#5eead4">Core</span></span>
-          <span class="mc-brand-sub" style="color:#7dd3fc"><?= htmlspecialchars($portalRoleBn ?? $portalRole ?? 'Portal') ?></span>
+          <span class="mc-brand-name" style="font-size:1.1rem;color:#0f172a;font-weight:800">Med<span style="color:#0f766e">Core</span></span>
+          <span class="mc-brand-sub" style="color:#0284c7;font-weight:800"><?= htmlspecialchars($portalRoleBn ?? $portalRole ?? 'Portal') ?></span>
         </span>
       </a>
       <button type="button" class="mc-rail-toggle" id="mcRailToggle" aria-label="Toggle portal menu" aria-expanded="false">
