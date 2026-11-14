@@ -41,6 +41,7 @@ npm-debug.log
 
 # Scratch & test scripts
 scratch/
+frontend/
 
 # Root assets junction (mirrored from public/assets)
 /assets/

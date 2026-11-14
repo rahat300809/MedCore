@@ -233,6 +233,9 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
         <a href="<?= APP_URL ?>/doctor/queue.php" class="mc-btn mc-btn-secondary mc-btn-sm">
           <i class="bi bi-people-fill"></i> Live queue (<?= $waitingQueueCount ?>)
         </a>
+        <a href="<?= APP_URL ?>/doctor/code-blue.php" class="mc-btn mc-btn-sm" style="background:#dc2626;color:#ffffff;border:none">
+          <i class="bi bi-lightning-charge-fill"></i> Code Blue ER
+        </a>
         <a href="<?= APP_URL ?>/doctor/patient-search.php" class="mc-btn mc-btn-soft mc-btn-sm">
           <i class="bi bi-search-heart-fill"></i> Find patient
         </a>

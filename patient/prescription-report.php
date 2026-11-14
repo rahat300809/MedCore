@@ -172,7 +172,7 @@ $backUrl = 'javascript:history.back()';
   <title>Prescription — <?= htmlspecialchars($rx['prescription_uid']) ?> — MedCore</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=Source+Sans+3:wght@400;600;700;800&family=Great+Vibes&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/competition.css?v=4">
+  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/competition.css?v=35">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/rx-pad.css?v=1">
   <style>
     body { background: #e8eef3; margin: 0; padding: 24px 14px 40px; font-family: 'Source Sans 3', system-ui, sans-serif; }

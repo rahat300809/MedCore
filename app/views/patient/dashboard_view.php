@@ -40,6 +40,7 @@ require dirname(__DIR__) . '/layout/portal_shell_start.php';
   <div class="mc-action-grid">
     <?php
     $actions = [
+      [APP_URL.'/patient/sidekick.php', 'bi-shield-heart-fill', 'Sidekick AI Advocate', 'রিয়েল-টাইম ডাক্তার ভিজিট অ্যাসিস্ট্যান্ট'],
       [APP_URL.'/patient/prescriptions.php', 'bi-file-earmark-medical', 'Prescriptions', 'ডাক্তারের দেওয়া ওষুধের তালিকা'],
       [APP_URL.'/patient/medications.php', 'bi-capsule', 'Medicines', 'কখন কী খাবেন'],
       [APP_URL.'/patient/lab-reports.php', 'bi-eyedropper', 'Lab tokens', 'টোকেন দেখান ও রিপোর্ট নিন'],

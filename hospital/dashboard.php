@@ -108,7 +108,7 @@ $portalMeta = ($hospital['hospital_uid'] ?? '') . ' · ' . ($hospital['city'] ??
 $portalTitle = 'Hospital overview';
 $portalSubtitle = 'রিসেপশন, ডাক্তার রোস্টার ও ল্যাব নেটওয়ার্ক';
 $portalNav = mc_hospital_nav('dashboard', count($pendingAffiliations));
-$portalTopAction = '<a class="mc-btn mc-btn-primary mc-btn-sm" href="' . APP_URL . '/hospital/appointments.php">Open reception</a>';
+$portalTopAction = '<a class="mc-btn mc-btn-danger mc-btn-sm" href="' . APP_URL . '/hospital/code-blue.php"><i class="bi bi-lightning-charge-fill"></i> Code Blue ER</a> <a class="mc-btn mc-btn-primary mc-btn-sm" href="' . APP_URL . '/hospital/appointments.php">Open reception</a>';
 $bodyClass = 'lab-desk';
 require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>

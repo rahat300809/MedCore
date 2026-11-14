@@ -11,10 +11,10 @@ require __DIR__ . '/head.php';
   <aside class="mc-rail" id="mcRail">
     <div class="mc-rail-brand">
       <a class="mc-brand" href="<?= APP_URL ?>/">
-        <span class="mc-brand-mark">M</span>
+        <span class="mc-brand-mark"><i class="bi bi-heart-pulse-fill"></i></span>
         <span>
-          <span class="mc-brand-name" style="font-size:1rem">Med<span>Core</span></span>
-          <span class="mc-brand-sub"><?= htmlspecialchars($portalRoleBn ?? $portalRole ?? 'Portal') ?></span>
+          <span class="mc-brand-name" style="font-size:1.05rem;color:#ffffff">Med<span style="color:#5eead4">Core</span></span>
+          <span class="mc-brand-sub" style="color:#7dd3fc"><?= htmlspecialchars($portalRoleBn ?? $portalRole ?? 'Portal') ?></span>
         </span>
       </a>
       <button type="button" class="mc-rail-toggle" id="mcRailToggle" aria-label="Toggle portal menu" aria-expanded="false">
@@ -47,8 +47,8 @@ require __DIR__ . '/head.php';
         <?php endforeach; ?>
       </nav>
 
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="mc-btn mc-btn-ghost mc-btn-sm mc-btn-block" style="margin-top:1rem">
-        <i class="bi bi-box-arrow-right"></i> Logout
+      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="mc-btn mc-btn-sm mc-btn-block" style="margin-top:1.25rem;background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.25);border-radius:10px">
+        <i class="bi bi-box-arrow-right"></i> Sign Out
       </a>
     </div>
   </aside>

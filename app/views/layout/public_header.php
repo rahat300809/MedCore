@@ -21,6 +21,8 @@
       <li><a href="<?= APP_URL ?>/for-doctors.php">Doctors</a></li>
       <li><a href="<?= APP_URL ?>/for-hospitals.php">Hospitals</a></li>
       <li><a href="<?= APP_URL ?>/for-labs.php">Labs</a></li>
+      <li><a href="<?= APP_URL ?>/hospital/code-blue.php" style="color:#ef4444;font-weight:700"><i class="bi bi-lightning-charge-fill" style="margin-right:.25rem"></i>Code Blue</a></li>
+      <li><a href="<?= APP_URL ?>/patient/sidekick.php" style="color:#0f766e;font-weight:700"><i class="bi bi-shield-heart-fill" style="margin-right:.25rem"></i>Sidekick AI</a></li>
       <li><a href="<?= APP_URL ?>/book-doctor.php"><i class="bi bi-calendar2-check" style="color:var(--accent);margin-right:.25rem"></i>Find Doctor</a></li>
       <li><a href="<?= APP_URL ?>/admin/login.php" style="color:var(--muted);font-size:.85rem"><i class="bi bi-shield-lock" style="margin-right:.2rem"></i>Admin</a></li>
     </ul>

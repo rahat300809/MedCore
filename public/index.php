@@ -27,54 +27,91 @@ require __DIR__ . '/../app/views/layout/public_header.php';
 <!-- 1. INTERNATIONAL CLINICAL HERO -->
 <section class="mc-hero-intl">
   <div class="mc-wrap">
-    <div class="mc-hero-content">
-      <div class="mc-hero-badge">
-        <span class="status-dot"></span>
-        <span>DGHS COMPLIANT NATIONAL HEALTH GRID · BANGLADESH</span>
-      </div>
-      <h1 class="mc-hero-title">
-        One Citizen Record.<br>
-        <span>Every Episode of Care.</span>
-      </h1>
-      <p class="mc-hero-sub">
-        একটিমাত্র জাতীয় স্বাস্থ্য আইডি দিয়ে সারাদেশের সরকারি ও বেসরকারি হাসপাতাল, বিশেষজ্ঞ চিকিৎসক এবং ডায়াগনস্টিক ল্যাবরেটরি থেকে নিরাপদ, সম্মতিকেন্দ্রিক ডিজিটাল স্বাস্থ্যসেবা।
-      </p>
-
-      <div class="mc-hero-actions-intl">
-        <a class="mc-btn mc-btn-primary mc-btn-xl" href="<?= APP_URL ?>/book-doctor.php">
-          <i class="bi bi-calendar2-check-fill"></i> Book Doctor Serial
-        </a>
-        <a class="mc-btn mc-btn-ghost-light mc-btn-xl" href="<?= APP_URL ?>/role-selection.php">
-          <i class="bi bi-grid-fill"></i> Select Clinical Portal
-        </a>
-        <a class="mc-btn mc-btn-danger mc-btn-xl" href="<?= APP_URL ?>/emergency.php?uid=PT-000001">
-          <i class="bi bi-lightning-charge-fill"></i> Emergency ICE
-        </a>
-      </div>
-
-      <!-- Quick Triage & Search Box -->
-      <form class="mc-search-triage" action="<?= APP_URL ?>/book-doctor.php" method="GET">
-        <div class="mc-search-triage-field">
-          <i class="bi bi-hospital"></i>
-          <select name="department" aria-label="Select Clinical Department">
-            <option value="">All Specialties (সকল বিভাগ)</option>
-            <option value="Cardiology">Cardiology (হৃদরোগ বিভাগ)</option>
-            <option value="Medicine">Internal Medicine (মেডিসিন)</option>
-            <option value="Pediatrics">Pediatrics (শিশু স্বাস্থ্য)</option>
-            <option value="Orthopedics">Orthopedics (হাড় ও জোড়া)</option>
-            <option value="Gynecology">Gynecology (স্ত্রী ও প্রসূতি)</option>
-            <option value="Neurology">Neurology (নিউরো মেডিসিন)</option>
-            <option value="Pathology">Pathology (প্যাথলজি)</option>
-          </select>
+    <div class="mc-hero-grid">
+      <!-- Left: Content & Triage -->
+      <div class="mc-hero-content">
+        <div class="mc-hero-badge">
+          <span class="status-dot"></span>
+          <span>DGHS COMPLIANT NATIONAL HEALTH GRID · BANGLADESH</span>
         </div>
-        <div class="mc-search-triage-field">
-          <i class="bi bi-search"></i>
-          <input type="text" name="q" placeholder="Doctor name, hospital or condition..." aria-label="Search Doctor or Hospital">
+        <h1 class="mc-hero-title">
+          One Citizen Record.<br>
+          <span>Every Episode of Care.</span>
+        </h1>
+        <p class="mc-hero-sub">
+          একটিমাত্র জাতীয় স্বাস্থ্য আইডি দিয়ে সারাদেশের সরকারি ও বেসরকারি হাসপাতাল, বিশেষজ্ঞ চিকিৎসক এবং ডায়াগনস্টিক ল্যাবরেটরি থেকে নিরাপদ, সম্মতিকেন্দ্রিক ডিজিটাল স্বাস্থ্যসেবা।
+        </p>
+
+        <div class="mc-hero-actions-intl">
+          <a class="mc-btn mc-btn-primary mc-btn-xl" href="<?= APP_URL ?>/book-doctor.php">
+            <i class="bi bi-calendar2-check-fill"></i> Book Doctor Serial
+          </a>
+          <a class="mc-btn mc-btn-ghost-light mc-btn-xl" href="<?= APP_URL ?>/role-selection.php">
+            <i class="bi bi-grid-fill"></i> Select Clinical Portal
+          </a>
+          <a class="mc-btn mc-btn-danger mc-btn-xl" href="<?= APP_URL ?>/emergency.php?uid=PT-000001">
+            <i class="bi bi-lightning-charge-fill"></i> Emergency ICE
+          </a>
         </div>
-        <button type="submit" class="mc-search-triage-btn">
-          <i class="bi bi-arrow-right-circle-fill"></i> Find Doctor
-        </button>
-      </form>
+
+        <!-- Quick Triage & Search Box -->
+        <form class="mc-search-triage" action="<?= APP_URL ?>/book-doctor.php" method="GET">
+          <div class="mc-search-triage-field">
+            <i class="bi bi-hospital"></i>
+            <select name="department" aria-label="Select Clinical Department">
+              <option value="">All Specialties (সকল বিভাগ)</option>
+              <option value="Cardiology">Cardiology (হৃদরোগ বিভাগ)</option>
+              <option value="Medicine">Internal Medicine (মেডিসিন)</option>
+              <option value="Pediatrics">Pediatrics (শিশু স্বাস্থ্য)</option>
+              <option value="Orthopedics">Orthopedics (হাড় ও জোড়া)</option>
+              <option value="Gynecology">Gynecology (স্ত্রী ও প্রসূতি)</option>
+              <option value="Neurology">Neurology (নিউরো মেডিসিন)</option>
+              <option value="Pathology">Pathology (প্যাথলজি)</option>
+            </select>
+          </div>
+          <div class="mc-search-triage-field">
+            <i class="bi bi-search"></i>
+            <input type="text" name="q" placeholder="Doctor name, hospital or condition..." aria-label="Search Doctor or Hospital">
+          </div>
+          <button type="submit" class="mc-search-triage-btn">
+            <i class="bi bi-arrow-right-circle-fill"></i> Find Doctor
+          </button>
+        </form>
+      </div>
+
+      <!-- Right: Immersive Clinical Visual Showcase -->
+      <div class="mc-hero-visual">
+        <div class="mc-hero-img-wrap">
+          <img src="<?= MC_IMG_DOCTOR ?>" alt="Verified BMDC Medical Practitioner with Patient" class="mc-hero-img">
+          
+          <!-- Floating Badge 1: Verified Doctors -->
+          <div class="mc-hero-badge-float badge-top-right">
+            <div class="badge-float-icon teal"><i class="bi bi-patch-check-fill"></i></div>
+            <div>
+              <div class="badge-float-val">4,800+ Verified</div>
+              <div class="badge-float-sub">BMDC Specialist Doctors</div>
+            </div>
+          </div>
+
+          <!-- Floating Badge 2: Consent OTP -->
+          <div class="mc-hero-badge-float badge-bottom-left">
+            <div class="badge-float-icon blue"><i class="bi bi-shield-lock-fill"></i></div>
+            <div>
+              <div class="badge-float-val">100% Consent Locked</div>
+              <div class="badge-float-sub">30-Min Expiring OTP Grant</div>
+            </div>
+          </div>
+
+          <!-- Floating Badge 3: 24/7 ER Grid -->
+          <div class="mc-hero-badge-float badge-center-right">
+            <div class="badge-float-icon red"><i class="bi bi-lightning-charge-fill"></i></div>
+            <div>
+              <div class="badge-float-val">24/7 National ER</div>
+              <div class="badge-float-sub">Hotline 999 · 16263 DGHS</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
