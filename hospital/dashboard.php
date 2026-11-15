@@ -120,10 +120,28 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
   <div class="mc-stat"><div class="l">Today appointments</div><div class="v"><?= (int)($stats['today_appointments'] ?? 0) ?></div></div>
 </div>
 
-<div class="mc-panel">
-  <div class="mc-panel-h"><h2>Reception desk</h2></div>
-  <p style="color:var(--muted);margin:0 0 1rem;font-size:.9rem">OPD বুকিং চেক-ইন ও সিরিয়াল কিউ ম্যানেজ করুন।</p>
-  <a class="mc-btn mc-btn-primary" href="<?= APP_URL ?>/hospital/appointments.php">Open appointments &amp; queue</a>
+<div class="mc-action-grid" style="margin-bottom:1.25rem">
+  <a class="mc-action" href="<?= APP_URL ?>/hospital/appointments.php">
+    <span class="mc-action-ico"><i class="bi bi-calendar2-check"></i></span>
+    <span>
+      <h3>Reception desk</h3>
+      <p>OPD চেক-ইন ও সিরিয়াল কিউ</p>
+    </span>
+  </a>
+  <a class="mc-action" href="<?= APP_URL ?>/hospital/code-blue.php" style="border-color:#fecaca">
+    <span class="mc-action-ico" style="background:#fef2f2;color:#dc2626"><i class="bi bi-lightning-charge-fill"></i></span>
+    <span>
+      <h3>Code Blue ER</h3>
+      <p>ACLS টাইমার, ভয়েস লগ, রান শিট</p>
+    </span>
+  </a>
+  <a class="mc-action" href="<?= APP_URL ?>/hospital/doctors.php">
+    <span class="mc-action-ico"><i class="bi bi-person-badge"></i></span>
+    <span>
+      <h3>Doctor roster</h3>
+      <p>অ্যাফিলিয়েশন ও ডিপার্টমেন্ট</p>
+    </span>
+  </a>
 </div>
 
 <?php if (!empty($pendingAffiliations)): ?>

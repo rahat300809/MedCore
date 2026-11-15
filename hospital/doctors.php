@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_doctor'])) {
                         'metadata'   => ['doctor_name' => $doc['full_name'], 'designation' => $desig, 'type' => $empType],
                     ]);
 
-                    $success = 'Dr. ' . htmlspecialchars($doc['full_name']) . ' has been re-affiliated to ' . htmlspecialchars($hospital['name']) . ' successfully!';
+                    $success = 'Dr. ' . $doc['full_name'] . ' has been re-affiliated to ' . $hospital['name'] . ' successfully!';
                 }
             } else {
                 $stmtInsert = $db->prepare("
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_doctor'])) {
                     'metadata'   => ['doctor_name' => $doc['full_name'], 'designation' => $desig, 'type' => $empType],
                 ]);
 
-                $success = 'Dr. ' . htmlspecialchars($doc['full_name']) . ' has been successfully added to ' . htmlspecialchars($hospital['name']) . ' (' . htmlspecialchars($empType) . ')!';
+                $success = 'Dr. ' . $doc['full_name'] . ' has been successfully added to ' . $hospital['name'] . ' (' . $empType . ')!';
             }
         }
     }
@@ -122,11 +122,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             ]);
 
             if ($newStatus === 'REMOVED') {
-                $success = 'Dr. ' . htmlspecialchars($targetAff['full_name']) . ' has been removed from this hospital. (Their affiliations with other hospitals and central verified status remain intact).';
+                $success = 'Dr. ' . $targetAff['full_name'] . ' has been removed from this hospital. (Their affiliations with other hospitals and central verified status remain intact).';
             } elseif ($newStatus === 'SUSPENDED') {
-                $success = 'Dr. ' . htmlspecialchars($targetAff['full_name']) . ' has been temporarily suspended from practicing at this hospital.';
+                $success = 'Dr. ' . $targetAff['full_name'] . ' has been temporarily suspended from practicing at this hospital.';
             } else {
-                $success = 'Dr. ' . htmlspecialchars($targetAff['full_name']) . ' has been set to ACTIVE at this hospital.';
+                $success = 'Dr. ' . $targetAff['full_name'] . ' has been set to ACTIVE at this hospital.';
             }
         }
     }
@@ -148,11 +148,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['handle_request'])) {
             if ($action === 'approve') {
                 $db->prepare("UPDATE doctor_hospitals SET status = 'APPROVED', joined_at = CURDATE(), approved_by = ?, approved_at = NOW(), rejection_reason = NULL WHERE id = ?")->execute([$_SESSION['user_id'], $dhId]);
                 AuditService::log(AuditService::AFFILIATION_APPROVED, ['user_id'=>$_SESSION['user_id'],'hospital_id'=>$hospitalId,'doctor_id'=>$req['doctor_id'],'metadata'=>['doctor_name'=>$req['full_name'],'source'=>'doctor_request']]);
-                $success = 'Dr. ' . htmlspecialchars($req['full_name']) . ' has been approved and is now an active affiliated doctor.';
+                $success = 'Dr. ' . $req['full_name'] . ' has been approved and is now an active affiliated doctor.';
             } else {
                 $db->prepare("UPDATE doctor_hospitals SET status = 'REJECTED', rejection_reason = ? WHERE id = ?")->execute([$rejectMsg ?: 'Request declined by hospital.', $dhId]);
                 AuditService::log(AuditService::AFFILIATION_REJECTED, ['user_id'=>$_SESSION['user_id'],'hospital_id'=>$hospitalId,'doctor_id'=>$req['doctor_id'],'metadata'=>['doctor_name'=>$req['full_name'],'reason'=>$rejectMsg]]);
-                $success = 'Request from Dr. ' . htmlspecialchars($req['full_name']) . ' has been declined.';
+                $success = 'Request from Dr. ' . $req['full_name'] . ' has been declined.';
             }
         }
     }

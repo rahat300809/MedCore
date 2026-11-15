@@ -8,7 +8,7 @@ $portalMeta = ($patient['patient_uid'] ?? '') . ' · Blood ' . ($patient['blood_
 $portalTitle = 'Health overview';
 $portalSubtitle = 'আজকের প্রয়োজনীয় কাজ এক নজরে';
 $portalNav = mc_patient_nav('dashboard');
-$portalTopAction = '<a class="mc-btn mc-btn-primary mc-btn-sm" href="' . APP_URL . '/book-doctor.php"><i class="bi bi-plus-lg"></i> Book serial</a>';
+$portalTopAction = '<a class="mc-btn mc-btn-secondary mc-btn-sm" href="' . APP_URL . '/patient/sidekick.php"><i class="bi bi-shield-heart-fill"></i> Sidekick</a> <a class="mc-btn mc-btn-secondary mc-btn-sm" href="' . APP_URL . '/patient/medications.php"><i class="bi bi-capsule"></i> Medicines</a> <a class="mc-btn mc-btn-primary mc-btn-sm" href="' . APP_URL . '/book-doctor.php"><i class="bi bi-plus-lg"></i> Book serial</a>';
 require dirname(__DIR__) . '/layout/portal_shell_start.php';
 ?>
 
@@ -150,5 +150,36 @@ require dirname(__DIR__) . '/layout/portal_shell_start.php';
     </div>
   <?php endif; ?>
 </div>
+
+<?php if (!empty($dashMedications)): ?>
+<div class="mc-panel" id="medicine-guide">
+  <div class="mc-panel-h">
+    <h2>ওষুধ কেন খাচ্ছেন</h2>
+    <a href="<?= APP_URL ?>/patient/medications.php" style="font-weight:800;color:var(--accent);font-size:.9rem">Full guide</a>
+  </div>
+  <p style="margin:0 0 1rem;color:var(--muted);font-size:.9rem">Sidekick AI — ডাক্তার কোন ওষুধ কোন কাজের জন্য দিয়েছেন।</p>
+  <ul class="mc-med-bullets">
+    <?php foreach ($dashMedications as $m):
+      $displayName = $m['brand_name'] ?: $m['generic_name'];
+      $lookup = strtolower(trim($displayName));
+      $ex = $dashMedExplanations[$lookup] ?? null;
+      if (!$ex) {
+        foreach ($dashMedExplanations as $k => $v) {
+          if (str_contains($lookup, $k) || str_contains($k, $lookup)) { $ex = $v; break; }
+        }
+      }
+      $why = $ex['purpose_bn'] ?? ($ex['purpose_en'] ?? 'ডাক্তারের নির্দেশ অনুযায়ী চিকিৎসার অংশ।');
+    ?>
+      <li>
+        <strong><?= htmlspecialchars($displayName) ?></strong>
+        <?php if (!empty($m['frequency'])): ?>
+          <span class="mc-med-freq"><?= htmlspecialchars($m['frequency']) ?></span>
+        <?php endif; ?>
+        <span class="mc-med-why-line"><?= htmlspecialchars($why) ?></span>
+      </li>
+    <?php endforeach; ?>
+  </ul>
+</div>
+<?php endif; ?>
 
 <?php require dirname(__DIR__) . '/layout/portal_shell_end.php'; ?>

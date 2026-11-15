@@ -13,6 +13,13 @@ if (file_exists(__DIR__ . '/../app/middleware/AuthMiddleware.php')) {
 
 header('Content-Type: application/json; charset=utf-8');
 
+initSession();
+if (!isLoggedIn('PATIENT')) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Patient login required.']);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Only POST requests supported.']);
     exit;
@@ -38,6 +45,16 @@ switch ($action) {
         $transcript = trim($body['transcript'] ?? '');
         $meta = $body['meta'] ?? [];
         $result = SidekickService::generateSummary($transcript, $meta);
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        break;
+
+    case 'explain_medicines':
+        $meds = $body['medicines'] ?? [];
+        if (!is_array($meds)) {
+            echo json_encode(['success' => false, 'message' => 'medicines array required.']);
+            exit;
+        }
+        $result = SidekickService::explainMedicines($meds);
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
         break;
 

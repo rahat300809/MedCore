@@ -47,8 +47,8 @@ require __DIR__ . '/head.php';
         <?php endforeach; ?>
       </nav>
 
-      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="mc-btn mc-btn-sm mc-btn-block" style="margin-top:1.25rem;background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.25);border-radius:10px">
-        <i class="bi bi-box-arrow-right"></i> Sign Out
+      <a href="<?= APP_URL ?>/app/helpers/logout.php" class="mc-btn mc-btn-sm mc-btn-block" style="margin-top:1.25rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:10px">
+        <i class="bi bi-box-arrow-right"></i> Sign out
       </a>
     </div>
   </aside>

@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'metadata'    => ['uid' => $diagUid, 'modality' => $modality, 'title' => $title, 'storage' => $storageType]
             ]);
 
-            $success = "Diagnostic record <strong>{$diagUid}</strong> ({$title}) has been verified and assigned to the patient database successfully!";
+            $success = 'Diagnostic record ' . $diagUid . ' (' . $title . ') has been verified and assigned to the patient database successfully!';
         }
     }
 }
@@ -215,7 +215,7 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
 
 <?php if ($success): ?>
-  <div class="mc-alert mc-alert-ok"><i class="bi bi-check-circle-fill"></i> <?= $success ?></div>
+  <div class="mc-alert mc-alert-ok"><i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($success) ?></div>
 <?php endif; ?>
 <?php if ($error): ?>
   <div class="mc-alert mc-alert-danger"><i class="bi bi-exclamation-triangle-fill"></i> <?= htmlspecialchars($error) ?></div>

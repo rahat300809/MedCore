@@ -13,6 +13,13 @@ if (file_exists(__DIR__ . '/../app/middleware/AuthMiddleware.php')) {
 
 header('Content-Type: application/json; charset=utf-8');
 
+initSession();
+if (!isLoggedIn('DOCTOR') && !isLoggedIn('HOSPITAL_ADMIN')) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Doctor or hospital login required.']);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Only POST requests supported.']);
     exit;

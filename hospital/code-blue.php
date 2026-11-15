@@ -6,34 +6,41 @@ require_once __DIR__ . '/../app/views/portal/navs.php';
 
 initSession();
 
-// Allow Hospital Admin, Doctor, or demo visitor
 $isHospital = isLoggedIn('HOSPITAL_ADMIN');
 $isDoctor = isLoggedIn('DOCTOR');
-$userRole = $_SESSION['role'] ?? 'HOSPITAL_ADMIN';
-$userName = $_SESSION['name'] ?? ($isDoctor ? 'Dr. Farhana Rahman' : 'Emergency Resuscitation Team');
-$hospitalName = $_SESSION['hospital_name'] ?? 'ABC General Hospital';
+if (!$isHospital && !$isDoctor) {
+    $fromDoctor = str_contains($_SERVER['SCRIPT_NAME'] ?? '', '/doctor/');
+    $login = $fromDoctor
+        ? APP_URL . '/doctor/select-hospital.php'
+        : APP_URL . '/hospital/login.php';
+    $redirect = $fromDoctor ? '/doctor/code-blue.php' : '/hospital/code-blue.php';
+    header('Location: ' . $login . '?redirect=' . urlencode($redirect));
+    exit;
+}
 
-$portalRole = 'Emergency';
+$userName = $_SESSION['name'] ?? ($isDoctor ? 'Doctor' : 'ER Team');
+$hospitalName = $_SESSION['hospital_name'] ?? 'Hospital';
+
+$portalRole = $isDoctor ? 'Doctor' : 'Hospital';
 $portalRoleBn = 'Code Blue ACLS';
 $portalUser = $userName;
-$portalMeta = 'Resuscitation Co-Pilot · ' . $hospitalName;
-$portalTitle = 'Cardiac Arrest Code Blue Assistant';
-$portalSubtitle = 'AHA ACLS 2025/2026 Guidelines · Real-time Voice Transcription · 2-Min Pulse Reminder · Automated Run Sheet';
+$portalMeta = $hospitalName . ' · Resuscitation co-pilot';
+$portalTitle = 'Code Blue assistant';
+$portalSubtitle = 'AHA ACLS timers · voice log · automated run sheet';
 $portalNav = $isDoctor ? mc_doctor_nav('code_blue') : mc_hospital_nav('code_blue');
+$portalTopAction = '<button type="button" class="mc-btn mc-btn-danger mc-btn-sm" onclick="toggleCodeTimer()"><i class="bi bi-play-fill"></i> Start / pause</button>';
 
 require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
 
 <div class="code-blue-container">
-  <!-- 1. LIVE RESUSCITATION TELEMETRY BAR -->
   <div class="cb-telemetry-grid">
-    <!-- Total Code Time -->
     <div class="cb-card cb-time-card">
-      <div class="cb-card-label"><i class="bi bi-stopwatch-fill"></i> Total Code Duration</div>
+      <div class="cb-card-label"><i class="bi bi-stopwatch-fill"></i> Total code duration</div>
       <div class="cb-big-timer" id="totalTimer">00:00</div>
       <div class="cb-timer-controls">
         <button type="button" class="cb-btn cb-btn-start" id="btnStartCode" onclick="toggleCodeTimer()">
-          <i class="bi bi-play-fill"></i> Start Code
+          <i class="bi bi-play-fill"></i> Start code
         </button>
         <button type="button" class="cb-btn cb-btn-pause" id="btnPauseCode" onclick="resetCodeTimer()">
           <i class="bi bi-arrow-counterclockwise"></i> Reset
@@ -101,26 +108,26 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
       <div style="display:flex;align-items:center;gap:0.75rem">
         <div class="cb-voice-pulse" id="voicePulseIndicator"></div>
         <div>
-          <h3 style="margin:0;font-size:1.05rem;color:#0f172a">AI Voice-to-Text Resuscitation Co-Pilot</h3>
+          <h3 style="margin:0;font-size:1.05rem;color:#0f172a">AudioToText + Groq Co-Pilot</h3>
           <p style="margin:0.15rem 0 0;font-size:0.8rem;color:var(--muted)">
-            কথা বলুন — এআই স্বয়ংক্রিয়ভাবে ড্রাগ, ডোজ, শক ও সিপিআর শনাক্ত করে রেকর্ডভুক্ত করবে।
+            Whisper অডিও→টেক্সট · Groq ইন্টারভেনশন sort/রেকর্ড · Pulse/Epi রিমাইন্ডার
           </p>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:0.5rem">
         <button type="button" class="mc-btn mc-btn-primary mc-btn-sm" id="btnVoiceToggle" onclick="toggleVoiceListening()">
-          <i class="bi bi-mic-fill"></i> <span id="voiceBtnText">Start Listening (ভয়েস রেকর্ড চালু করুন)</span>
+          <i class="bi bi-mic-fill"></i> <span id="voiceBtnText">Start listening</span>
         </button>
       </div>
     </div>
 
-    <!-- Live Transcript Box -->
     <div class="cb-transcript-box" id="transcriptBox">
       <span class="transcript-placeholder" id="transcriptPlaceholder">
-        মাইক্রোফোন চালু করে কথা বলুন অথবা নিচের সিমুলেশন বোতামগুলো ক্লিক করুন (যেমন: "Dr. Farhana just pushed 1mg epi IV", "Shock 200J delivered, resume CPR", "Carotid pulse is back!").
+        মাইক চালু করুন — টিম যে কথা বলবে (Epi, Shock, CPR, ROSC) Whisper ট্রান্সক্রাইব করে Groq সাজিয়ে ledger-এ লিখবে। অথবা নিচের simulate chips ব্যবহার করুন।
       </span>
       <span id="liveTranscriptText" style="color:#0f172a;font-weight:600"></span>
     </div>
+    <p id="cbAsrEngine" style="margin:.45rem 0 0;font-size:.75rem;color:var(--muted)"></p>
 
     <!-- Quick Audio Simulation / Test Chips -->
     <div class="cb-sim-chips">
@@ -264,86 +271,6 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
     </div>
   </div>
 </div>
-
-<style>
-/* Code Blue Styles */
-.code-blue-container { display: flex; flex-direction: column; gap: 1.25rem; }
-.cb-telemetry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; }
-.cb-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(16,24,40,0.03); }
-.cb-card-label { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
-.cb-big-timer { font-family: "JetBrains Mono", monospace; font-size: 2.6rem; font-weight: 800; color: #0f172a; margin: 0.35rem 0; line-height: 1; }
-.cb-timer-controls { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-.cb-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.85rem; border-radius: 9px; font-size: 0.82rem; font-weight: 700; border: 1px solid transparent; cursor: pointer; transition: all 0.2s ease; }
-.cb-btn-start { background: #0f766e; color: #fff; }
-.cb-btn-start:hover { background: #0d9488; }
-.cb-btn-pause { background: #f1f5f9; color: var(--ink); border-color: #cbd5e1; }
-.cb-btn-pulse { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-.cb-btn-metronome { background: #fdf4ff; color: #a21caf; border-color: #f5d0fe; }
-.cb-btn-metronome.active { background: #a21caf; color: #fff; }
-.cb-btn-danger { background: #dc2626; color: #fff; }
-.cb-btn-danger:hover { background: #b91c1c; }
-.cb-btn-action { background: #0f766e; color: #fff; width: 100%; justify-content: center; }
-
-/* 2-Min CPR Card */
-.cb-cpr-card { border-left: 4px solid #1d4ed8; }
-.cb-cpr-display { display: flex; align-items: baseline; justify-content: space-between; margin: 0.35rem 0; }
-.cb-cpr-time { font-family: "JetBrains Mono", monospace; font-size: 2.2rem; font-weight: 800; color: #1d4ed8; line-height: 1; }
-.cb-cpr-sub { font-size: 0.82rem; font-weight: 700; color: #64748b; }
-.cb-cpr-bar-wrap { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin: 0.4rem 0; }
-.cb-cpr-bar { height: 100%; background: #1d4ed8; transition: width 1s linear; }
-
-/* Epinephrine Card */
-.cb-epi-card { border-left: 4px solid #7c3aed; }
-.cb-epi-display { display: flex; align-items: baseline; justify-content: space-between; margin: 0.35rem 0; }
-.cb-epi-time { font-family: "JetBrains Mono", monospace; font-size: 2.2rem; font-weight: 800; color: #7c3aed; line-height: 1; }
-.cb-epi-sub { font-size: 0.82rem; font-weight: 700; color: #64748b; }
-
-/* Voice Co-Pilot Panel */
-.cb-voice-panel { background: linear-gradient(135deg, #f8fafc 0%, #ecfdf8 100%); border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 1.25rem; }
-.cb-voice-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.85rem; }
-.cb-voice-pulse { width: 12px; height: 12px; border-radius: 50%; background: #94a3b8; }
-.cb-voice-pulse.listening { background: #ef4444; box-shadow: 0 0 12px #ef4444; animation: pulse-voice 1.5s infinite; }
-@keyframes pulse-voice { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.2);opacity:0.6} }
-.cb-transcript-box { background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 0.85rem 1rem; min-height: 52px; font-size: 0.92rem; line-height: 1.5; margin-bottom: 0.75rem; }
-.transcript-placeholder { color: #94a3b8; font-style: italic; }
-.cb-sim-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-.cb-chip { background: #fff; border: 1px solid #cbd5e1; border-radius: 20px; padding: 0.25rem 0.65rem; font-size: 0.76rem; font-weight: 600; color: #334155; cursor: pointer; transition: all 0.15s ease; }
-.cb-chip:hover { border-color: #0f766e; background: #ecfdf8; color: #0f766e; }
-
-/* Main Grid */
-.cb-main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.25rem; }
-@media (max-width: 960px) { .cb-main-grid { grid-template-columns: 1fr; } }
-.cb-quick-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; padding: 0.75rem; background: #f8fafc; border-radius: 12px; border: 1px solid var(--line); margin-bottom: 1rem; }
-.cb-q-btn { border: 1px solid transparent; border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: transform 0.1s ease; }
-.cb-q-btn:hover { transform: translateY(-1px); }
-.cb-q-btn.red { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
-.cb-q-btn.purple { background: #faf5ff; color: #6b21a8; border-color: #e9d5ff; }
-.cb-q-btn.blue { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-.cb-q-btn.cyan { background: #ecfeff; color: #0e7490; border-color: #a5f3fc; }
-.cb-q-btn.amber { background: #fffbeb; color: #b45309; border-color: #fde68a; }
-.cb-q-btn.teal { background: #f0fdfa; color: #0f766e; border-color: #99f6e4; }
-.cb-q-btn.green { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
-
-/* Timeline List */
-.cb-timeline-list { display: flex; flex-direction: column; gap: 0.6rem; max-height: 480px; overflow-y: auto; }
-.cb-timeline-item { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid var(--line); background: #fafbfc; }
-.cb-timeline-item.shock { border-color: #fca5a5; background: #fef2f2; }
-.cb-timeline-item.med { border-color: #d8b4fe; background: #faf5ff; }
-.cb-timeline-item.rosc { border-color: #86efac; background: #f0fdf4; }
-.cb-time-badge { font-family: "JetBrains Mono", monospace; font-size: 0.8rem; font-weight: 800; background: #e2e8f0; padding: 0.15rem 0.45rem; border-radius: 5px; color: #0f172a; }
-.cb-empty-ledger { text-align: center; padding: 3rem 1rem; color: var(--muted); }
-.cb-empty-ledger i { font-size: 2.2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5; }
-
-/* Guidelines & Causes */
-.cb-acls-rules { margin: 0; padding-left: 1.2rem; font-size: 0.82rem; line-height: 1.55; color: #334155; }
-.cb-acls-rules li { margin-bottom: 0.45rem; }
-.cb-causes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.82rem; }
-.cb-check-item { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem; cursor: pointer; color: #334155; }
-
-/* Modal */
-.mc-modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 9999; display: grid; place-items: center; }
-.mc-modal { background: #fff; border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); overflow: hidden; }
-</style>
 
 <script>
 // Code Blue State & Timers
@@ -605,71 +532,57 @@ function toggleCause(checkbox, cause) {
 }
 
 // -------------------------------------------------------------
-// Voice Speech-to-Text via Web Speech API + Groq AI Parsing
+// AudioToText (Whisper) → Groq ACLS parse/sort
 // -------------------------------------------------------------
-function toggleVoiceListening() {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    alert("Web Speech API is not supported in this browser. You can use the Quick Action buttons or simulate speech chips.");
-    return;
-  }
+let cbAudioClient = null;
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+function toggleVoiceListening() {
   const btn = document.getElementById('btnVoiceToggle');
   const btnText = document.getElementById('voiceBtnText');
   const pulse = document.getElementById('voicePulseIndicator');
+  const engineEl = document.getElementById('cbAsrEngine');
 
   if (!isListening) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = function() {
+    if (!window.MedCoreAudioToText) {
+      alert('AudioToText client missing. Use quick actions or simulate chips.');
+      return;
+    }
+    cbAudioClient = MedCoreAudioToText.create({
+      endpoint: '<?= APP_URL ?>/api/audio-transcribe.php',
+      mode: 'code_blue',
+      chunkMs: 5500,
+      onPartial: function (t) {
+        document.getElementById('transcriptPlaceholder').style.display = 'none';
+        document.getElementById('liveTranscriptText').textContent = t;
+      },
+      onFinal: function (t) {
+        document.getElementById('transcriptPlaceholder').style.display = 'none';
+        document.getElementById('liveTranscriptText').textContent = t;
+        processTranscriptWithGroq(t);
+      },
+      onStatus: function (s) {
+        if (engineEl) {
+          engineEl.textContent = s === 'whisper'
+            ? 'Engine: Whisper (AudioToText) → Groq refine + ACLS sort'
+            : (s === 'webspeech' ? 'Engine: Web Speech fallback → Groq' : '');
+        }
+      },
+      onError: function (msg) { console.warn('ASR:', msg); }
+    });
+    cbAudioClient.start().then(function () {
       isListening = true;
-      btnText.textContent = 'Listening Active (রেকর্ড হচ্ছে - কথা বলুন)...';
+      btnText.textContent = 'Listening…';
       btn.classList.add('mc-btn-danger');
       pulse.classList.add('listening');
       document.getElementById('transcriptPlaceholder').style.display = 'none';
-    };
-
-    recognition.onresult = function(event) {
-      let interim = '';
-      let finalTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
-        }
-      }
-
-      document.getElementById('liveTranscriptText').textContent = finalTranscript || interim;
-
-      if (finalTranscript.trim().length > 0) {
-        processTranscriptWithGroq(finalTranscript.trim());
-      }
-    };
-
-    recognition.onerror = function(err) {
-      console.warn("Speech recognition error:", err);
-    };
-
-    recognition.onend = function() {
-      if (isListening) {
-        try { recognition.start(); } catch(e) {}
-      }
-    };
-
-    try {
-      recognition.start();
-    } catch(e) {
-      console.error(e);
-    }
+    }).catch(function () {
+      alert('Microphone permission required for AudioToText.');
+    });
   } else {
     isListening = false;
+    if (cbAudioClient) cbAudioClient.stop();
     if (recognition) recognition.stop();
-    btnText.textContent = 'Start Listening (ভয়েস রেকর্ড চালু করুন)';
+    btnText.textContent = 'Start listening';
     btn.classList.remove('mc-btn-danger');
     pulse.classList.remove('listening');
   }

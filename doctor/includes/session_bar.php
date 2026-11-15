@@ -273,7 +273,7 @@ if (!function_exists('getPatientExecutiveClinicalSummary')) {
         $stmtActiveMeds->execute([$patientId]);
         $activeMeds = $stmtActiveMeds->fetchAll() ?: [];
 
-        return [
+        $summary = [
             'patient'       => $patient,
             'prescriptions' => $prescriptions,
             'consultations' => $consultations,
@@ -282,6 +282,47 @@ if (!function_exists('getPatientExecutiveClinicalSummary')) {
             'allergies'     => $allergies,
             'active_meds'   => $activeMeds,
         ];
+
+        // AI short brief for doctors (session-cached ~10 min)
+        $summary['ai_brief'] = mc_get_doctor_ai_brief($summary);
+
+        return $summary;
+    }
+}
+
+if (!function_exists('mc_get_doctor_ai_brief')) {
+    function mc_get_doctor_ai_brief(array $summary): array {
+        $pid = (int)($summary['patient']['id'] ?? 0);
+        $cacheKey = 'mc_ai_brief_' . $pid;
+        $sig = md5(json_encode([
+            count($summary['conditions'] ?? []),
+            count($summary['active_meds'] ?? []),
+            count($summary['allergies'] ?? []),
+            count($summary['prescriptions'] ?? []),
+        ]));
+        if (
+            !empty($_SESSION[$cacheKey]['sig'])
+            && $_SESSION[$cacheKey]['sig'] === $sig
+            && !empty($_SESSION[$cacheKey]['expires'])
+            && $_SESSION[$cacheKey]['expires'] > time()
+        ) {
+            return $_SESSION[$cacheKey]['data'];
+        }
+
+        $servicePath = dirname(__DIR__, 2) . '/app/services/SidekickService.php';
+        if (!class_exists('SidekickService') && is_file($servicePath)) {
+            require_once $servicePath;
+        }
+        $brief = class_exists('SidekickService')
+            ? SidekickService::doctorPatientBrief($summary)
+            : ['success' => false, 'bullets' => [], 'headline_bn' => '', 'headline_en' => ''];
+
+        $_SESSION[$cacheKey] = [
+            'sig' => $sig,
+            'expires' => time() + 600,
+            'data' => $brief,
+        ];
+        return $brief;
     }
 }
 
@@ -293,6 +334,8 @@ if (!function_exists('renderExecutiveClinicalSummary')) {
         $conds = $summary['conditions'] ?? [];
         $allergies = $summary['allergies'] ?? [];
         $activeMeds = $summary['active_meds'] ?? [];
+        $aiBrief = $summary['ai_brief'] ?? [];
+        $aiBullets = $aiBrief['bullets'] ?? [];
 
         $hasCriticalAllergy = false;
         foreach ($allergies as $a) {
@@ -310,7 +353,7 @@ if (!function_exists('renderExecutiveClinicalSummary')) {
                   <i class="bi bi-stars"></i> EXECUTIVE CLINICAL SUMMARY
                 </span>
                 <span style="font-size:12px;color:var(--mc-text-muted);font-weight:600;">
-                  রোগীর অতীত রোগ, ওষুধ ও ল্যাব রিপোর্ট সারাংশ
+                  AI brief · অতীত অসুখ · চলতি ওষুধ
                 </span>
               </div>
               <h2 style="font-size:<?= $compact ? '18px' : '22px' ?>;font-weight:800;color:var(--mc-text-dark);margin:4px 0 0;">
@@ -352,6 +395,33 @@ if (!function_exists('renderExecutiveClinicalSummary')) {
                   <?php endforeach; ?>
                 </div>
               </div>
+            </div>
+          <?php endif; ?>
+
+          <?php if (!empty($aiBullets)): ?>
+            <div class="mc-ai-brief" style="margin:0 0 1.15rem;padding:1rem 1.15rem;background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;">
+              <div style="display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;align-items:baseline;margin-bottom:.55rem">
+                <strong style="font-size:.92rem;color:#0c4a6e">
+                  <i class="bi bi-robot"></i> AI short summary
+                  <?php if (!empty($aiBrief['headline_bn'])): ?>
+                    — <?= htmlspecialchars($aiBrief['headline_bn']) ?>
+                  <?php endif; ?>
+                </strong>
+                <span style="font-size:.72rem;font-weight:700;color:#0369a1;letter-spacing:.04em;text-transform:uppercase">
+                  <?= ($aiBrief['source'] ?? '') === 'groq' ? 'Groq' : 'Local' ?>
+                </span>
+              </div>
+              <?php if (!empty($aiBrief['headline_en'])): ?>
+                <p style="margin:0 0 .55rem;font-size:.86rem;color:#475569"><?= htmlspecialchars($aiBrief['headline_en']) ?></p>
+              <?php endif; ?>
+              <ul style="margin:0;padding-left:1.1rem;display:grid;gap:.35rem;color:#0f172a;font-size:.92rem;line-height:1.45">
+                <?php foreach ($aiBullets as $b):
+                  $line = ltrim((string)$b);
+                  if (str_starts_with($line, '•')) $line = ltrim(substr($line, 1));
+                ?>
+                  <li><?= htmlspecialchars(trim($line)) ?></li>
+                <?php endforeach; ?>
+              </ul>
             </div>
           <?php endif; ?>
 

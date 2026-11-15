@@ -57,13 +57,13 @@ PROMPT;
         $userMessage = "Transcript from resuscitation room:\n\"" . $transcript . "\"";
 
         $postData = [
-            'model' => 'openai/gpt-oss-120b',
+            'model' => GROQ_MODEL,
             'messages' => [
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $userMessage]
             ],
             'temperature' => 0.1,
-            'max_tokens' => 800,
+            'max_tokens' => 900,
             'response_format' => ['type' => 'json_object']
         ];
 
@@ -76,7 +76,7 @@ PROMPT;
                 'Authorization: Bearer ' . $apiKey,
                 'Content-Type: application/json'
             ],
-            CURLOPT_TIMEOUT        => 8
+            CURLOPT_TIMEOUT        => 12
         ]);
 
         $response = curl_exec($ch);
@@ -88,11 +88,17 @@ PROMPT;
             $content = $data['choices'][0]['message']['content'] ?? '';
             $parsed = json_decode($content, true);
             if (is_array($parsed) && isset($parsed['events'])) {
+                // Chronological-friendly sort: CRITICAL first, then HIGH, then STANDARD
+                usort($parsed['events'], static function ($a, $b) {
+                    $rank = ['CRITICAL' => 0, 'HIGH' => 1, 'STANDARD' => 2];
+                    $ua = $rank[$a['urgency'] ?? 'STANDARD'] ?? 2;
+                    $ub = $rank[$b['urgency'] ?? 'STANDARD'] ?? 2;
+                    return $ua <=> $ub;
+                });
                 return $parsed;
             }
         }
 
-        // Fallback to rule engine if API is unreachable
         return self::fallbackRuleParser($transcript);
     }
 
@@ -233,7 +239,7 @@ PROMPT;
         $reportText = '';
         if (!empty($apiKey)) {
             $postData = [
-                'model' => 'openai/gpt-oss-120b',
+                'model' => GROQ_MODEL,
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
                     ['role' => 'user', 'content' => $userMessage]

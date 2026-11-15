@@ -7,8 +7,13 @@ require_once __DIR__ . '/../app/views/media.php';
 
 initSession();
 
+$redirect = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
+if ($redirect !== '' && (!str_starts_with($redirect, '/') || str_starts_with($redirect, '//'))) {
+    $redirect = '';
+}
+
 if (isLoggedIn('HOSPITAL_ADMIN')) {
-    header('Location: ' . APP_URL . '/hospital/dashboard.php');
+    header('Location: ' . APP_URL . (!empty($redirect) ? $redirect : '/hospital/dashboard.php'));
     exit;
 }
 
@@ -56,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'metadata'    => ['method' => 'hospital_admin_password'],
                 ]);
 
-                header('Location: ' . APP_URL . '/hospital/dashboard.php');
+                header('Location: ' . APP_URL . (!empty($redirect) ? $redirect : '/hospital/dashboard.php'));
                 exit;
             }
         } else {
@@ -80,6 +85,9 @@ ob_start();
 ?>
 <form method="POST" id="login-form">
   <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+  <?php if (!empty($redirect)): ?>
+    <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect) ?>">
+  <?php endif; ?>
 
   <label class="mc-field">
     <span>Admin email</span>

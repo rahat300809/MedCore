@@ -60,7 +60,7 @@ PROMPT;
         $userMessage = "Consultation speech segment:\n\"" . $speechText . "\"";
 
         $postData = [
-            'model' => 'openai/gpt-oss-120b',
+            'model' => GROQ_MODEL,
             'messages' => [
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $userMessage]
@@ -79,7 +79,7 @@ PROMPT;
                 'Authorization: Bearer ' . $apiKey,
                 'Content-Type: application/json'
             ],
-            CURLOPT_TIMEOUT        => 8
+            CURLOPT_TIMEOUT        => 12
         ]);
 
         $response = curl_exec($ch);
@@ -128,7 +128,7 @@ PROMPT;
         $summaryText = '';
         if (!empty($apiKey)) {
             $postData = [
-                'model' => 'openai/gpt-oss-120b',
+                'model' => GROQ_MODEL,
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
                     ['role' => 'user', 'content' => $userMessage]
@@ -168,6 +168,282 @@ PROMPT;
             'summary_markdown' => $summaryText,
             'created_at' => date('Y-m-d H:i:s')
         ];
+    }
+
+    /**
+     * Short AI brief for doctors opening a consented patient record.
+     * Bullet points: past illnesses, current medicines & purpose, alerts.
+     */
+    public static function doctorPatientBrief(array $summary): array {
+        $patient = $summary['patient'] ?? [];
+        $conditions = array_slice($summary['conditions'] ?? [], 0, 8);
+        $activeMeds = array_slice($summary['active_meds'] ?? [], 0, 12);
+        $allergies = array_slice($summary['allergies'] ?? [], 0, 8);
+        $rxs = array_slice($summary['prescriptions'] ?? [], 0, 5);
+
+        $payload = [
+            'patient' => [
+                'name' => $patient['full_name'] ?? '',
+                'age' => $patient['age'] ?? null,
+                'gender' => $patient['gender'] ?? '',
+                'blood_group' => $patient['blood_group'] ?? '',
+            ],
+            'conditions' => array_map(static function ($c) {
+                return [
+                    'condition' => $c['condition_name'] ?? $c['diagnosis'] ?? ($c['title'] ?? 'Condition'),
+                    'status' => $c['status'] ?? '',
+                    'diagnosed' => $c['diagnosed_date'] ?? '',
+                    'when' => $c['time_ago'] ?? '',
+                ];
+            }, $conditions),
+            'active_medicines' => array_map(static function ($m) {
+                return [
+                    'name' => ($m['brand_name'] ?? '') ?: ($m['generic_name'] ?? 'Medicine'),
+                    'generic' => $m['generic_name'] ?? '',
+                    'dose' => trim(($m['dosage'] ?? '') . ' ' . ($m['strength'] ?? '')),
+                    'frequency' => $m['frequency'] ?? '',
+                ];
+            }, $activeMeds),
+            'allergies' => array_map(static function ($a) {
+                return [
+                    'name' => $a['allergy_name'] ?? '',
+                    'severity' => $a['severity'] ?? '',
+                ];
+            }, $allergies),
+            'recent_diagnoses' => array_map(static function ($rx) {
+                return [
+                    'diagnosis' => $rx['diagnosis'] ?? 'Consultation',
+                    'when' => $rx['time_ago'] ?? '',
+                    'medicines' => array_map(static function ($m) {
+                        return ($m['medicine_name'] ?? $m['brand_name'] ?? $m['generic_name'] ?? 'Med');
+                    }, array_slice($rx['medicines'] ?? [], 0, 6)),
+                ];
+            }, $rxs),
+        ];
+
+        $apiKey = GROQ_API_KEY;
+        if (!empty($apiKey)) {
+            $systemPrompt = <<<PROMPT
+You are MedCore clinical co-pilot for Bangladesh doctors.
+Given structured patient history, write a SHORT bedside briefing in clear bilingual bullets.
+Return ONLY valid JSON:
+{
+  "headline_bn": "১ লাইনের সারাংশ",
+  "headline_en": "One-line English headline",
+  "bullets": [
+    "• Past illness / diagnosis with rough timing (BN or EN mix OK)",
+    "• Current medicine — what it is for",
+    "• Allergy / red-flag if any",
+    "• Key follow-up hint"
+  ]
+}
+Rules:
+- 5 to 8 bullets max.
+- Each bullet starts with "• ".
+- Focus on: আগে কী অসুখ ছিল, কী ওষুধ খাচ্ছে ও কেন, অ্যালার্জি।
+- Be clinically careful; do not invent diagnoses not in the data.
+- If data is sparse, say so briefly.
+PROMPT;
+            $postData = [
+                'model' => GROQ_MODEL,
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => json_encode($payload, JSON_UNESCAPED_UNICODE)],
+                ],
+                'temperature' => 0.15,
+                'max_tokens' => 900,
+                'response_format' => ['type' => 'json_object'],
+            ];
+            $ch = curl_init(GROQ_API_URL);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($postData),
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $apiKey,
+                    'Content-Type: application/json',
+                ],
+                CURLOPT_TIMEOUT => 12,
+            ]);
+            $response = curl_exec($ch);
+            $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($httpCode === 200 && $response) {
+                $data = json_decode($response, true);
+                $content = $data['choices'][0]['message']['content'] ?? '';
+                $parsed = json_decode($content, true);
+                if (is_array($parsed) && !empty($parsed['bullets']) && is_array($parsed['bullets'])) {
+                    return [
+                        'success' => true,
+                        'headline_bn' => $parsed['headline_bn'] ?? '',
+                        'headline_en' => $parsed['headline_en'] ?? '',
+                        'bullets' => array_values(array_filter(array_map('strval', $parsed['bullets']))),
+                        'source' => 'groq',
+                    ];
+                }
+            }
+        }
+
+        return self::fallbackDoctorBrief($payload);
+    }
+
+    private static function fallbackDoctorBrief(array $payload): array {
+        $bullets = [];
+        foreach ($payload['allergies'] as $a) {
+            if (($a['name'] ?? '') === '') continue;
+            $sev = $a['severity'] ?? '';
+            $bullets[] = '• Allergy: ' . $a['name'] . ($sev ? " ({$sev})" : '');
+        }
+        foreach ($payload['conditions'] as $c) {
+            $name = $c['condition'] ?? 'Condition';
+            $when = $c['when'] ?: ($c['diagnosed'] ?? '');
+            $bullets[] = '• Past / chronic: ' . $name . ($when ? " — {$when}" : '');
+        }
+        foreach ($payload['recent_diagnoses'] as $rx) {
+            $meds = !empty($rx['medicines']) ? ' · Rx: ' . implode(', ', $rx['medicines']) : '';
+            $bullets[] = '• ' . ($rx['diagnosis'] ?: 'Visit') . ($rx['when'] ? ' (' . $rx['when'] . ')' : '') . $meds;
+        }
+        foreach ($payload['active_medicines'] as $m) {
+            $bullets[] = '• Taking: ' . $m['name'] . ($m['frequency'] ? ' — ' . $m['frequency'] : '') . ' (active)';
+        }
+        if (empty($bullets)) {
+            $bullets[] = '• Limited prior history in MedCore for this patient yet.';
+        }
+        $bullets = array_slice($bullets, 0, 8);
+        $p = $payload['patient']['name'] ?? 'Patient';
+        return [
+            'success' => true,
+            'headline_bn' => $p . ' — সংক্ষিপ্ত ক্লিনিক্যাল সারাংশ',
+            'headline_en' => 'Quick clinical brief',
+            'bullets' => $bullets,
+            'source' => 'fallback',
+        ];
+    }
+
+    /**
+     * Explain prescribed medicines for the patient portal (what each drug is for).
+     * @param array $meds list of {generic_name, brand_name, dosage, frequency, strength, dosage_form, drug_class?}
+     */
+    public static function explainMedicines(array $meds): array {
+        if (empty($meds)) {
+            return ['success' => true, 'explanations' => []];
+        }
+
+        $apiKey = GROQ_API_KEY;
+        $payload = array_map(static function ($m) {
+            return [
+                'name' => trim(($m['brand_name'] ?? '') ?: ($m['generic_name'] ?? 'Medicine')),
+                'generic' => $m['generic_name'] ?? '',
+                'dose' => trim(($m['dosage'] ?? '') . ' ' . ($m['strength'] ?? '')),
+                'frequency' => $m['frequency'] ?? '',
+                'form' => $m['dosage_form'] ?? '',
+                'class' => $m['drug_class'] ?? '',
+            ];
+        }, $meds);
+
+        if (!empty($apiKey)) {
+            $systemPrompt = <<<PROMPT
+You are MedCore Sidekick — a patient advocate pharmacist educator for Bangladesh.
+For each medicine, explain in simple language WHY the doctor prescribed it and HOW to take it safely.
+Return ONLY valid JSON:
+{
+  "explanations": [
+    {
+      "name": "exact medicine name from input",
+      "purpose_bn": "এই ওষুধ কেন খাচ্ছেন — সহজ বাংলায় ১–২ বাক্য",
+      "purpose_en": "Why prescribed — 1 short English sentence",
+      "how_to_take_bn": "কখন/কীভাবে খাবেন (খাওয়ার আগে/পরে, সময়)",
+      "caution_bn": "সতর্কতা — সংক্ষেপে",
+      "icon_hint": "heart|sugar|infection|pain|stomach|lung|other"
+    }
+  ]
+}
+PROMPT;
+            $postData = [
+                'model' => GROQ_MODEL,
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => json_encode(['medicines' => $payload], JSON_UNESCAPED_UNICODE)],
+                ],
+                'temperature' => 0.2,
+                'max_tokens' => 1400,
+                'response_format' => ['type' => 'json_object'],
+            ];
+            $ch = curl_init(GROQ_API_URL);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($postData),
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $apiKey,
+                    'Content-Type: application/json',
+                ],
+                CURLOPT_TIMEOUT => 14,
+            ]);
+            $response = curl_exec($ch);
+            $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($httpCode === 200 && $response) {
+                $data = json_decode($response, true);
+                $content = $data['choices'][0]['message']['content'] ?? '';
+                $parsed = json_decode($content, true);
+                if (is_array($parsed) && isset($parsed['explanations'])) {
+                    return ['success' => true, 'explanations' => $parsed['explanations'], 'source' => 'groq'];
+                }
+            }
+        }
+
+        return ['success' => true, 'explanations' => self::fallbackMedicineExplanations($payload), 'source' => 'fallback'];
+    }
+
+    private static function fallbackMedicineExplanations(array $payload): array {
+        $out = [];
+        foreach ($payload as $m) {
+            $name = $m['name'] ?: 'Medicine';
+            $g = strtolower($m['generic'] . ' ' . $name . ' ' . ($m['class'] ?? ''));
+            $purposeBn = 'ডাক্তার আপনার চিকিৎসার জন্য এই ওষুধটি নির্ধারণ করেছেন।';
+            $purposeEn = 'Your doctor prescribed this as part of your treatment plan.';
+            $hint = 'other';
+            if (preg_match('/amlo|losartan|atenolol|bisoprolol|pressure|hypertens|ace|arb|beta/', $g)) {
+                $purposeBn = 'এটি রক্তচাপ নিয়ন্ত্রণে সাহায্য করে — হৃদপিণ্ড ও রক্তনালীর চাপ কমায়।';
+                $purposeEn = 'Helps control blood pressure and protect the heart.';
+                $hint = 'heart';
+            } elseif (preg_match('/metformin|glimepiride|insulin|gliclazide|diabetes|glucose/', $g)) {
+                $purposeBn = 'এটি রক্তের শর্করা (সুগার) নিয়ন্ত্রণে সাহায্য করে।';
+                $purposeEn = 'Helps control blood sugar levels.';
+                $hint = 'sugar';
+            } elseif (preg_match('/amox|azithro|cipro|cef|antibiotic|moxiflox/', $g)) {
+                $purposeBn = 'এটি ব্যাকটেরিয়া সংক্রমণ প্রতিরোধ/চিকিৎসার অ্যান্টিবায়োটিক।';
+                $purposeEn = 'Antibiotic to treat bacterial infection.';
+                $hint = 'infection';
+            } elseif (preg_match('/omeprazole|esomeprazole|pantoprazole|ranitidine|antacid/', $g)) {
+                $purposeBn = 'এটি পেটের অ্যাসিড কমায় — গ্যাস্ট্রিক/আলসার সুরক্ষায়।';
+                $purposeEn = 'Reduces stomach acid for gastric protection.';
+                $hint = 'stomach';
+            } elseif (preg_match('/paracetamol|ibuprofen|naproxen|diclofenac|tramadol|pain/', $g)) {
+                $purposeBn = 'এটি ব্যথা ও জ্বর কমাতে সাহায্য করে।';
+                $purposeEn = 'Helps relieve pain and/or fever.';
+                $hint = 'pain';
+            } elseif (preg_match('/atorvastatin|rosuvastatin|statin|lipid|cholesterol/', $g)) {
+                $purposeBn = 'এটি রক্তের ক্ষতিকর কোলেস্টেরল কমায়।';
+                $purposeEn = 'Lowers harmful cholesterol in the blood.';
+                $hint = 'heart';
+            } elseif (preg_match('/salbutamol|montelukast|inhal|asthma|budesonide/', $g)) {
+                $purposeBn = 'এটি শ্বাসনালী খুলে শ্বাসকষ্ট কমাতে সাহায্য করে।';
+                $purposeEn = 'Helps open airways and ease breathing.';
+                $hint = 'lung';
+            }
+            $freq = $m['frequency'] ?: 'ডাক্তারের নির্দেশমতো';
+            $out[] = [
+                'name' => $name,
+                'purpose_bn' => $purposeBn,
+                'purpose_en' => $purposeEn,
+                'how_to_take_bn' => 'মাত্রা: ' . ($m['dose'] ?: 'প্রেসক্রিপশন অনুযায়ী') . ' · সময়: ' . $freq . '। নিয়মিত খান, নিজে নিজে বন্ধ করবেন না।',
+                'caution_bn' => 'অ্যালার্জি, বমি, তীব্র পার্শ্বপ্রতিক্রিয়া হলে ডাক্তারকে জানান।',
+                'icon_hint' => $hint,
+            ];
+        }
+        return $out;
     }
 
     private static function fallbackAnalysis(string $speechText): array {

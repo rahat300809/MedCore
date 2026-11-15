@@ -4,45 +4,37 @@ require_once __DIR__ . '/../app/config/database.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/views/portal/navs.php';
 
-initSession();
+requireAuth('PATIENT');
 
-$isPatient = isLoggedIn('PATIENT');
 $patientUid = $_SESSION['patient_uid'] ?? 'PT-000001';
-$patientName = $_SESSION['name'] ?? 'Rahat Mahamud';
+$patientName = $_SESSION['name'] ?? 'Patient';
 
 $portalRole = 'Patient';
-$portalRoleBn = 'নাগরিক ও রোগী পোর্টাল';
+$portalRoleBn = 'Patient portal';
 $portalUser = $patientName;
-$portalMeta = 'Patient UID: ' . $patientUid;
-$portalTitle = 'Sidekick — Real-Time Patient Advocate';
-$portalSubtitle = 'ডাক্তারের সাথে অ্যাপয়েন্টমেন্টের সময় লাইভ ভয়েস অনুবাদ, মেডিকেল টার্ম সহজ ব্যাখ্যা ও করণীয় সারাংশ';
+$portalMeta = $patientUid . ' · Sidekick AI';
+$portalTitle = 'Sidekick AI';
+$portalSubtitle = 'লাইভ কনসালটেশনে মেডিকেল টার্ম ব্যাখ্যা ও স্মার্ট প্রশ্ন';
 $portalNav = mc_patient_nav('sidekick');
+$portalTopAction = '<a class="mc-btn mc-btn-secondary mc-btn-sm" href="' . APP_URL . '/patient/dashboard.php">Dashboard</a>';
 
 require __DIR__ . '/../app/views/layout/portal_shell_start.php';
 ?>
 
 <div class="sidekick-container">
-  <!-- 1. TOP ADVOCATE HERO BANNER -->
   <div class="sk-banner">
     <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
       <div class="sk-banner-icon"><i class="bi bi-shield-heart-fill"></i></div>
-      <div style="flex:1;min-width:260px">
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">
-          <span class="mc-pill" style="background:#0f766e;color:#fff;font-size:0.75rem;border:none">
-            <i class="bi bi-stars"></i> Real-Time AI Advocate
-          </span>
-          <span style="font-size:0.8rem;color:#64748b;font-weight:600">Patient Rights & Clarification</span>
-        </div>
-        <h2 style="margin:0;font-size:1.35rem;color:#0f172a">কখনো কোনো চিকিৎসা তথ্য ভুলে যাবেন না</h2>
-        <p style="margin:0.25rem 0 0;font-size:0.88rem;color:var(--muted)">
-          ডাক্তারের রুমে এটি চালু রাখুন — জটিল মেডিকেল শব্দ সহজ বাংলায় বুঝে নিন এবং সঠিক প্রশ্ন করার তাৎক্ষণিক পরামর্শ পান।
+      <div style="flex:1;min-width:240px">
+        <p class="mc-kicker" style="margin:0 0 .35rem">Real-time patient advocate</p>
+        <h2 style="margin:0;font-size:1.25rem">চেম্বারে শুনুন — সহজ ভাষায় বুঝুন</h2>
+        <p style="margin:.35rem 0 0;font-size:.9rem;color:var(--muted)">
+          জটিল পরিভাষা বাংলায়, প্রশ্ন সাজেশন, এবং সেশনের সারাংশ এক জায়গায়।
         </p>
       </div>
-      <div>
-        <button type="button" class="mc-btn mc-btn-primary mc-btn-lg" id="btnMicToggle" onclick="toggleSidekickListening()">
-          <i class="bi bi-mic-fill"></i> <span id="micBtnLabel">Start Listening (ভয়েস রেকর্ড চালু করুন)</span>
-        </button>
-      </div>
+      <button type="button" class="mc-btn mc-btn-primary mc-btn-lg" id="btnMicToggle" onclick="toggleSidekickListening()">
+        <i class="bi bi-mic-fill"></i> <span id="micBtnLabel">Start listening</span>
+      </button>
     </div>
   </div>
 
@@ -160,45 +152,6 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
   </div>
 </div>
 
-<style>
-.sidekick-container { display: flex; flex-direction: column; gap: 1.25rem; }
-.sk-banner { background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf8 50%, #eff6ff 100%); border: 1.5px solid #a7f3d0; border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(16,24,40,0.03); }
-.sk-banner-icon { width: 56px; height: 56px; border-radius: 16px; background: #0f766e; color: #fff; display: grid; place-items: center; font-size: 1.8rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(15,118,110,0.25); }
-
-.sk-transcript-panel { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-.sk-pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; }
-.sk-pulse-dot.active { background: #ef4444; box-shadow: 0 0 10px #ef4444; animation: pulse-sk 1.5s infinite; }
-@keyframes pulse-sk { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.25);opacity:0.6} }
-.sk-speech-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 1rem; min-height: 56px; font-size: 0.95rem; line-height: 1.55; margin-bottom: 0.85rem; }
-.sk-placeholder { color: #94a3b8; font-style: italic; }
-.sk-sim-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-.sk-chip { background: #fff; border: 1px solid #cbd5e1; border-radius: 20px; padding: 0.3rem 0.75rem; font-size: 0.78rem; font-weight: 600; color: #334155; cursor: pointer; transition: all 0.15s ease; }
-.sk-chip:hover { border-color: #0f766e; background: #ecfdf8; color: #0f766e; }
-
-.sk-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-@media (max-width: 900px) { .sk-main-grid { grid-template-columns: 1fr; } }
-.sk-card-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.85rem; margin-bottom: 1rem; border-bottom: 1px solid var(--line); }
-.sk-icon-wrap { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; font-size: 1.2rem; flex-shrink: 0; }
-.sk-icon-wrap.teal { background: #ecfdf8; color: #0f766e; }
-.sk-icon-wrap.amber { background: #fffbeb; color: #b45309; }
-.sk-count-badge { font-size: 0.75rem; font-weight: 700; background: #f1f5f9; padding: 0.2rem 0.55rem; border-radius: 999px; color: #64748b; }
-
-.sk-terms-list, .sk-questions-list { display: flex; flex-direction: column; gap: 0.75rem; min-height: 220px; max-height: 460px; overflow-y: auto; }
-.sk-empty-hint { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
-.sk-empty-hint i { font-size: 2rem; display: block; margin-bottom: 0.4rem; opacity: 0.45; }
-
-.sk-term-card { background: #fafbfc; border: 1px solid #e2e8f0; border-left: 4px solid #0f766e; border-radius: 12px; padding: 0.85rem 1rem; }
-.sk-term-word { font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem; }
-.sk-term-bn { font-size: 0.86rem; color: #0f766e; font-weight: 600; line-height: 1.45; margin-bottom: 0.2rem; }
-.sk-term-en { font-size: 0.78rem; color: #64748b; line-height: 1.4; }
-
-.sk-question-card { background: #fffdf5; border: 1px solid #fef3c7; border-left: 4px solid #d97706; border-radius: 12px; padding: 0.85rem 1rem; position: relative; }
-.sk-question-text { font-size: 0.9rem; font-weight: 700; color: #92400e; line-height: 1.45; margin-bottom: 0.25rem; }
-.sk-question-reason { font-size: 0.78rem; color: #b45309; }
-
-.sk-summary-card { background: #ffffff; border: 1px solid var(--line); border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(16,24,40,0.04); }
-</style>
-
 <script>
 let isListening = false;
 let recognition = null;
@@ -206,66 +159,48 @@ let collectedTranscripts = [];
 let detectedTerms = [];
 let suggestedQuestions = [];
 
-function toggleSidekickListening() {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    alert("Web Speech API is not supported in this browser. Please use Chrome/Edge or click the Demo Simulation buttons.");
-    return;
-  }
+let skAudioClient = null;
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+function toggleSidekickListening() {
   const btn = document.getElementById('btnMicToggle');
   const label = document.getElementById('micBtnLabel');
   const pulse = document.getElementById('skPulse');
 
   if (!isListening) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'bn-BD'; // Support Bengali, falls back to English
-
-    recognition.onstart = function() {
+    if (!window.MedCoreAudioToText) {
+      alert('AudioToText unavailable. Use demo simulation chips.');
+      return;
+    }
+    skAudioClient = MedCoreAudioToText.create({
+      endpoint: '<?= APP_URL ?>/api/audio-transcribe.php',
+      mode: 'clinical',
+      chunkMs: 5000,
+      onPartial: function (t) {
+        document.getElementById('speechPlaceholder').style.display = 'none';
+        document.getElementById('speechLiveText').textContent = t;
+      },
+      onFinal: function (t) {
+        document.getElementById('speechPlaceholder').style.display = 'none';
+        document.getElementById('speechLiveText').textContent = t;
+        collectedTranscripts.push(t);
+        analyzeSnippetWithGroq(t);
+      },
+      onError: function (msg) { console.warn('Sidekick ASR:', msg); }
+    });
+    skAudioClient.start().then(function () {
       isListening = true;
-      label.textContent = 'Listening Active (রেকর্ড হচ্ছে)...';
+      label.textContent = 'Listening…';
       btn.classList.add('mc-btn-danger');
       pulse.classList.add('active');
       document.getElementById('speechPlaceholder').style.display = 'none';
-    };
-
-    recognition.onresult = function(event) {
-      let interim = '';
-      let finalTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
-        }
-      }
-
-      document.getElementById('speechLiveText').textContent = finalTranscript || interim;
-
-      if (finalTranscript.trim().length > 0) {
-        collectedTranscripts.push(finalTranscript.trim());
-        analyzeSnippetWithGroq(finalTranscript.trim());
-      }
-    };
-
-    recognition.onerror = function(err) {
-      console.warn("Sidekick mic error:", err);
-    };
-
-    recognition.onend = function() {
-      if (isListening) {
-        try { recognition.start(); } catch(e) {}
-      }
-    };
-
-    try { recognition.start(); } catch(e) {}
+    }).catch(function () {
+      alert('Microphone permission required.');
+    });
   } else {
     isListening = false;
+    if (skAudioClient) skAudioClient.stop();
     if (recognition) recognition.stop();
-    label.textContent = 'Start Listening (ভয়েস রেকর্ড চালু করুন)';
+    label.textContent = 'Start listening';
     btn.classList.remove('mc-btn-danger');
     pulse.classList.remove('active');
   }

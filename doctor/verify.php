@@ -14,7 +14,12 @@ if (!isset($_SESSION['selected_hospital_id'])) {
 }
 
 if (isLoggedIn('DOCTOR') && isset($_SESSION['hospital_id'])) {
-    header('Location: ' . APP_URL . '/doctor/dashboard.php');
+    $go = $_SESSION['post_login_redirect'] ?? '/doctor/dashboard.php';
+    unset($_SESSION['post_login_redirect']);
+    if (!str_starts_with($go, '/') || str_starts_with($go, '//')) {
+        $go = '/doctor/dashboard.php';
+    }
+    header('Location: ' . APP_URL . $go);
     exit;
 }
 

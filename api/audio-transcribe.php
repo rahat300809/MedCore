@@ -1,74 +1,66 @@
 <?php
 /**
- * MedCore Audio-to-Text Transcription API
- * Uses Groq Whisper API (whisper-large-v3-turbo) to convert speech audio files into text.
+ * MedCore Audio → Text API
+ * Whisper STT (Groq) — same approach as Carleslc/AudioToText, cloud Whisper backend.
+ * Optional: refine=1 runs Groq cleanup before returning text.
  */
 if (file_exists(__DIR__ . '/../app/middleware/AuthMiddleware.php')) {
     require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
-    require_once __DIR__ . '/../app/config/chatbot.php';
+    require_once __DIR__ . '/../app/services/AudioToTextService.php';
 } else {
     require_once __DIR__ . '/../../app/middleware/AuthMiddleware.php';
-    require_once __DIR__ . '/../../app/config/chatbot.php';
+    require_once __DIR__ . '/../../app/services/AudioToTextService.php';
 }
 
 header('Content-Type: application/json; charset=utf-8');
 
+initSession();
+$allowed = isLoggedIn('DOCTOR') || isLoggedIn('HOSPITAL_ADMIN') || isLoggedIn('PATIENT');
+if (!$allowed) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Login required for audio transcription.']);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Only POST requests supported.']);
+    echo json_encode(['success' => false, 'message' => 'Only POST supported.']);
     exit;
 }
 
 $uploadedFile = $_FILES['audio'] ?? $_FILES['file'] ?? null;
 if (!$uploadedFile || empty($uploadedFile['tmp_name'])) {
-    echo json_encode(['success' => false, 'message' => 'No audio file provided in request.']);
+    echo json_encode(['success' => false, 'message' => 'No audio file provided.']);
     exit;
 }
 
-$apiKey = GROQ_API_KEY;
-if (empty($apiKey)) {
-    echo json_encode(['success' => false, 'message' => 'Groq API Key not configured.']);
+$mode = trim($_POST['mode'] ?? 'clinical');
+$language = trim($_POST['language'] ?? '') ?: null;
+$refine = isset($_POST['refine']) ? (bool)$_POST['refine'] : true;
+
+$result = AudioToTextService::transcribeFile(
+    $uploadedFile['tmp_name'],
+    $uploadedFile['name'] ?? 'audio.webm',
+    $uploadedFile['type'] ?? 'audio/webm',
+    $language
+);
+
+if (!$result['success']) {
+    echo json_encode($result, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-$tmpPath = $uploadedFile['tmp_name'];
-$fileName = $uploadedFile['name'] ?: 'audio.webm';
-$mimeType = $uploadedFile['type'] ?: 'audio/webm';
-
-$cfile = new CURLFile($tmpPath, $mimeType, $fileName);
-$postData = [
-    'file'            => $cfile,
-    'model'           => 'whisper-large-v3-turbo',
-    'response_format' => 'json',
-    'temperature'     => '0.0'
-];
-
-$ch = curl_init('https://api.groq.com/openai/v1/audio/transcriptions');
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => $postData,
-    CURLOPT_HTTPHEADER     => [
-        'Authorization: Bearer ' . $apiKey,
-    ],
-    CURLOPT_TIMEOUT        => 30
-]);
-
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlErr  = curl_error($ch);
-curl_close($ch);
-
-if ($httpCode === 200 && $response) {
-    $data = json_decode($response, true);
-    $text = trim($data['text'] ?? '');
-    echo json_encode([
-        'success'    => true,
-        'text'       => $text,
-        'model'      => 'whisper-large-v3-turbo'
-    ], JSON_UNESCAPED_UNICODE);
-} else {
-    echo json_encode([
-        'success'    => false,
-        'message'    => 'Whisper transcription failed (' . $httpCode . '): ' . ($curlErr ?: substr($response ?: '', 0, 180))
-    ]);
+$text = $result['text'] ?? '';
+$refined = $text;
+if ($refine && $text !== '') {
+    $refineMode = ($mode === 'code_blue') ? 'code_blue' : 'clinical';
+    $refined = AudioToTextService::refineTranscript($text, $refineMode);
 }
+
+echo json_encode([
+    'success'       => true,
+    'text'          => $refined,
+    'raw_text'      => $text,
+    'model'         => $result['model'] ?? AudioToTextService::WHISPER_MODEL,
+    'engine'        => 'whisper+groq',
+    'source_pattern'=> 'AudioToText / Whisper',
+], JSON_UNESCAPED_UNICODE);

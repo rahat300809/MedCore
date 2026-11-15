@@ -218,25 +218,23 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
     <?php renderExecutiveClinicalSummary($activeClinicalSummary, true); ?>
   </div>
 <?php else: ?>
-  <div class="mc-panel" style="background:linear-gradient(135deg,#0b2538 0%,#0f766e 100%);color:#fff;border:0">
+  <div class="mc-panel mc-panel-ready">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
       <div>
-        <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#a7f3d0">
-          <i class="bi bi-person-bounding-box"></i> Chamber ready
-        </div>
-        <h2 style="font-size:1.28rem;margin:.3rem 0;color:#fff">Ready for next patient consultation</h2>
-        <p style="margin:0;opacity:.88;font-size:.9rem;max-width:36rem">
-          Search by Patient UID (e.g. PT-000001), phone number, or NID to unlock records &amp; clinical summary.
+        <p class="mc-kicker" style="margin:0 0 .35rem"><i class="bi bi-person-bounding-box"></i> Chamber ready</p>
+        <h2 style="font-size:1.28rem;margin:0">Next consultation</h2>
+        <p style="margin:.35rem 0 0;font-size:.9rem;color:var(--muted);max-width:36rem">
+          Search by Patient UID, phone, or NID — OTP unlocks the clinical summary.
         </p>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
         <a href="<?= APP_URL ?>/doctor/queue.php" class="mc-btn mc-btn-secondary mc-btn-sm">
           <i class="bi bi-people-fill"></i> Live queue (<?= $waitingQueueCount ?>)
         </a>
-        <a href="<?= APP_URL ?>/doctor/code-blue.php" class="mc-btn mc-btn-sm" style="background:#dc2626;color:#ffffff;border:none">
-          <i class="bi bi-lightning-charge-fill"></i> Code Blue ER
+        <a href="<?= APP_URL ?>/doctor/code-blue.php" class="mc-btn mc-btn-danger mc-btn-sm">
+          <i class="bi bi-lightning-charge-fill"></i> Code Blue
         </a>
-        <a href="<?= APP_URL ?>/doctor/patient-search.php" class="mc-btn mc-btn-soft mc-btn-sm">
+        <a href="<?= APP_URL ?>/doctor/patient-search.php" class="mc-btn mc-btn-primary mc-btn-sm">
           <i class="bi bi-search-heart-fill"></i> Find patient
         </a>
       </div>

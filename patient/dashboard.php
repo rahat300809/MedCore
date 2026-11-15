@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $_SESSION['flash'] = [
                         'type' => 'success',
-                        'title' => 'Access Granted! 🎉',
+                        'title' => 'Access granted',
                         'msg' => 'You approved Dr. ' . $request['doctor_name'] . ' (' . $request['hospital_name'] . '). 30-minute secure clinical access is now active.'
                     ];
                 } catch (Exception $e) {
@@ -272,5 +272,26 @@ $upcomingAppointments = $stmtUpcomingApt->fetchAll();
 
 // Welcome flag
 $isNewUser = isset($_GET['welcome']);
+
+// Active medicines + AI "why taking" for bottom of patient portal
+require_once __DIR__ . '/../app/services/SidekickService.php';
+$stmtDashMeds = $db->prepare("
+    SELECT pm.*, m.generic_name, m.brand_name, m.strength, m.dosage_form, m.drug_class
+    FROM patient_medications pm
+    JOIN medications m ON pm.medication_id = m.id
+    WHERE pm.patient_id = ? AND pm.status = 'ACTIVE'
+    ORDER BY pm.started_at DESC
+    LIMIT 8
+");
+$stmtDashMeds->execute([$patientId]);
+$dashMedications = $stmtDashMeds->fetchAll() ?: [];
+$dashMedExplanations = [];
+if (!empty($dashMedications)) {
+    $exResult = SidekickService::explainMedicines($dashMedications);
+    foreach (($exResult['explanations'] ?? []) as $ex) {
+        $k = strtolower(trim($ex['name'] ?? ''));
+        if ($k !== '') $dashMedExplanations[$k] = $ex;
+    }
+}
 
 require __DIR__ . '/../app/views/patient/dashboard_view.php';

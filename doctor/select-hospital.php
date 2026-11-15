@@ -6,8 +6,18 @@ require_once __DIR__ . '/../app/views/media.php';
 
 initSession();
 
+$redirect = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
+if ($redirect !== '' && str_starts_with($redirect, '/') && !str_starts_with($redirect, '//')) {
+    $_SESSION['post_login_redirect'] = $redirect;
+}
+
 if (isLoggedIn('DOCTOR') && isset($_SESSION['hospital_id']) && !isset($_GET['switch'])) {
-    header('Location: ' . APP_URL . '/doctor/dashboard.php');
+    $go = $_SESSION['post_login_redirect'] ?? '/doctor/dashboard.php';
+    unset($_SESSION['post_login_redirect']);
+    if (!str_starts_with($go, '/') || str_starts_with($go, '//')) {
+        $go = '/doctor/dashboard.php';
+    }
+    header('Location: ' . APP_URL . $go);
     exit;
 }
 if (isLoggedIn('DOCTOR') && isset($_SESSION['doctor_id'])) {
