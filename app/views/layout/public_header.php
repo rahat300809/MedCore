@@ -14,6 +14,7 @@
       <li><a href="<?= APP_URL ?>/for-hospitals.php">Hospitals</a></li>
       <li><a href="<?= APP_URL ?>/for-labs.php">Labs</a></li>
       <li><a href="<?= APP_URL ?>/book-doctor.php">Book</a></li>
+      <li><a href="<?= APP_URL ?>/docs.php">Docs</a></li>
     </ul>
 
     <div class="mc-nav-actions">
@@ -28,6 +29,7 @@
     <a href="<?= APP_URL ?>/for-hospitals.php">Hospitals</a>
     <a href="<?= APP_URL ?>/for-labs.php">Labs</a>
     <a href="<?= APP_URL ?>/book-doctor.php">Book serial</a>
+    <a href="<?= APP_URL ?>/docs.php">Docs</a>
     <a href="<?= APP_URL ?>/emergency.php">ICE</a>
     <a href="<?= APP_URL ?>/role-selection.php">Portal login</a>
   </div>

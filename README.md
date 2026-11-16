@@ -9,11 +9,13 @@
 [![Security](https://img.shields.io/badge/Security-AES--256_%7C_CSRF_%7C_Audit_Logs-16A34A?style=for-the-badge)](https://github.com/rahat300809/MedCore)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-### *"One Record. Every Care."*
+### *"One Record. Every Care. For Bangladesh."*
 
 **A Unified, Consent-Driven National Electronic Health Record (EHR) & Clinical Workflow Platform**
 
-[🌐 Live Vercel Demo](https://medcore1-tan.vercel.app/) • [🔑 Demo Accounts](#-demo-accounts--credentials) • [Key Features](#-core-features) • [Laboratory Token Flow](#-laboratory-management--token-workflow) • [System Architecture](#-system-architecture) • [Quick Start](#-installation--quick-start)
+📄 **[Full project idea, motivation & work → PROJECT.md](PROJECT.md)**
+
+[🌐 Live Vercel Demo](https://medcore-main-2026.vercel.app/) • [🔑 Demo Accounts](#-demo-accounts--credentials) • [Key Features](#-core-features) • [Laboratory Token Flow](#-laboratory-management--token-workflow) • [System Architecture](#-system-architecture) • [Quick Start](#-installation--quick-start)
 
 </div>
 

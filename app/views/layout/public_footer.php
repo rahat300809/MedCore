@@ -17,6 +17,7 @@
       <h4>Care</h4>
       <ul>
         <li><a href="<?= APP_URL ?>/book-doctor.php">Book serial</a></li>
+        <li><a href="<?= APP_URL ?>/docs.php">Docs / pitch</a></li>
         <li><a href="<?= APP_URL ?>/emergency.php">ICE emergency</a></li>
         <li><a href="<?= APP_URL ?>/security.php">Security</a></li>
         <li><a href="<?= APP_URL ?>/role-selection.php">All gateways</a></li>
