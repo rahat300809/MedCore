@@ -548,7 +548,7 @@ function toggleVoiceListening() {
       return;
     }
     cbAudioClient = MedCoreAudioToText.create({
-      endpoint: '<?= APP_URL ?>/api/audio-transcribe.php',
+      endpoint: '<?= APP_URL ?>/audio-transcribe.php',
       mode: 'code_blue',
       chunkMs: 4500,
       onPartial: function (t) {

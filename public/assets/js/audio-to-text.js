@@ -1,11 +1,10 @@
 /**
  * MedCore AudioToText client
- * Complete WebM segments → /api/audio-transcribe.php (Whisper)
- * + optional Web Speech for live partial text.
+ * Complete WebM segments → Whisper API
+ * + Web Speech for live text (and parse fallback)
  *
- * Important: MediaRecorder timeslice fragments are NOT valid standalone
- * WebM files (only the first has headers). We stop/restart every chunkMs
- * so each upload is a complete file Whisper can decode.
+ * MediaRecorder timeslice fragments are NOT valid standalone WebM files.
+ * We stop/restart every chunkMs so each upload is a complete file.
  */
 (function (global) {
   function createAudioToText(options) {
@@ -13,8 +12,8 @@
       endpoint: '/api/audio-transcribe.php',
       mode: 'clinical',
       language: '',
-      chunkMs: 5000,
-      minBytes: 1200,
+      chunkMs: 4500,
+      minBytes: 800,
       onPartial: null,
       onFinal: null,
       onError: null,
@@ -26,9 +25,11 @@
     let recognition = null;
     let active = false;
     let segmentTimer = null;
-    let uploading = false;
-    let segmentChunks = [];
     let mime = 'audio/webm';
+    let segmentChunks = [];
+    const uploadQueue = [];
+    let pumping = false;
+    let lastWhisperAt = 0;
 
     function status(msg) {
       if (typeof opts.onStatus === 'function') opts.onStatus(msg);
@@ -38,15 +39,33 @@
       if (typeof opts.onError === 'function') opts.onError(msg);
     }
 
-    async function uploadBlob(blob) {
+    function emitFinal(text, meta) {
+      const t = String(text || '').trim();
+      if (!t) return;
+      if (typeof opts.onFinal === 'function') opts.onFinal(t, meta || {});
+    }
+
+    async function pumpUploads() {
+      if (pumping) return;
+      pumping = true;
+      while (uploadQueue.length && active) {
+        const blob = uploadQueue.shift();
+        await uploadBlob(blob);
+      }
+      pumping = false;
+    }
+
+    function enqueueBlob(blob) {
       if (!blob || blob.size < opts.minBytes) {
         fail('Audio chunk too small (' + (blob ? blob.size : 0) + ' bytes) — speak closer to the mic.');
         return;
       }
-      if (uploading) return;
-      uploading = true;
-      status('uploading');
+      uploadQueue.push(blob);
+      pumpUploads();
+    }
 
+    async function uploadBlob(blob) {
+      status('uploading');
       const fd = new FormData();
       const ext = mime.indexOf('mp4') !== -1 ? 'mp4' : 'webm';
       fd.append('audio', blob, 'segment.' + ext);
@@ -68,7 +87,8 @@
           return;
         }
         if (data && data.success && data.text && String(data.text).trim()) {
-          if (typeof opts.onFinal === 'function') opts.onFinal(String(data.text).trim(), data);
+          lastWhisperAt = Date.now();
+          emitFinal(data.text, data);
           status('whisper');
         } else if (data && data.message) {
           fail(data.message);
@@ -79,8 +99,6 @@
         }
       } catch (err) {
         fail(String(err && err.message ? err.message : err));
-      } finally {
-        uploading = false;
       }
     }
 
@@ -131,9 +149,9 @@
         const blob = new Blob(segmentChunks, { type: mime || 'audio/webm' });
         segmentChunks = [];
         if (active && blob.size > 0) {
-          uploadBlob(blob);
+          enqueueBlob(blob);
         }
-        if (active && mediaStream) {
+        if (active && mediaStream && mediaStream.active !== false) {
           try {
             bindRecorder();
             mediaRecorder.start();
@@ -151,7 +169,7 @@
 
     async function startWhisper() {
       mime = pickMime();
-      if (!mime && !(window.MediaRecorder)) {
+      if (!window.MediaRecorder) {
         throw new Error('MediaRecorder not supported');
       }
       mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -162,15 +180,19 @@
         },
       });
       if (!mime) mime = 'audio/webm';
-      bindRecorder();
       active = true;
+      bindRecorder();
       status('whisper');
       return true;
     }
 
-    function startWebSpeech() {
+    function startWebSpeech(asPrimary) {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) throw new Error('No speech recognition available in this browser');
+      if (!SR) {
+        if (asPrimary) throw new Error('No speech recognition available in this browser');
+        return false;
+      }
+      if (recognition) return true;
       recognition = new SR();
       recognition.continuous = true;
       recognition.interimResults = true;
@@ -185,75 +207,55 @@
           else interim += t;
         }
         if (interim && typeof opts.onPartial === 'function') opts.onPartial(interim);
-        if (finalText.trim() && typeof opts.onFinal === 'function') opts.onFinal(finalText.trim());
+        if (finalText.trim()) {
+          if (typeof opts.onPartial === 'function') opts.onPartial(finalText.trim());
+          // If Whisper has not returned recently, use Web Speech for parse/ledger
+          if (asPrimary || Date.now() - lastWhisperAt > 6000) {
+            emitFinal(finalText.trim(), { engine: 'webspeech' });
+          }
+        }
       };
       recognition.onerror = function (e) {
-        fail(e.error || 'speech error');
+        if (asPrimary) fail(e.error || 'speech error');
       };
       recognition.onend = function () {
-        if (active) {
+        if (active && recognition) {
           try { recognition.start(); } catch (e) {}
         }
       };
       recognition.start();
-      active = true;
-      status('webspeech');
-      return true;
-    }
-
-    /** Live captions via Web Speech while Whisper segments upload (Chrome/Edge). */
-    function startWebSpeechPartials() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR || recognition) return;
-      try {
-        recognition = new SR();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = opts.language === 'bn' ? 'bn-BD' : 'en-US';
-        recognition.onresult = function (event) {
-          let interim = '';
-          let finalText = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const t = event.results[i][0].transcript;
-            if (event.results[i].isFinal) finalText += t;
-            else interim += t;
-          }
-          if (interim && typeof opts.onPartial === 'function') opts.onPartial(interim);
-          // Final Whisper text still drives ACLS parse; Web Speech finals are captions only
-          if (finalText.trim() && typeof opts.onPartial === 'function') {
-            opts.onPartial(finalText.trim());
-          }
-        };
-        recognition.onerror = function () { /* ignore; Whisper is primary */ };
-        recognition.onend = function () {
-          if (active && recognition) {
-            try { recognition.start(); } catch (e) {}
-          }
-        };
-        recognition.start();
-      } catch (e) {
-        recognition = null;
+      if (asPrimary) {
+        active = true;
+        status('webspeech');
       }
+      return true;
     }
 
     async function start() {
       if (active) return true;
+      let whisperOk = false;
       try {
         if (navigator.mediaDevices && window.MediaRecorder) {
           await startWhisper();
-          startWebSpeechPartials();
-          return true;
+          whisperOk = true;
         }
       } catch (e) {
         fail(String(e && e.message ? e.message : e));
       }
-      startWebSpeech();
+      // Always try Web Speech for live captions + fallback parse (Chrome/Edge)
+      try {
+        startWebSpeech(!whisperOk);
+      } catch (e) {
+        if (!whisperOk) throw e;
+      }
+      if (!active) active = true;
       return true;
     }
 
     function stop() {
       active = false;
       clearSegmentTimer();
+      uploadQueue.length = 0;
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         try { mediaRecorder.stop(); } catch (e) {}
       }

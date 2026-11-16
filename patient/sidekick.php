@@ -173,7 +173,7 @@ function toggleSidekickListening() {
       return;
     }
     skAudioClient = MedCoreAudioToText.create({
-      endpoint: '<?= APP_URL ?>/api/audio-transcribe.php',
+      endpoint: '<?= APP_URL ?>/audio-transcribe.php',
       mode: 'clinical',
       chunkMs: 5000,
       onPartial: function (t) {
