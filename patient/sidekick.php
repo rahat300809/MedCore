@@ -54,6 +54,7 @@ require __DIR__ . '/../app/views/layout/portal_shell_start.php';
       </span>
       <span id="speechLiveText" style="color:#0f172a;font-weight:600"></span>
     </div>
+    <p id="skAsrEngine" style="margin:.45rem 0 0;font-size:.75rem;color:var(--muted)"></p>
 
     <!-- Quick Simulation Chips -->
     <div class="sk-sim-chips">
@@ -185,7 +186,19 @@ function toggleSidekickListening() {
         collectedTranscripts.push(t);
         analyzeSnippetWithGroq(t);
       },
-      onError: function (msg) { console.warn('Sidekick ASR:', msg); }
+      onStatus: function (s) {
+        const el = document.getElementById('skAsrEngine');
+        if (!el) return;
+        el.style.color = '';
+        if (s === 'whisper') el.textContent = 'Engine: Whisper · text every ~5s';
+        else if (s === 'uploading') el.textContent = 'Uploading to Whisper…';
+        else if (s === 'webspeech') el.textContent = 'Engine: Web Speech fallback';
+      },
+      onError: function (msg) {
+        console.warn('Sidekick ASR:', msg);
+        const el = document.getElementById('skAsrEngine');
+        if (el) { el.style.color = '#b42318'; el.textContent = 'ASR: ' + msg; }
+      }
     });
     skAudioClient.start().then(function () {
       isListening = true;

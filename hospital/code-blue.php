@@ -550,7 +550,7 @@ function toggleVoiceListening() {
     cbAudioClient = MedCoreAudioToText.create({
       endpoint: '<?= APP_URL ?>/api/audio-transcribe.php',
       mode: 'code_blue',
-      chunkMs: 5500,
+      chunkMs: 4500,
       onPartial: function (t) {
         document.getElementById('transcriptPlaceholder').style.display = 'none';
         document.getElementById('liveTranscriptText').textContent = t;
@@ -558,16 +558,29 @@ function toggleVoiceListening() {
       onFinal: function (t) {
         document.getElementById('transcriptPlaceholder').style.display = 'none';
         document.getElementById('liveTranscriptText').textContent = t;
+        if (engineEl) engineEl.style.color = '';
         processTranscriptWithGroq(t);
       },
       onStatus: function (s) {
-        if (engineEl) {
-          engineEl.textContent = s === 'whisper'
-            ? 'Engine: Whisper (AudioToText) → Groq refine + ACLS sort'
-            : (s === 'webspeech' ? 'Engine: Web Speech fallback → Groq' : '');
+        if (!engineEl) return;
+        if (s === 'whisper') {
+          engineEl.style.color = '';
+          engineEl.textContent = 'Engine: Whisper (AudioToText) → Groq refine + ACLS sort · speak clearly, text appears every ~4–5s';
+        } else if (s === 'uploading') {
+          engineEl.style.color = '';
+          engineEl.textContent = 'Uploading audio segment to Whisper…';
+        } else if (s === 'webspeech') {
+          engineEl.style.color = '';
+          engineEl.textContent = 'Engine: Web Speech fallback → Groq';
         }
       },
-      onError: function (msg) { console.warn('ASR:', msg); }
+      onError: function (msg) {
+        console.warn('ASR:', msg);
+        if (engineEl) {
+          engineEl.style.color = '#b42318';
+          engineEl.textContent = 'ASR: ' + msg;
+        }
+      }
     });
     cbAudioClient.start().then(function () {
       isListening = true;
@@ -575,8 +588,9 @@ function toggleVoiceListening() {
       btn.classList.add('mc-btn-danger');
       pulse.classList.add('listening');
       document.getElementById('transcriptPlaceholder').style.display = 'none';
-    }).catch(function () {
-      alert('Microphone permission required for AudioToText.');
+      if (engineEl) engineEl.textContent = 'Listening… allow mic, then speak (Epi / Shock / CPR).';
+    }).catch(function (err) {
+      alert('Microphone permission required for AudioToText. ' + (err && err.message ? err.message : ''));
     });
   } else {
     isListening = false;
