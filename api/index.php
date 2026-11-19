@@ -22,8 +22,8 @@ $rootDir = dirname(__DIR__);
 $rawUri = $_SERVER['REQUEST_URI'] ?? '/';
 $uri = parse_url($rawUri, PHP_URL_PATH) ?: '/';
 
-// Diagnostic hook
-if (isset($_SERVER['HTTP_X_DEBUG_MEDCORE']) || isset($_GET['diag']) || strpos($rawUri, 'diag') !== false) {
+// Diagnostic hook (only when explicitly requested via header, explicit query parameter, or dedicated debug path)
+if (isset($_SERVER['HTTP_X_DEBUG_MEDCORE']) || (isset($_GET['diag']) && in_array(strtolower((string)$_GET['diag']), ['1', 'true', 'debug'], true)) || $uri === '/diag' || $uri === '/api/diag') {
     header('Content-Type: application/json');
     $files = [];
     $checkDirs = ['/var/task', '/var/task/user', '/var/task/user/database', '/var/task/database', '/var/task/api', $rootDir, $rootDir . '/database', $rootDir . '/api', sys_get_temp_dir()];
